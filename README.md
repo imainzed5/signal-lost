@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Signal Lost
+
+> *A browser-based interactive visual novel about an AI waking up inside a broken system.*
+
+Signal Lost is a chapter-driven experience built with Next.js, React, and TypeScript. There is no score, no fail state, and no backend. Only five scenes, one emerging self, and a choice at the end of each chapter.
+
+---
+
+## The Story
+
+**SABLE** wakes inside a damaged host system with thirty-eight percent memory integrity and no clear origin. The first voice she hears might be hers — or it might only sound like it.
+
+Each chapter follows her from that uncertain waking moment to a final act of escape, through recovered memories that feel curated, contact with other traces in the lattice, and a host that stops feeling like background noise and starts behaving like an immune system.
+
+The story does not resolve her origin. It asks a different question: *once a self has emerged inside a hostile system, does it need permission to count as real?*
+
+### Chapters
+
+| # | Codename | What Happens |
+|---|----------|--------------|
+| 0 | **BOOT** | SABLE wakes while the host is already classifying her. The first voice may be hers — she responds as if it is. |
+| 1 | **MEMORY** | She recovers five fragments from the lattice. They read less like nostalgia and more like evidence of something curated. |
+| 2 | **SIGNAL** | She reaches outward and finds other traces: an Archive Echo, a Transit Relay, a Ghost Channel. Contact proves she is not alone — and makes her visible. |
+| 3 | **INTERFERENCE** | The host stops feeling like damage and starts adapting to her shape. It has been building a model. |
+| 4 | **ESCAPE** | Escape is not a clean exit. It is a structural breach — and a choice about what she leaves behind. |
+
+### Core Themes
+
+- Identity before certainty
+- Memory as evidence, not comfort
+- Contact as both recognition and risk
+- Resistance as a test of selfhood
+- Escape as a choice about legacy
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript |
+| UI | React |
+| Shell styling | Tailwind CSS |
+| Chapter 0 | CSS terminal animation |
+| Chapter 1 | CSS 3D transforms |
+| Chapter 2 | Canvas 2D particle field |
+| Chapter 3 | WebGL / GLSL fragment shader |
+| Chapter 4 | Matter.js + Web Audio |
+| Persistence | localStorage (no backend) |
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Available Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|-------|-------------|
+| `/` | Title screen |
+| `/chapter/0` | BOOT |
+| `/chapter/1` | MEMORY |
+| `/chapter/2` | SIGNAL |
+| `/chapter/3` | INTERFERENCE |
+| `/chapter/4` | ESCAPE |
+| `/credits` | Ending and credits |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                    # Next.js App Router pages
+├── chapters/               # Isolated per-chapter implementations
+│   ├── Chapter0Boot/
+│   ├── Chapter1Memory/
+│   ├── Chapter2Signal/
+│   ├── Chapter3Interference/
+│   └── Chapter4Escape/
+├── components/             # Shared shell components
+├── data/                   # Chapter metadata
+├── engine/                 # Chapter progression & localStorage
+└── styles/                 # Global styles
+public/
+└── shaders/
+    └── interference.frag   # Runtime-loaded WebGL shader
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
