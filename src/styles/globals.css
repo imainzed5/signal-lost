@@ -1,0 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+:root {
+  --background: #050816;
+  --foreground: #edf9f2;
+  --muted: rgba(220, 235, 228, 0.72);
+  --accent: #84ffd2;
+  --accent-soft: rgba(132, 255, 210, 0.72);
+  --panel: rgba(8, 14, 26, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --font-shell:
+    "IBM Plex Mono",
+    "Aptos Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-panel: var(--panel);
+  --color-panel-border: var(--panel-border);
+  --font-mono: var(--font-shell);
+  --font-sans: var(--font-shell);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(132, 255, 210, 0.08), transparent 34%),
+    radial-gradient(circle at 85% 18%, rgba(255, 183, 94, 0.08), transparent 22%),
+    linear-gradient(180deg, #09111f 0%, #060914 55%, #03050d 100%);
+  color: var(--foreground);
+  font-family: var(--font-shell), monospace;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(132, 255, 210, 0.025) 0,
+      rgba(132, 255, 210, 0.025) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  opacity: 0.32;
+  mix-blend-mode: screen;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.44));
+}
+
+@keyframes shellDrift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(-0.75%, 1.5%, 0) scale(1);
+  }
+}
+
+@keyframes shellSweep {
+  0% {
+    transform: translate3d(-28%, -4%, 0) rotate(-10deg);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.18;
+  }
+
+  56% {
+    opacity: 0.08;
+  }
+
+  100% {
+    transform: translate3d(30%, 8%, 0) rotate(-10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes shellPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+.shell-grid {
+  background-image:
+    linear-gradient(rgba(132, 255, 210, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(132, 255, 210, 0.05) 1px, transparent 1px);
+  background-position: center;
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+.shell-drift {
+  animation: shellDrift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.shell-sweep {
+  animation: shellSweep 14s linear infinite;
+  will-change: transform, opacity;
+}
+
+.shell-pulse {
+  animation: shellPulse 2.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-drift,
+  .shell-sweep,
+  .shell-pulse {
+    animation: none;
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(132, 255, 210, 0.24);
+  color: var(--foreground);
+}

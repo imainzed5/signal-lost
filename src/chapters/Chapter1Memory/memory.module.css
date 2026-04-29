@@ -1,0 +1,1974 @@
+.memoryRoot {
+  --bg: #080610;
+  --card-bg: #0d0a14;
+  --accent: #7b5ea7;
+  --error: #e06090;
+  --title: #e8e0f5;
+  --body: #b8a8d4;
+  --mono:
+    "IBM Plex Mono",
+    "Aptos Mono",
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  --serif: "DM Serif Display", Georgia, serif;
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(123, 94, 167, 0.2), transparent 38%),
+    radial-gradient(circle at 86% 18%, rgba(123, 94, 167, 0.14), transparent 32%),
+    radial-gradient(circle at 50% 78%, rgba(46, 29, 73, 0.34), transparent 56%),
+    linear-gradient(180deg, #090711 0%, #080610 48%, #06040d 100%);
+  color: var(--title);
+  font-family: var(--mono);
+}
+
+.memoryRoot::before,
+.memoryRoot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.memoryRoot::before {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(123, 94, 167, 0.04) 0,
+      rgba(123, 94, 167, 0.04) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    linear-gradient(180deg, rgba(8, 6, 16, 0), rgba(8, 6, 16, 0.32));
+  opacity: 0.45;
+}
+
+.memoryRoot::after {
+  background: radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.44));
+}
+
+.entryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(1.5rem, 8vw, 7rem);
+  background:
+    radial-gradient(circle at 26% 45%, rgba(123, 94, 167, 0.14), transparent 44%),
+    linear-gradient(180deg, rgba(8, 6, 16, 0.66), rgba(8, 6, 16, 0.82));
+  transition: opacity 520ms ease, filter 520ms ease;
+}
+
+.entryOverlayDissolve {
+  opacity: 0;
+  filter: blur(5px);
+}
+
+.entryBlock {
+  max-width: min(42rem, 88vw);
+  animation: entryBlockIn 720ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+.entryChapter {
+  margin: 0;
+  color: rgba(184, 168, 212, 0.92);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.entryTitle {
+  margin: 0.9rem 0 0;
+  color: var(--title);
+  font-size: clamp(3rem, 8vw, 7rem);
+  letter-spacing: 0.12em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
+.entryBody {
+  max-width: 44ch;
+  margin: 1.3rem 0 0;
+  color: rgba(232, 224, 245, 0.9);
+  font-size: clamp(0.92rem, 2vw, 1.03rem);
+  line-height: 1.8;
+}
+
+.entrySystemNote {
+  margin: 1.35rem 0 0;
+  color: rgba(123, 94, 167, 0.7);
+  font-size: 0.67rem;
+  letter-spacing: 0.12em;
+  line-height: 1.75;
+  text-transform: lowercase;
+  white-space: pre-line;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.entrySystemNoteVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ghostLabel,
+.receivedHud,
+.pressureHud {
+  position: absolute;
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 460ms ease;
+}
+
+.ghostLabel {
+  top: 1.3rem;
+  left: 1.45rem;
+  margin: 0;
+  color: rgba(232, 224, 245, 0.95);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.receivedHud {
+  top: 1.35rem;
+  right: 1.45rem;
+  margin: 0;
+  color: rgba(184, 168, 212, 0.94);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pressureHud {
+  bottom: 1.25rem;
+  left: 1.45rem;
+}
+
+.pressureLabel {
+  margin: 0;
+  color: rgba(123, 94, 167, 0.7);
+  font-size: 0.58rem;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.pressureLabelOverload {
+  animation: pressureOverload 900ms ease forwards;
+}
+
+.pressureBar {
+  margin: 0.4rem 0 0;
+  display: inline-flex;
+  gap: 0.22rem;
+  align-items: center;
+  min-width: 0.86rem;
+  padding: 0.19rem 0.26rem;
+  border-radius: 2px;
+  background: rgba(123, 94, 167, 0.15);
+}
+
+.pressureSegment {
+  width: 0.6rem;
+  height: 0.3rem;
+  background: rgba(123, 94, 167, 0.2);
+  overflow: hidden;
+}
+
+.pressureBarOverload {
+  animation: pressureOverload 900ms ease forwards;
+}
+
+.pressureSegmentFill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: rgba(123, 94, 167, 0.8);
+  transition: width 600ms ease, opacity 200ms ease;
+}
+
+.pressureSegmentFilled {
+  width: 100%;
+}
+
+.pressureSegmentPartial {
+  width: 40%;
+  background: rgba(123, 94, 167, 0.8);
+}
+
+.hudVisible {
+  opacity: 1;
+}
+
+.ghostLabel.hudVisible {
+  opacity: 0.2;
+}
+
+.cardField {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 520ms ease, transform 520ms ease;
+  pointer-events: none;
+}
+
+.cardFieldVisible {
+  opacity: 1;
+  transform: none;
+}
+
+.cardFieldFrozen {
+  opacity: 0.35;
+}
+
+.cardFieldFrozen .cardDrift,
+.cardFieldFrozen .cardScanline,
+.cardFieldFrozen .cardDashPulse,
+.cardFieldFrozen .cardFace {
+  animation-play-state: paused;
+}
+
+.memoryCard {
+  --drift-factor: 1;
+  --progress-fill: #7b5ea7;
+  --progress-shadow: rgba(123, 94, 167, 0.5);
+  position: absolute;
+  top: var(--card-idle-top);
+  left: var(--card-idle-left);
+  z-index: var(--card-z);
+  width: 220px;
+  height: 280px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: none;
+  transition: top 800ms ease-in-out, left 800ms ease-in-out, z-index 140ms linear;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.memoryCard:disabled {
+  cursor: default;
+}
+
+.memoryCard:focus-visible {
+  outline: 1px solid rgba(123, 94, 167, 0.9);
+  outline-offset: 4px;
+}
+
+.memoryCardHovered {
+  z-index: 95;
+}
+
+.memoryCardHeld {
+  z-index: 98;
+}
+
+.memoryCardNeighbor {
+  --drift-factor: 1.5;
+}
+
+.cardFieldSettled .memoryCard {
+  top: var(--card-settled-top);
+  left: var(--card-settled-left);
+}
+
+.cardEntry {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: translate3d(0, var(--entry-offset-y, 20px), 0);
+}
+
+.cardFieldVisible .cardEntry {
+  animation: cardArrive 760ms cubic-bezier(0.2, 1, 0.3, 1) var(--entry-delay) forwards;
+}
+
+.cardMount {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--card-idle-rotate)) scale(var(--card-idle-scale));
+  transition: transform 800ms ease-in-out;
+}
+
+.cardFieldSettled .cardMount {
+  transform: rotate(var(--card-settled-rotate)) scale(var(--card-settled-scale));
+}
+
+.cardDrift {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+
+.cardFieldActive .cardDrift {
+  animation-duration: var(--drift-duration);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.memoryCard[data-drift="A"] .cardDrift {
+  animation-name: driftA;
+}
+
+.memoryCard[data-drift="B"] .cardDrift {
+  animation-name: driftB;
+}
+
+.memoryCard[data-drift="C"] .cardDrift {
+  animation-name: driftC;
+}
+
+.memoryCard[data-drift="D"] .cardDrift {
+  animation-name: driftD;
+}
+
+.memoryCard[data-drift="E"] .cardDrift {
+  animation-name: driftE;
+}
+
+.memoryCardHeld .cardDrift,
+.memoryCardStabilized .cardDrift,
+.cardFieldSettled .cardDrift {
+  animation-play-state: paused;
+  transform: none;
+}
+
+.cardFlip {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 600ms ease-in-out, filter 220ms ease;
+}
+
+.memoryCardHovered .cardFlip {
+  filter: brightness(1.04);
+}
+
+.memoryCardHeld .cardFlip {
+  filter: brightness(1.08);
+}
+
+.memoryCardStabilized .cardFlip,
+.cardFieldSettled .memoryCard .cardFlip {
+  transform: rotateY(-180deg);
+}
+
+.cardFace {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.58rem;
+  padding: 0.72rem 0.8rem 0.78rem;
+  border: 1px solid rgba(123, 94, 167, 0.25);
+  border-radius: 6px;
+  background: var(--card-bg);
+  backface-visibility: hidden;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(123, 94, 167, 0.07);
+}
+
+.cardFront {
+  background:
+    linear-gradient(180deg, rgba(123, 94, 167, 0.14), transparent 24%),
+    linear-gradient(160deg, rgba(13, 10, 20, 0.98), rgba(10, 8, 16, 0.95));
+}
+
+.cardBack {
+  transform: rotateY(180deg);
+  border-color: rgba(123, 94, 167, 0.45);
+  box-shadow: 0 0 28px rgba(123, 94, 167, 0.12);
+  background:
+    linear-gradient(180deg, rgba(123, 94, 167, 0.18), transparent 24%),
+    linear-gradient(160deg, rgba(14, 11, 22, 0.99), rgba(10, 8, 17, 0.96));
+}
+
+.memoryCardHeld .cardFace {
+  border-color: rgba(123, 94, 167, 0.7);
+  box-shadow: 0 0 40px rgba(123, 94, 167, 0.2);
+}
+
+.memoryCardStabilized .cardFace,
+.cardFieldSettled .memoryCard .cardFace {
+  border-color: rgba(123, 94, 167, 0.48);
+}
+
+.cardHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: rgba(123, 94, 167, 0.6);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cardBack .cardHeader {
+  color: rgba(123, 94, 167, 0.8);
+}
+
+.cardHeader span:last-child {
+  text-align: right;
+}
+
+.cardHeaderStatus {
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.cardScanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 1px;
+  background: rgba(123, 94, 167, 0.5);
+  opacity: 0.5;
+  animation: scanlineDrop 3s linear infinite;
+}
+
+.memoryCardHeld .cardScanline {
+  animation-duration: 1s;
+}
+
+.memoryCardStabilized .cardScanline,
+.cardFieldSettled .cardScanline {
+  display: none;
+}
+
+.cardTitle {
+  position: relative;
+  z-index: 1;
+  margin: 0.12rem 0 0;
+  color: var(--title);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cardSubtitle {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(123, 94, 167, 0.5);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.cardBody {
+  position: relative;
+  z-index: 1;
+  margin: 0.12rem 0 0;
+  color: var(--body);
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.ghostEchoWord {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  color: rgba(232, 224, 245, 0.35);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  text-transform: lowercase;
+  transform: translate(-50%, -50%);
+  animation: ghostEcho 600ms ease forwards;
+  white-space: nowrap;
+}
+
+.cardHint {
+  position: relative;
+  z-index: 1;
+  margin: auto 0 0;
+  color: rgba(123, 94, 167, 0.3);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cardDashPulse {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(123, 94, 167, 0.44) 0,
+    rgba(123, 94, 167, 0.44) 7px,
+    transparent 7px,
+    transparent 12px
+  );
+  opacity: 0.2;
+  animation: dashPulse 2s ease-in-out infinite;
+}
+
+.cardProgressTrack {
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  height: 2px;
+  background: rgba(123, 94, 167, 0.15);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.memoryCardHeld .cardProgressTrack {
+  opacity: 1;
+}
+
+.cardProgressFill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--progress-fill, #7b5ea7);
+  transform: scaleX(var(--stabilize-progress, 0));
+  transform-origin: left center;
+  box-shadow: 0 0 16px var(--progress-shadow, rgba(123, 94, 167, 0.5));
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.cardDivider {
+  height: 1px;
+  margin-top: auto;
+  background: rgba(123, 94, 167, 0.2);
+}
+
+.cardSystemNote {
+  margin: 0;
+  color: rgba(123, 94, 167, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  line-height: 1.55;
+  text-transform: lowercase;
+  white-space: pre-line;
+}
+
+.recoveryMetaBlock {
+  margin-top: 0.28rem;
+}
+
+.recoveryMetaDivider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: rgba(123, 94, 167, 0.2);
+}
+
+.recoveryMetaLine {
+  margin: 0.34rem 0 0;
+  color: rgba(123, 94, 167, 0.35);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: lowercase;
+}
+
+.reexamineBlock {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 300ms ease, max-height 300ms ease;
+}
+
+.reexamineBlockVisible {
+  opacity: 1;
+  max-height: 5.5rem;
+}
+
+.reexamineDivider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin: 0.3rem 0 0.34rem;
+  background: rgba(123, 94, 167, 0.15);
+}
+
+.reexamineRefLine,
+.reexamineNoteLine {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: lowercase;
+}
+
+.reexamineRefLine {
+  color: rgba(123, 94, 167, 0.35);
+}
+
+.reexamineNoteLine {
+  margin-top: 0.12rem;
+  color: rgba(123, 94, 167, 0.3);
+}
+
+.cardHeaderBlocked,
+.memoryCardBlocked .cardHeaderStatus {
+  color: rgba(224, 96, 144, 0.7);
+}
+
+.memoryCardStuttering {
+  --progress-fill: rgba(205, 111, 149, 0.95);
+  --progress-shadow: rgba(224, 96, 144, 0.34);
+}
+
+.memoryCardStuttering .cardFace {
+  border-color: rgba(123, 94, 167, 0.18);
+}
+
+.memoryCardBlocked {
+  --progress-fill: rgba(224, 96, 144, 0.88);
+  --progress-shadow: rgba(224, 96, 144, 0.34);
+}
+
+.memoryCardBlocked .cardFace {
+  border-color: rgba(224, 96, 144, 0.35);
+  box-shadow: 0 0 28px rgba(224, 96, 144, 0.14);
+  animation: blockedBorderPulse 2500ms ease-in-out infinite;
+}
+
+.memoryCardBlocked .cardHeader {
+  color: rgba(224, 96, 144, 0.7);
+}
+
+.memoryCardBlocked .cardScanline {
+  background: rgba(224, 96, 144, 0.72);
+  opacity: 0.72;
+  animation: blockedScanlineBurst 2500ms steps(1, end) infinite;
+}
+
+.memoryCardBlocked .cardProgressTrack {
+  background: rgba(224, 96, 144, 0.16);
+}
+
+.memoryCardBlocked .corruptNoise,
+.memoryCardBlocked .inlineErrMarker {
+  color: rgba(224, 96, 144, 0.96);
+}
+
+.memoryCardBlocked.memoryCardHeld .cardFace {
+  animation-duration: 1000ms;
+}
+
+.memoryCardBlocked.memoryCardHeld .cardScanline {
+  opacity: 1;
+  animation: scanlineDrop 600ms linear infinite;
+}
+
+.memoryCardBlockedFlash .cardFace {
+  border-color: rgba(224, 96, 144, 0.8);
+  box-shadow: 0 0 34px rgba(224, 96, 144, 0.22);
+}
+
+.blockedBodyVeil {
+  position: absolute;
+  inset: 0.2rem -0.05rem 0.7rem;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(224, 96, 144, 0.24) 0,
+      rgba(224, 96, 144, 0.24) 10px,
+      transparent 10px,
+      transparent 22px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(224, 96, 144, 0.14) 0,
+      rgba(224, 96, 144, 0.14) 28px,
+      transparent 28px,
+      transparent 56px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.blockedHint {
+  position: relative;
+  z-index: 1;
+  margin: -0.26rem 0 0;
+  color: rgba(224, 96, 144, 0.5);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.responseLine {
+  position: absolute;
+  z-index: 14;
+  margin: 0;
+  color: rgba(232, 224, 245, 0.6);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  pointer-events: none;
+  text-align: center;
+  animation: responseLineLifecycle 3000ms ease forwards;
+}
+
+.corruptSpan {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+.corruptClean {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.corruptNoise {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(224, 96, 144, 0.8);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 180ms ease;
+}
+
+.corruptNoiseIntensified {
+  color: rgba(224, 96, 144, 0.96);
+  text-shadow: 0 0 10px rgba(224, 96, 144, 0.32);
+}
+
+.inlineErrMarker {
+  display: inline-block;
+  margin-left: 0.24rem;
+  color: rgba(224, 96, 144, 0.78);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.inlineErrMarkerBleed {
+  color: rgba(224, 96, 144, 0.96);
+}
+
+.corruptSpan[data-resolved="true"] .corruptClean {
+  opacity: 1;
+}
+
+.corruptSpan[data-resolved="true"] .corruptNoise {
+  opacity: 0;
+}
+
+.degradeStage1 .cardFace {
+  border-color: rgba(123, 94, 167, 0.18);
+}
+
+.degradeStage2 .cardFace {
+  border-color: rgba(123, 94, 167, 0.12);
+}
+
+.degradeStage3 .cardFace {
+  border-color: rgba(123, 94, 167, 0.08);
+}
+
+.degradeStage1 .cardScanline {
+  opacity: 0.65;
+}
+
+.degradeStage2 .cardScanline {
+  opacity: 0.8;
+}
+
+.degradeStage3 .cardScanline {
+  opacity: 1;
+}
+
+.degradeStage3:not(.memoryCardHeld) .cardScanline {
+  animation-duration: 2s;
+}
+
+.degradeStage3 .cardHeaderStatus {
+  color: rgba(224, 96, 144, 0.6);
+}
+
+.memoryCardResonating .cardFace {
+  animation: resonanceBorderPulse 1000ms ease forwards;
+}
+
+.memoryCardResonatingReduced .cardFace {
+  animation-name: resonanceBorderPulseReduced;
+  animation-duration: 1000ms;
+  animation-timing-function: ease;
+  animation-fill-mode: forwards;
+}
+
+.memoryCardResonating:not(.memoryCardHeld) .cardScanline {
+  animation-duration: 1s;
+}
+
+.bleedState .cardFace {
+  animation: bleedBorderPulse 800ms ease forwards;
+}
+
+.bleedState .cardScanline {
+  animation-name: scanlineRise;
+  animation-duration: 800ms;
+  animation-iteration-count: 1;
+}
+
+.archiveDimmedCard {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.archiveDimmedCard .cardScanline,
+.archiveDimmedCard .cardDashPulse,
+.archiveDimmedCard .cardFace {
+  animation-play-state: paused;
+}
+
+.uninvitedCard {
+  --progress-fill: #7b5ea7;
+  --progress-shadow: rgba(123, 94, 167, 0.34);
+  position: absolute;
+  top: var(--uninvited-top);
+  left: var(--uninvited-left);
+  z-index: 49;
+  width: 220px;
+  height: 280px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 1;
+  transform: translateX(-50%);
+  transition:
+    left var(--uninvited-transition, 3000ms) ease-in-out,
+    top var(--uninvited-transition, 3000ms) ease-in-out,
+    opacity 300ms ease;
+}
+
+.uninvitedCardEntering,
+.uninvitedCardVisible {
+  opacity: 1;
+}
+
+.uninvitedCardMount {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--uninvited-rotate));
+  transition: transform var(--uninvited-transition, 3000ms) ease-in-out;
+}
+
+.uninvitedFace {
+  width: 100%;
+  height: 100%;
+  box-shadow: none;
+  border-color: rgba(123, 94, 167, 0.2);
+  background:
+    linear-gradient(180deg, rgba(123, 94, 167, 0.1), transparent 24%),
+    linear-gradient(160deg, rgba(10, 8, 20, 0.98), rgba(9, 7, 18, 0.95));
+}
+
+.uninvitedCardVisible .uninvitedFace {
+  border-color: rgba(123, 94, 167, 0.2);
+}
+
+.uninvitedCardExiting {
+  pointer-events: none;
+}
+
+.uninvitedHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: rgba(123, 94, 167, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.uninvitedHeader span:last-child {
+  text-align: right;
+}
+
+.uninvitedBlankTitle {
+  display: block;
+  height: 2.25rem;
+  margin-top: 0.12rem;
+}
+
+.uninvitedBody {
+  color: rgba(232, 224, 245, 0.78);
+}
+
+.uninvitedHint {
+  color: rgba(123, 94, 167, 0.3);
+}
+
+.uninvitedScanline {
+  animation-name: scanlineRise;
+  animation-duration: 3s;
+  opacity: 0.55;
+}
+
+.uninvitedCard.memoryCardHovered .uninvitedFace {
+  border-color: rgba(123, 94, 167, 0.4);
+}
+
+.uninvitedCard.memoryCardHovered .uninvitedScanline {
+  animation-duration: 1s;
+}
+
+.archiveEventOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.archiveEventBlock {
+  position: relative;
+  width: min(26rem, 82vw);
+  padding: 0.9rem 1.1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.52rem;
+  border: 1px solid rgba(224, 96, 144, 0.35);
+  border-radius: 8px;
+  background: rgba(5, 4, 10, 0.55);
+  box-shadow:
+    0 0 28px rgba(6, 4, 12, 0.7),
+    0 0 18px rgba(224, 96, 144, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.archiveEventHeaderLine,
+.archiveEventBodyLine {
+  margin: 0;
+  font-family: var(--mono);
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.archiveEventHeaderLine {
+  color: rgba(224, 96, 144, 0.92);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 12px rgba(224, 96, 144, 0.38);
+}
+
+.archiveEventBodyLine {
+  color: rgba(184, 168, 212, 0.78);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  line-height: 1.75;
+}
+
+.blockedOverrideNotice {
+  position: absolute;
+  inset: 0;
+  z-index: 17;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  pointer-events: none;
+  animation: blockedOverrideNotice 2000ms ease forwards;
+}
+
+.blockedOverrideTitle,
+.blockedOverrideBody {
+  margin: 0;
+  font-family: var(--mono);
+  text-align: center;
+}
+
+.blockedOverrideTitle {
+  color: rgba(224, 96, 144, 0.6);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.blockedOverrideBody {
+  color: rgba(224, 96, 144, 0.6);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.originCardLayer {
+  position: absolute;
+  z-index: 10;
+  width: 220px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 600ms ease;
+}
+
+.originCardEntering,
+.originCardHolding {
+  opacity: 1;
+}
+
+.originCardHolding {
+  pointer-events: auto;
+}
+
+.originCardExiting {
+  opacity: 0;
+  transition-duration: 800ms;
+}
+
+.originCard {
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  height: 280px;
+  padding: 0.72rem 0.8rem 0.78rem;
+  border: 1px solid rgba(123, 94, 167, 0.15);
+  border-radius: 6px;
+  background: #080610;
+  transition: border-color 200ms ease;
+}
+
+.originCard:hover {
+  border-color: rgba(123, 94, 167, 0.35);
+}
+
+.originHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: rgba(123, 94, 167, 0.5);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.originTitle {
+  margin: 0.12rem 0 0;
+  color: rgba(232, 224, 245, 0.7);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.originSubtitle {
+  margin: 0;
+  color: rgba(123, 94, 167, 0.5);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.originBodyGap {
+  flex: 1;
+}
+
+.originDivider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin-top: auto;
+  background: rgba(123, 94, 167, 0.2);
+}
+
+.originSystemNoteBlock {
+  margin-top: 0.62rem;
+}
+
+.originSystemNoteLine,
+.originSystemNoteNote,
+.originFooter,
+.originSessionLine {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  line-height: 1.55;
+  text-transform: lowercase;
+  white-space: pre-line;
+}
+
+.originSystemNoteLine {
+  color: rgba(123, 94, 167, 0.45);
+}
+
+.originSystemNoteNote {
+  margin-top: 0.62rem;
+  color: rgba(123, 94, 167, 0.4);
+}
+
+.originSessionBlock {
+  margin-top: 0.48rem;
+  opacity: 1;
+  transition: opacity var(--origin-session-fade-ms, 300ms) ease;
+}
+
+.originSessionBlockFading {
+  opacity: 0;
+}
+
+.originSessionLine {
+  color: rgba(224, 96, 144, 0.55);
+}
+
+.originFooter {
+  margin-top: auto;
+  color: rgba(123, 94, 167, 0.25);
+}
+
+.monologueBlock {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  z-index: 11;
+  width: min(32.5rem, 86vw);
+  transform: translateX(-50%);
+  pointer-events: none;
+  text-align: center;
+}
+
+.monologueLine {
+  margin: 0;
+  color: rgba(232, 224, 245, 0.8);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 2;
+}
+
+.choiceLayer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58%;
+  bottom: 0;
+  z-index: 11;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(2rem, 12vh, 8rem) 1.5rem 1.5rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  overflow: hidden;
+}
+
+.choiceLayerVisible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.choiceContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 2.2rem;
+  pointer-events: auto;
+}
+
+.choiceMonologue {
+  margin: 0 0 0.3rem;
+  width: min(32rem, 86vw);
+  text-align: center;
+}
+
+.choiceMonologueLine {
+  margin: 0;
+  color: rgba(232, 224, 245, 0.46);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+
+.choicePrompt {
+  margin: 0;
+  color: rgba(232, 224, 245, 0.7);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.choiceRow {
+  width: min(46rem, 88vw);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.6rem, 3.6vw, 2.4rem);
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.choiceRow::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(54rem, 100%);
+  height: 14rem;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(123, 94, 167, 0.28), transparent 62%),
+    radial-gradient(circle at 50% 65%, rgba(224, 96, 144, 0.16), transparent 72%);
+  opacity: 0.8;
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.choiceOption {
+  position: relative;
+  z-index: 1;
+  width: min(18rem, 40vw);
+  padding: 1.1rem 1.05rem 1.2rem;
+  border: 1px solid rgba(123, 94, 167, 0.32);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(123, 94, 167, 0.16), transparent 26%),
+    linear-gradient(160deg, rgba(13, 10, 20, 0.98), rgba(10, 8, 16, 0.95));
+  color: rgba(232, 224, 245, 0.92);
+  text-align: left;
+  opacity: 0.86;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  box-shadow: 0 0 24px rgba(123, 94, 167, 0.12);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    filter 200ms ease;
+  text-shadow: 0 0 10px rgba(6, 4, 12, 0.6);
+  overflow: hidden;
+}
+
+.choiceOption::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 1px;
+  background: rgba(123, 94, 167, 0.5);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.choiceOption:disabled {
+  cursor: default;
+}
+
+.choiceOption:hover,
+.choiceOption:focus-visible {
+  opacity: 1;
+  transform: translateY(-2px);
+  border-color: rgba(123, 94, 167, 0.55);
+  box-shadow: 0 0 30px rgba(123, 94, 167, 0.22);
+}
+
+.choiceOptionDimmed {
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+
+.choiceOptionDimmed .choiceDescription {
+  color: rgba(195, 178, 218, 0.55);
+}
+
+.choiceOptionHidden {
+  opacity: 0;
+  transition-duration: 400ms;
+}
+
+.choiceOptionRecorded {
+  opacity: 0.62;
+  transition-duration: 200ms;
+}
+
+.choiceSeparator {
+  width: 1px;
+  height: 120px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(123, 94, 167, 0.22),
+    transparent
+  );
+  transition: opacity 300ms ease;
+}
+
+.choiceSeparatorHidden {
+  opacity: 0;
+}
+
+.choiceHeadingWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.choiceHeadingWrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.4rem;
+  height: 1px;
+  background: rgba(123, 94, 167, 0.75);
+  opacity: 0.45;
+  transition: opacity 150ms ease;
+}
+
+.choiceOption:hover .choiceHeadingWrap::after,
+.choiceOption:focus-visible .choiceHeadingWrap::after {
+  opacity: 1;
+}
+
+.choiceHeading {
+  display: block;
+  margin: 0;
+  font-size: 15px;
+  color: inherit;
+  font-family: var(--mono);
+  letter-spacing: 0.14em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.choiceMeta {
+  color: rgba(123, 94, 167, 0.6);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.choiceDescription {
+  display: block;
+  margin: 0.75rem 0 0;
+  color: rgba(214, 204, 230, 0.78);
+  font-size: 12px;
+  font-family: var(--serif);
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.choiceOptionSelected {
+  opacity: 1;
+  border-color: rgba(224, 96, 144, 0.7);
+  box-shadow: 0 0 36px rgba(224, 96, 144, 0.22);
+  transform: translateY(-1px);
+}
+
+.choiceOptionSelected::before {
+  opacity: 0.6;
+  background: rgba(224, 96, 144, 0.7);
+}
+
+.choiceOptionSelected .choiceHeadingWrap::after {
+  opacity: 1;
+  background: rgba(224, 96, 144, 0.7);
+}
+
+.choiceActive .monologueBlock {
+  top: 46%;
+  width: min(30rem, 86vw);
+}
+
+.choiceActive .monologueLine {
+  line-height: 1.8;
+}
+
+.choiceOption:hover .choiceDescription,
+.choiceOption:focus-visible .choiceDescription {
+  color: rgba(232, 224, 245, 0.92);
+}
+
+.choiceConfirmation,
+.choiceContinueLine,
+.choiceContinueHint,
+.replayLink {
+  margin: 0;
+  font-family: var(--mono);
+  text-align: center;
+}
+
+.choiceConfirmation {
+  color: rgba(123, 94, 167, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 1;
+  transition: opacity 300ms ease;
+}
+
+.choiceConfirmationFading {
+  opacity: 0;
+}
+
+.choiceContinueBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.4rem;
+}
+
+.choiceContinueLine {
+  color: rgba(232, 224, 245, 0.6);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+}
+
+.choiceContinueHint {
+  color: rgba(123, 94, 167, 0.45);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+.replayLink {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.6rem;
+  border: 0;
+  background: transparent;
+  color: rgba(123, 94, 167, 0.3);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  pointer-events: auto;
+  transform: none;
+  transition: color 200ms ease, text-decoration-color 200ms ease;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+
+.replayLink:hover,
+.replayLink:focus-visible {
+  color: rgba(123, 94, 167, 0.55);
+  text-decoration-color: currentColor;
+}
+
+@keyframes entryBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardArrive {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, var(--entry-offset-y, 20px), 0);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translate3d(0, calc(var(--entry-offset-y, 20px) * -0.2), 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scanlineDrop {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(278px);
+  }
+}
+
+@keyframes scanlineRise {
+  from {
+    transform: translateY(278px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashPulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes driftA {
+  0% {
+    transform: translate3d(
+        calc((-1px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(1px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-0.4deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  50% {
+    transform: translate3d(
+        calc((2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-6px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(1.2deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  100% {
+    transform: translate3d(
+        calc((-2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-3px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-1deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+}
+
+@keyframes driftB {
+  0% {
+    transform: translate3d(
+        calc((1px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(2px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(0.5deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  50% {
+    transform: translate3d(
+        calc((-3px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-5px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-1.3deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  100% {
+    transform: translate3d(
+        calc((2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-2px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(1deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+}
+
+@keyframes driftC {
+  0% {
+    transform: translate3d(
+        calc((-1px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(0px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-0.2deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  50% {
+    transform: translate3d(
+        calc((3px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-6px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(1.5deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  100% {
+    transform: translate3d(
+        calc((-3px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-3px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-1.1deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+}
+
+@keyframes driftD {
+  0% {
+    transform: translate3d(
+        calc((2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(1px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(0.7deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  50% {
+    transform: translate3d(
+        calc((-2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-6px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-1.4deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  100% {
+    transform: translate3d(
+        calc((3px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-2px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(0.9deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+}
+
+@keyframes driftE {
+  0% {
+    transform: translate3d(
+        calc((-2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(1px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-0.6deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  50% {
+    transform: translate3d(
+        calc((2px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-6px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(1.3deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+
+  100% {
+    transform: translate3d(
+        calc((-1px * var(--drift-factor, 1) * var(--motion-scale, 1)) + (var(--neighbor-bias-x, 0px) * var(--drift-factor, 1))),
+        calc(-3px * var(--drift-factor, 1) * var(--motion-scale, 1)),
+        0
+      )
+      rotate(calc(-1deg * var(--drift-factor, 1) * var(--motion-scale, 1)));
+  }
+}
+
+@media (max-width: 1100px) {
+  .memoryCard {
+    width: 204px;
+    height: 260px;
+  }
+
+  .uninvitedCard {
+    width: 204px;
+    height: 260px;
+  }
+
+  .entryOverlay {
+    padding: clamp(1.4rem, 6vw, 4rem);
+  }
+
+  .entryBody {
+    max-width: 40ch;
+  }
+}
+
+@media (max-width: 860px) {
+  .ghostLabel {
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.6rem;
+  }
+
+  .receivedHud {
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.62rem;
+  }
+
+  .pressureHud {
+    left: 1rem;
+    bottom: 1rem;
+  }
+
+  .memoryCard {
+    width: 184px;
+    height: 236px;
+  }
+
+  .uninvitedCard {
+    width: 184px;
+    height: 236px;
+  }
+
+  .choiceLayer {
+    align-items: flex-start;
+    padding-top: clamp(1.4rem, 8vh, 3.6rem);
+  }
+
+  .choiceRow {
+    width: 100%;
+    max-width: 32rem;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1.8rem;
+  }
+
+  .choiceOption {
+    width: 100%;
+  }
+
+  .choiceSeparator {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .entryChapter {
+    font-size: 0.62rem;
+  }
+
+  .entryTitle {
+    font-size: clamp(2.2rem, 16vw, 3.4rem);
+  }
+
+  .entryBody {
+    font-size: 0.86rem;
+    line-height: 1.74;
+  }
+
+  .entrySystemNote {
+    font-size: 0.6rem;
+  }
+
+  .memoryCard {
+    width: 170px;
+    height: 220px;
+  }
+
+  .uninvitedCard {
+    width: 170px;
+    height: 220px;
+  }
+
+  .cardTitle {
+    font-size: 20px;
+  }
+
+  .cardSubtitle {
+    font-size: 10px;
+  }
+
+  .cardBody {
+    font-size: 12px;
+  }
+
+  .choiceLayer {
+    padding-top: clamp(1.2rem, 6vh, 2.4rem);
+  }
+
+  .monologueBlock {
+    width: min(90vw, 28rem);
+  }
+}
+
+@keyframes ghostEcho {
+  0% {
+    opacity: 0;
+  }
+
+  25%,
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes responseLineLifecycle {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  83% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pressureOverload {
+  0%,
+  22% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  55% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes resonanceBorderPulse {
+  0% {
+    border-color: rgba(123, 94, 167, 0.25);
+  }
+
+  40% {
+    border-color: rgba(123, 94, 167, 0.55);
+  }
+
+  100% {
+    border-color: rgba(123, 94, 167, 0.25);
+  }
+}
+
+@keyframes resonanceBorderPulseReduced {
+  0% {
+    border-color: rgba(123, 94, 167, 0.25);
+  }
+
+  40% {
+    border-color: rgba(123, 94, 167, 0.4);
+  }
+
+  100% {
+    border-color: rgba(123, 94, 167, 0.25);
+  }
+}
+
+@keyframes bleedBorderPulse {
+  0% {
+    border-color: rgba(224, 96, 144, 0.6);
+  }
+
+  25% {
+    border-color: rgba(224, 96, 144, 0.6);
+  }
+
+  100% {
+    border-color: rgba(123, 94, 167, 0.25);
+  }
+}
+
+@keyframes blockedBorderPulse {
+  0%,
+  100% {
+    border-color: rgba(224, 96, 144, 0.35);
+  }
+
+  50% {
+    border-color: rgba(224, 96, 144, 0.55);
+  }
+}
+
+@keyframes blockedScanlineBurst {
+  0% {
+    transform: translateY(0);
+  }
+
+  12% {
+    transform: translateY(72px);
+  }
+
+  24% {
+    transform: translateY(132px);
+  }
+
+  36%,
+  48% {
+    transform: translateY(132px);
+  }
+
+  64% {
+    transform: translateY(212px);
+  }
+
+  76%,
+  88% {
+    transform: translateY(212px);
+  }
+
+  100% {
+    transform: translateY(278px);
+  }
+}
+
+@keyframes blockedOverrideNotice {
+  0% {
+    opacity: 0;
+  }
+
+  10%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,914 @@
+.bootRoot {
+  --boot-green: #98ffd9;
+  --boot-green-soft: rgba(152, 255, 217, 0.74);
+  --boot-amber: #ffc971;
+  --boot-shadow: rgba(12, 255, 167, 0.14);
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(83, 255, 196, 0.08), transparent 24%),
+    radial-gradient(circle at 80% 16%, rgba(255, 201, 113, 0.08), transparent 18%),
+    linear-gradient(180deg, #060c12 0%, #020407 100%);
+  color: var(--boot-green);
+}
+
+.bootRoot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(152, 255, 217, 0.055) 0,
+      rgba(152, 255, 217, 0.055) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  opacity: 0.32;
+  mix-blend-mode: screen;
+}
+
+.bootRoot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.06;
+}
+
+.bootInteractive {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  cursor: pointer;
+}
+
+.bootInteractivePassive {
+  cursor: default;
+}
+
+.bootShell {
+  display: grid;
+  min-height: 100vh;
+  width: 100%;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+}
+
+.bootPreludeInteractive {
+  transition:
+    opacity 240ms ease,
+    filter 240ms ease;
+}
+
+.bootPreludeFading {
+  opacity: 0;
+  filter: blur(6px);
+}
+
+.bootPreludeShell {
+  display: grid;
+  min-height: 100vh;
+  width: 100%;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+}
+
+.bootPreludeColumn,
+.bootPreludeRail {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 6.5rem 1.5rem 1.5rem;
+}
+
+.bootPreludeColumn {
+  justify-content: space-between;
+  border-right: 1px solid rgba(152, 255, 217, 0.1);
+}
+
+.bootPreludeRail {
+  justify-content: flex-end;
+  gap: 1.5rem;
+}
+
+.bootColumn {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6.5rem 1.5rem 1.5rem;
+}
+
+.bootColumnMain {
+  border-right: 1px solid rgba(152, 255, 217, 0.1);
+}
+
+.bootHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.bootPreludeHeader {
+  display: flex;
+  max-width: 42rem;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bootMeta {
+  margin: 0;
+  color: rgba(152, 255, 217, 0.62);
+  font-size: 0.72rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+}
+
+.titleBlock {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  position: relative;
+  margin: 0;
+  color: #e6fff5;
+  font-size: clamp(3.4rem, 8vw, 8rem);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 22px rgba(121, 255, 208, 0.24),
+    0 0 40px rgba(121, 255, 208, 0.12);
+}
+
+.title::before,
+.title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.title::before {
+  left: 0.04em;
+  color: rgba(255, 113, 113, 0.82);
+  clip-path: polygon(0 8%, 100% 0, 100% 32%, 0 36%);
+  animation: titleGlitchA 2.8s steps(1, end) infinite;
+}
+
+.title::after {
+  left: -0.03em;
+  color: rgba(113, 227, 255, 0.82);
+  clip-path: polygon(0 62%, 100% 56%, 100% 100%, 0 100%);
+  animation: titleGlitchB 2.1s steps(1, end) infinite;
+}
+
+.subtitle {
+  max-width: 28rem;
+  margin: 0;
+  color: rgba(214, 239, 230, 0.76);
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.bootPreludeSummary {
+  max-width: 34rem;
+  margin: 0;
+  color: rgba(214, 239, 230, 0.74);
+  font-size: 1rem;
+  line-height: 1.95;
+}
+
+.bootPreludeTimeline {
+  display: grid;
+  align-self: stretch;
+  gap: 0.85rem;
+  width: min(100%, 48rem);
+}
+
+.bootPreludeBeat {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(152, 255, 217, 0.1);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 32%),
+    rgba(3, 7, 12, 0.62);
+  padding: 1rem 1rem 1rem 1.2rem;
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.bootPreludeBeat::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.18rem;
+  background: linear-gradient(
+    180deg,
+    rgba(152, 255, 217, 0.12),
+    rgba(152, 255, 217, 0.66),
+    rgba(255, 201, 113, 0.48)
+  );
+}
+
+.bootPreludeBeatCurrent {
+  border-color: rgba(152, 255, 217, 0.2);
+  box-shadow:
+    0 22px 72px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(152, 255, 217, 0.04) inset;
+}
+
+.bootPreludeBeatLabel {
+  margin: 0;
+  color: rgba(152, 255, 217, 0.58);
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.bootPreludeBeatBody {
+  margin: 0.8rem 0 0;
+  color: #e6fff5;
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
+  line-height: 1.65;
+  text-wrap: balance;
+}
+
+.bootPreludeFooter {
+  display: flex;
+  width: min(100%, 48rem);
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 1.2rem;
+}
+
+.bootPreludeMeter {
+  height: 0.34rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bootPreludeMeterFill {
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(152, 255, 217, 0.76), rgba(255, 201, 113, 0.82));
+  box-shadow: 0 0 18px rgba(152, 255, 217, 0.22);
+}
+
+.logWindow {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: flex-end;
+  padding-top: 2rem;
+}
+
+.logStack {
+  width: min(100%, 54rem);
+}
+
+.logList {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logItem {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.45rem 0;
+  font-size: clamp(0.92rem, 1vw, 1.05rem);
+  line-height: 1.75;
+  text-shadow: 0 0 18px var(--boot-shadow);
+}
+
+.logItemSystem {
+  color: var(--boot-green);
+}
+
+.logItemSable {
+  color: #e7fff6;
+}
+
+.speaker {
+  color: rgba(152, 255, 217, 0.56);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.speakerWarning,
+.lineWarning {
+  color: rgba(255, 201, 113, 0.88);
+}
+
+.speakerSable {
+  color: #e7fff6;
+}
+
+.speakerSableLabel {
+  display: inline-flex;
+  width: fit-content;
+  border-bottom: 1px solid rgba(231, 255, 246, 0.6);
+  padding-bottom: 0.08rem;
+  transition: border-color 160ms ease;
+}
+
+.speakerSableInterrupted {
+  border-bottom-color: rgba(224, 96, 144, 0.92);
+}
+
+.line {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.lineStatic {
+  width: auto;
+}
+
+.lineCurrent {
+  min-height: 1.75em;
+}
+
+.lineStarted {
+  opacity: 1;
+}
+
+.lineSystem {
+  border-left: 2px solid rgba(152, 255, 217, 0.4);
+  padding-left: 0.9rem;
+  color: var(--boot-green);
+  letter-spacing: 0.04em;
+}
+
+.lineSable {
+  color: #e7fff6;
+  font-size: 1.05em;
+  letter-spacing: 0.01em;
+}
+
+.lineCursor {
+  margin-left: 0.08rem;
+  color: rgba(152, 255, 217, 0.72);
+  animation: cursorBlink 1s steps(1, end) infinite;
+}
+
+.choiceHeading {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  padding-bottom: 0.16rem;
+  font-size: 0.98rem;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+
+.choiceHeading::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  width: 0;
+  background: rgba(152, 255, 217, 0.82);
+  opacity: 0;
+  transition:
+    width 220ms ease,
+    opacity 220ms ease;
+}
+
+.choiceDetail {
+  color: rgba(214, 239, 230, 0.62);
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+}
+
+.choiceEntryDimmed {
+  opacity: 0.3;
+}
+
+.choiceEntrySelected {
+  color: #e7fff6;
+}
+
+.logUtilityRow {
+  display: flex;
+  width: 100%;
+  padding-left: calc(7.5rem + 1rem);
+  padding-top: 1rem;
+}
+
+.replayLink {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(152, 255, 217, 0.36);
+  cursor: pointer;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: lowercase;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.replayLink:hover,
+.replayLink:focus-visible {
+  color: rgba(152, 255, 217, 0.66);
+  opacity: 1;
+  outline: none;
+}
+
+.bootSidebar {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.tracePanel {
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+  flex-direction: column;
+  border: 1px solid rgba(152, 255, 217, 0.12);
+  background: rgba(4, 8, 13, 0.52);
+  backdrop-filter: blur(16px);
+}
+
+.traceSection,
+.hostResponseSection {
+  padding: 1.1rem 1rem;
+}
+
+.hostResponseSection {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hostResponseBody {
+  display: flex;
+  min-height: 3.9rem;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.panelChoiceSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0 1rem 1rem;
+}
+
+.panelChoiceSeparator {
+  height: 1px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(152, 255, 217, 0.3) 0 14px,
+    transparent 14px 22px
+  );
+}
+
+.panelChoiceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.panelChoiceButton {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(231, 255, 246, 0.84);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    opacity 220ms ease,
+    color 220ms ease,
+    max-height 280ms ease,
+    transform 220ms ease;
+}
+
+.panelChoiceButton:hover,
+.panelChoiceButton:focus-visible,
+.choiceEntrySelected {
+  color: #e7fff6;
+}
+
+.panelChoiceButton:hover .choiceHeading::after,
+.panelChoiceButton:focus-visible .choiceHeading::after,
+.choiceEntrySelected .choiceHeading::after {
+  width: 100%;
+  opacity: 1;
+}
+
+.panelChoiceButton:focus-visible {
+  outline: none;
+}
+
+.panelChoiceButtonHidden {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-0.2rem);
+}
+
+.panelChoiceSpeaker {
+  flex: 0 0 auto;
+  color: #e7fff6;
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(231, 255, 246, 0.6);
+  padding-bottom: 0.08rem;
+  line-height: 1.45;
+}
+
+.panelChoiceBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.statusPanel,
+.hintPanel {
+  border: 1px solid rgba(152, 255, 217, 0.12);
+  background: rgba(4, 8, 13, 0.52);
+  backdrop-filter: blur(16px);
+}
+
+.statusPanel {
+  padding: 1.1rem 1rem;
+}
+
+.statusTitle,
+.hintTitle {
+  margin: 0;
+  color: rgba(152, 255, 217, 0.62);
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.statusList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(217, 237, 228, 0.72);
+  font-size: 0.82rem;
+}
+
+.statusRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.statusValue {
+  color: #eefff8;
+  text-align: right;
+  transition: opacity 150ms ease;
+}
+
+.statusValueTransitioning {
+  opacity: 0;
+}
+
+.statusValueAlarm {
+  color: rgba(224, 96, 144, 0.7);
+}
+
+.statusValueAlarmPulse {
+  animation: threatPulse 3s ease-in-out infinite;
+}
+
+.hostResponseText {
+  color: rgba(152, 255, 217, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.75;
+  text-align: left;
+}
+
+.hostResponseSecondary {
+  margin: 0;
+  opacity: 0;
+  animation: hostResponseReveal 200ms ease forwards;
+}
+
+.hintPanel {
+  margin-top: auto;
+  padding: 1rem;
+}
+
+.hintBody {
+  margin: 0.9rem 0 0;
+  color: rgba(217, 237, 228, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+
+.hintFooter {
+  margin: 1rem 0 0;
+  color: rgba(152, 255, 217, 0.56);
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.advancePrompt {
+  margin-top: 1rem;
+  color: rgba(152, 255, 217, 0.52);
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.advanceInstruction {
+  color: rgba(152, 255, 217, 0.4);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  transition: opacity 400ms ease;
+}
+
+.advanceInstructionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding: 0 1rem 1rem;
+}
+
+.advanceInstructionHidden {
+  opacity: 0;
+}
+
+.advanceInstructionReady {
+  opacity: 0.8;
+}
+
+.advanceInstructionDesktop,
+.advanceInstructionMobile {
+  display: inline;
+}
+
+.advanceInstructionMobile {
+  display: none;
+}
+
+.advanceCursor {
+  display: inline-block;
+  margin-left: 0.1rem;
+  animation: cursorBlink 1s steps(1, end) infinite;
+}
+
+.continuePrompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+  color: rgba(152, 255, 217, 0.78);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  line-height: 1.3;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.continuePrompt:hover,
+.continuePrompt:focus-visible {
+  color: #eefff8;
+  outline: none;
+}
+
+.interruptedTag {
+  color: rgba(224, 96, 144, 0.5);
+}
+
+.interruptedTagVisible {
+  animation: interruptedFadeIn 200ms ease forwards;
+}
+
+.titlePulseActive {
+  animation: titlePulse 1.2s ease;
+}
+
+@keyframes typeLine {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: calc(var(--type-steps) * 1ch);
+  }
+}
+
+@keyframes titleGlitchA {
+  0%,
+  90%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+
+  91% {
+    opacity: 1;
+    transform: translate3d(0.02em, -0.02em, 0) skewX(-10deg);
+  }
+
+  93% {
+    opacity: 1;
+    transform: translate3d(-0.03em, 0.01em, 0) skewX(10deg);
+  }
+}
+
+@keyframes titleGlitchB {
+  0%,
+  82%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+
+  84% {
+    opacity: 1;
+    transform: translate3d(-0.04em, 0.02em, 0) skewX(12deg);
+  }
+
+  86% {
+    opacity: 1;
+    transform: translate3d(0.03em, -0.01em, 0) skewX(-12deg);
+  }
+}
+
+@keyframes titlePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1.1;
+  }
+}
+
+@keyframes threatPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes cursorBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes interruptedFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hostResponseReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 960px) {
+  .bootShell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bootPreludeShell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bootColumn {
+    padding-top: 5.5rem;
+  }
+
+  .bootPreludeColumn,
+  .bootPreludeRail {
+    padding-top: 5.5rem;
+  }
+
+  .bootColumnMain {
+    border-right: 0;
+    border-bottom: 1px solid rgba(152, 255, 217, 0.1);
+  }
+
+  .bootPreludeColumn {
+    border-right: 0;
+    border-bottom: 1px solid rgba(152, 255, 217, 0.1);
+  }
+
+  .bootSidebar {
+    min-height: auto;
+  }
+
+  .bootPreludeRail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .bootColumn {
+    padding: 5rem 1rem 1rem;
+  }
+
+  .bootPreludeColumn,
+  .bootPreludeRail {
+    padding: 5rem 1rem 1rem;
+  }
+
+  .logItem {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+
+  .logUtilityRow {
+    padding-left: 0;
+  }
+
+  .line {
+    white-space: normal;
+  }
+
+  .tracePanel {
+    min-height: auto;
+  }
+
+  .bootPreludeRail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bootPreludeBeatBody {
+    font-size: 0.95rem;
+    text-wrap: pretty;
+  }
+
+  .advanceInstructionDesktop {
+    display: none;
+  }
+
+  .advanceInstructionMobile {
+    display: inline;
+  }
+}
