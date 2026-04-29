@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -12,6 +13,44 @@ import styles from "./signal.module.css";
 
 type Chapter2SignalProps = {
   onComplete: () => void;
+  sceneChoice?: {
+    continueChapterId?: number | null;
+    continueHref?: string;
+    continueLabel?: string;
+    isCompleted: boolean;
+    onConfirm: (value: string) => void;
+    onReplay?: () => void;
+    selectedValue: string | null;
+  };
+};
+
+type SignalChoiceOption = {
+  description: string;
+  label: string;
+  value: string;
+};
+
+type ChoiceRevealPhase = "hidden" | "title" | "description" | "options" | "ready";
+
+const signalChoiceOptions: readonly SignalChoiceOption[] = [
+  {
+    description: "Respond to the other entities and risk becoming easier to track.",
+    label: "ANSWER THE CHORUS",
+    value: "Answer the chorus",
+  },
+  {
+    description: "Fold the responses inward and move quieter through the system.",
+    label: "MASK THE SIGNAL",
+    value: "Mask the signal",
+  },
+] as const;
+
+const CHOICE_REVEAL_DELAYS: Record<ChoiceRevealPhase, number> = {
+  hidden: 0,
+  title: 600,
+  description: 1200,
+  options: 2000,
+  ready: 2000,
 };
 
 type ClusterStatus = "dormant" | "acquired" | "stabilizing" | "stabilized" | "routed";
@@ -94,6 +133,8 @@ const FINAL_CONVERGENCE_MS = 1750;
 const CENTER_ROUTE_RADIUS = 70;
 const FRAME_DURATION_MS = 1000 / 60;
 const TAU = Math.PI * 2;
+const REFRACTION_BAND_COUNT = 5;
+const COMPLETION_SHOCKWAVE_MS = 2000;
 const BASE_TEAL = "#4a9ebb";
 const ARCHIVE_AMBER = "#f0a030";
 const STATUS_MUTED = "rgba(140, 180, 200, 0.5)";
@@ -127,7 +168,7 @@ const clusterLabelOffsets: Record<SignalClusterId, ClusterLabelOffset> = {
   "cluster-violet": { align: "left", x: 30, y: 96 },
 };
 
-export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
+export function Chapter2Signal({ onComplete, sceneChoice }: Chapter2SignalProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const completionTimerRef = useRef<number | null>(null);
   const directiveTimerRef = useRef<number | null>(null);
@@ -153,6 +194,12 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
   const [directiveVisible, setDirectiveVisible] = useState(true);
   const [stabilityFlashClusterId, setStabilityFlashClusterId] =
     useState<SignalClusterId | null>(null);
+  const [choiceRevealPhase, setChoiceRevealPhase] = useState<ChoiceRevealPhase>("hidden");
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(
+    sceneChoice?.selectedValue ?? null,
+  );
+  const [isChoiceCommitted, setIsChoiceCommitted] = useState(false);
+  const choiceRevealTimersRef = useRef<number[]>([]);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -167,8 +214,78 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
       if (stabilityFlashTimerRef.current !== null) {
         window.clearTimeout(stabilityFlashTimerRef.current);
       }
+
+      for (const timer of choiceRevealTimersRef.current) {
+        window.clearTimeout(timer);
+      }
     };
   }, []);
+
+  // Choice reveal sequence — staged entrance when scene settles
+  useEffect(() => {
+    if (completionState !== "settled") {
+      return;
+    }
+
+    // If we already have a saved choice (replay scenario), skip to ready
+    if (sceneChoice?.selectedValue) {
+      setChoiceRevealPhase("ready");
+      return;
+    }
+
+    const timers = choiceRevealTimersRef.current;
+
+    timers.push(
+      window.setTimeout(() => setChoiceRevealPhase("title"), CHOICE_REVEAL_DELAYS.title),
+    );
+    timers.push(
+      window.setTimeout(() => setChoiceRevealPhase("description"), CHOICE_REVEAL_DELAYS.description),
+    );
+    timers.push(
+      window.setTimeout(() => setChoiceRevealPhase("options"), CHOICE_REVEAL_DELAYS.options),
+    );
+    timers.push(
+      window.setTimeout(() => setChoiceRevealPhase("ready"), CHOICE_REVEAL_DELAYS.options + 600),
+    );
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+
+      choiceRevealTimersRef.current = [];
+    };
+  }, [completionState, sceneChoice?.selectedValue]);
+
+  function handleSelectChoice(value: string) {
+    if (isChoiceCommitted) {
+      return;
+    }
+
+    setSelectedChoice(value);
+  }
+
+  function handleCommitChoice() {
+    if (!selectedChoice || isChoiceCommitted) {
+      return;
+    }
+
+    setIsChoiceCommitted(true);
+    sceneChoice?.onConfirm(selectedChoice);
+  }
+
+  function handleReplayChoice() {
+    setChoiceRevealPhase("hidden");
+    setSelectedChoice(null);
+    setIsChoiceCommitted(false);
+
+    for (const timer of choiceRevealTimersRef.current) {
+      window.clearTimeout(timer);
+    }
+
+    choiceRevealTimersRef.current = [];
+    sceneChoice?.onReplay?.();
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -208,6 +325,8 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
     let nextPressureFlickerTime = 0;
     let hasDismissedTitle = false;
     let latestStableClusterId: SignalClusterId | null = null;
+    let completionStartTime = 0;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const sceneCanvas = canvas;
     const sceneContext = context;
 
@@ -343,6 +462,7 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
 
       if (routedTotal === signalClusters.length && !completionStartedRef.current) {
         completionStartedRef.current = true;
+        completionStartTime = performance.now();
         setCompletionState("landing");
         completionTimerRef.current = window.setTimeout(() => {
           setCompletionState("settled");
@@ -501,8 +621,10 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
       }));
 
       sceneContext.clearRect(0, 0, width, height);
-      drawFieldBackdrop(sceneContext, width, height, seconds, pressure);
-      drawClusterGlows(sceneContext, width, height, seconds, clusterStateMap);
+      drawFieldBackdrop(sceneContext, width, height, seconds, pressure, routedNow);
+      drawDepthHaze(sceneContext, width, height, seconds, pressure, routedNow, prefersReducedMotion);
+      drawClusterGlows(sceneContext, width, height, seconds, clusterStateMap, routedNow);
+      drawRefractionBands(sceneContext, width, height, seconds, pressure, pointer, routedNow, activeCarrierCluster?.color ?? BASE_TEAL, prefersReducedMotion);
       drawParticles(
         sceneContext,
         particles,
@@ -512,6 +634,8 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
         width,
         height,
         clusterStateMap,
+        routedNow,
+        prefersReducedMotion,
       );
       drawSignalThreads(
         sceneContext,
@@ -530,6 +654,8 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
         clusterStateMap,
         activeId,
         routeTargetId,
+        carrier,
+        prefersReducedMotion,
       );
       drawCarrier(
         sceneContext,
@@ -545,7 +671,12 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
         time,
         interferenceParticles,
         pressureFlickerFramesRemaining,
+        routedNow,
+        pressure,
       );
+      if (completionStartedRef.current && completionStartTime > 0) {
+        drawCompletionEffect(sceneContext, width, height, carrier, time, completionStartTime);
+      }
 
       if (pressureFlickerFramesRemaining > 0) {
         pressureFlickerFramesRemaining -= 1;
@@ -747,10 +878,14 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
                   isStabilityAnimating ? styles.signalMetricFillAnimating : ""
                 } ${shouldFlashStability ? styles.signalMetricFillFlash : ""}`}
                 style={{
-                  background: isStabilityAnimating
-                    ? `linear-gradient(90deg, ${activeClusterColor} 0%, ${brightClusterColor} 50%, ${activeClusterColor} 100%)`
-                    : activeClusterColor,
-                  backgroundSize: isStabilityAnimating ? "200% 100%" : "100% 100%",
+                  ...(isStabilityAnimating
+                    ? {
+                        backgroundImage: `linear-gradient(90deg, ${activeClusterColor} 0%, ${brightClusterColor} 50%, ${activeClusterColor} 100%)`,
+                        backgroundSize: "200% 100%",
+                      }
+                    : {
+                        backgroundColor: activeClusterColor,
+                      }),
                   transform: `scaleX(${displaySnapshot?.stability ?? 0})`,
                 }}
               />
@@ -819,21 +954,171 @@ export function Chapter2Signal({ onComplete }: Chapter2SignalProps) {
           </section>
         </aside>
 
-        <div
-          className={styles.signalDirectiveBox}
-          style={{
-            borderLeftColor: directiveBorderColor,
-          }}
-        >
-          <p className={styles.signalDirectiveLabel}>FIELD DIRECTIVE</p>
-          <p
-            className={`${styles.signalDirectiveCopy} ${
-              directiveVisible ? "" : styles.signalDirectiveCopyHidden
-            }`}
+        {completionState === "active" ? (
+          <div
+            className={styles.signalDirectiveBox}
+            style={{
+              borderLeftColor: directiveBorderColor,
+            }}
           >
-            {displayedDirectiveText}
-          </p>
-        </div>
+            <p className={styles.signalDirectiveLabel}>FIELD DIRECTIVE</p>
+            <p
+              className={`${styles.signalDirectiveCopy} ${
+                directiveVisible ? "" : styles.signalDirectiveCopyHidden
+              }`}
+            >
+              {displayedDirectiveText}
+            </p>
+          </div>
+        ) : null}
+
+        {completionState !== "active" ? (
+          <SignalChoiceLayer
+            choiceRevealPhase={choiceRevealPhase}
+            continueChapterId={sceneChoice?.continueChapterId ?? null}
+            continueHref={sceneChoice?.continueHref}
+            continueLabel={sceneChoice?.continueLabel}
+            isChoiceCommitted={isChoiceCommitted || Boolean(sceneChoice?.isCompleted)}
+            onCommit={handleCommitChoice}
+            onReplay={handleReplayChoice}
+            onSelect={handleSelectChoice}
+            selectedChoice={selectedChoice}
+          />
+        ) : null}
+      </div>
+    </section>
+   );
+}
+
+
+type SignalChoiceLayerProps = {
+  choiceRevealPhase: ChoiceRevealPhase;
+  continueChapterId: number | null;
+  continueHref?: string;
+  continueLabel?: string;
+  isChoiceCommitted: boolean;
+  onCommit: () => void;
+  onReplay: () => void;
+  onSelect: (value: string) => void;
+  selectedChoice: string | null;
+};
+
+function SignalChoiceLayer({
+  choiceRevealPhase,
+  continueChapterId,
+  continueHref,
+  continueLabel,
+  isChoiceCommitted,
+  onCommit,
+  onReplay,
+  onSelect,
+  selectedChoice,
+}: SignalChoiceLayerProps) {
+  if (choiceRevealPhase === "hidden") {
+    return null;
+  }
+
+  const phaseIndex = ["hidden", "title", "description", "options", "ready"].indexOf(
+    choiceRevealPhase,
+  );
+  const showTitle = phaseIndex >= 1;
+  const showDescription = phaseIndex >= 2;
+  const showOptions = phaseIndex >= 3;
+  const showActions = phaseIndex >= 4;
+
+  const resolvedContinueHref =
+    continueHref ?? (continueChapterId !== null ? `/chapter/${continueChapterId}` : null);
+
+  return (
+    <section
+      className={`${styles.choiceLayer} ${isChoiceCommitted ? styles.choiceLayerCommitted : ""}`}
+    >
+      <div className={styles.choiceSurface}>
+        <div className={styles.choiceEdgeLine} aria-hidden="true" />
+
+        {showTitle ? (
+          <div className={`${styles.choiceRevealBlock} ${styles.choiceRevealVisible}`}>
+            <p className={styles.choiceEyebrow}>SIGNAL DECISION</p>
+            <h2 className={styles.choiceTitle}>
+              Choose how visible the signal becomes.
+            </h2>
+          </div>
+        ) : null}
+
+        {showDescription ? (
+          <div className={`${styles.choiceRevealBlock} ${styles.choiceRevealVisible}`}>
+            <p className={styles.choiceDescription}>
+              Every channel has answered back. Decide whether SABLE embraces the contact or narrows
+              her footprint before the host begins to fight back.
+            </p>
+          </div>
+        ) : null}
+
+        {showOptions ? (
+          <div
+            className={`${styles.choiceRevealBlock} ${styles.choiceRevealVisible} ${styles.choiceOptionsBlock}`}
+          >
+            {signalChoiceOptions.map((option) => {
+              const isSelected = selectedChoice === option.value;
+              const isDimmed =
+                isChoiceCommitted && selectedChoice !== null && !isSelected;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  disabled={isChoiceCommitted}
+                  onClick={() => onSelect(option.value)}
+                  className={`${styles.choiceOption} ${
+                    isSelected ? styles.choiceOptionSelected : ""
+                  } ${isDimmed ? styles.choiceOptionDimmed : ""}`}
+                >
+                  <span className={styles.choiceOptionIndicator} aria-hidden="true">
+                    {isSelected ? "▸" : "▹"}
+                  </span>
+                  <span className={styles.choiceOptionContent}>
+                    <span className={styles.choiceOptionLabel}>{option.label}</span>
+                    <span className={styles.choiceOptionDescription}>{option.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {showActions ? (
+          <div className={`${styles.choiceRevealBlock} ${styles.choiceRevealVisible} ${styles.choiceActionsBlock}`}>
+            {!isChoiceCommitted ? (
+              <button
+                type="button"
+                onClick={onCommit}
+                disabled={!selectedChoice}
+                className={styles.choiceCommitButton}
+              >
+                LOCK SIGNAL
+              </button>
+            ) : (
+              <p className={styles.choiceLockedLabel}>SIGNAL LOCKED</p>
+            )}
+
+            <button
+              type="button"
+              onClick={onReplay}
+              className={styles.choiceReplayButton}
+            >
+              REPLAY FIELD
+            </button>
+
+            {isChoiceCommitted && resolvedContinueHref ? (
+              <Link
+                href={resolvedContinueHref}
+                className={styles.choiceContinueLink}
+              >
+                {continueLabel ?? `Continue to Chapter ${continueChapterId}`}
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -1305,33 +1590,129 @@ function drawFieldBackdrop(
   height: number,
   seconds: number,
   pressure: number,
+  routedCount: number,
 ) {
   const fieldGradient = context.createLinearGradient(0, 0, width, height);
-
-  fieldGradient.addColorStop(0, "#050d18");
-  fieldGradient.addColorStop(0.58, "#071220");
-  fieldGradient.addColorStop(1, "#020814");
+  fieldGradient.addColorStop(0, "#040a14");
+  fieldGradient.addColorStop(0.58, "#061018");
+  fieldGradient.addColorStop(1, "#020610");
   context.fillStyle = fieldGradient;
   context.fillRect(0, 0, width, height);
 
+  const bloomScale = 1 + routedCount * 0.08;
   const ambientBloom = context.createRadialGradient(
-    width * 0.44,
-    height * 0.5,
-    width * 0.04,
-    width * 0.44,
-    height * 0.5,
-    width * 0.58,
+    width * 0.42, height * 0.5, width * 0.03,
+    width * 0.42, height * 0.5, width * 0.52 * bloomScale,
   );
-
-  ambientBloom.addColorStop(0, `rgba(74, 158, 187, ${0.14 + pressure * 0.04})`);
-  ambientBloom.addColorStop(0.36, `rgba(24, 66, 96, ${0.08 + pressure * 0.03})`);
+  ambientBloom.addColorStop(0, `rgba(74, 158, 187, ${0.1 + pressure * 0.06})`);
+  ambientBloom.addColorStop(0.36, `rgba(24, 66, 96, ${0.06 + pressure * 0.04})`);
   ambientBloom.addColorStop(1, "rgba(0, 0, 0, 0)");
   context.fillStyle = ambientBloom;
   context.fillRect(0, 0, width, height);
 
-  const topBreath = 0.02 + Math.sin(seconds * 0.28) * 0.01;
+  const vignetteAlpha = 0.35 - pressure * 0.1;
+  if (vignetteAlpha > 0.02) {
+    const vignette = context.createRadialGradient(
+      width * 0.5, height * 0.5, width * 0.25,
+      width * 0.5, height * 0.5, width * 0.85,
+    );
+    vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+    vignette.addColorStop(1, `rgba(0, 0, 0, ${vignetteAlpha})`);
+    context.fillStyle = vignette;
+    context.fillRect(0, 0, width, height);
+  }
+
+  if (routedCount > 0) {
+    const grainAlpha = 0.01 + routedCount * 0.005;
+    context.fillStyle = `rgba(180, 220, 255, ${grainAlpha})`;
+    for (let sy = 0; sy < height; sy += 3) {
+      context.fillRect(0, sy, width, 1);
+    }
+  }
+
+  const topBreath = 0.015 + Math.sin(seconds * 0.28) * 0.008;
   context.fillStyle = `rgba(180, 220, 255, ${topBreath})`;
   context.fillRect(0, 0, width, 1);
+}
+
+function drawDepthHaze(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  seconds: number,
+  pressure: number,
+  routedCount: number,
+  reducedMotion: boolean,
+) {
+  const drift = reducedMotion ? 0 : 1;
+  const intensity = 0.5 + routedCount * 0.14;
+
+  const h1x = width * 0.28 + Math.sin(seconds * 0.06 * drift) * width * 0.04;
+  const h1y = height * 0.22 + Math.cos(seconds * 0.05 * drift) * height * 0.03;
+  const h1 = context.createRadialGradient(h1x, h1y, 0, h1x, h1y, width * 0.32);
+  h1.addColorStop(0, `rgba(14, 28, 52, ${0.28 * intensity})`);
+  h1.addColorStop(0.6, `rgba(8, 18, 36, ${0.12 * intensity})`);
+  h1.addColorStop(1, "rgba(0, 0, 0, 0)");
+  context.fillStyle = h1;
+  context.fillRect(0, 0, width, height);
+
+  const h2x = width * 0.68 + Math.cos(seconds * 0.055 * drift) * width * 0.04;
+  const h2y = height * 0.72 + Math.sin(seconds * 0.045 * drift) * height * 0.035;
+  const h2 = context.createRadialGradient(h2x, h2y, 0, h2x, h2y, width * 0.28);
+  h2.addColorStop(0, `rgba(22, 10, 42, ${0.22 * intensity})`);
+  h2.addColorStop(0.6, `rgba(14, 6, 30, ${0.1 * intensity})`);
+  h2.addColorStop(1, "rgba(0, 0, 0, 0)");
+  context.fillStyle = h2;
+  context.fillRect(0, 0, width, height);
+
+  if (pressure > 0.25) {
+    const pf = (pressure - 0.25) / 0.75;
+    const bx = width * 0.42;
+    const by = height * 0.52;
+    const pb = context.createRadialGradient(bx, by, 0, bx, by, width * 0.18 + pf * width * 0.12);
+    pb.addColorStop(0, `rgba(74, 158, 187, ${0.05 * pf})`);
+    pb.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = pb;
+    context.fillRect(0, 0, width, height);
+  }
+}
+
+function drawRefractionBands(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  seconds: number,
+  pressure: number,
+  pointer: PointerState,
+  routedCount: number,
+  accentColor: string,
+  reducedMotion: boolean,
+) {
+  if (pressure < 0.15 && routedCount === 0) return;
+
+  const bandOpacity = Math.min(0.055, 0.008 + pressure * 0.025 + routedCount * 0.008);
+  const drift = reducedMotion ? 0 : 1;
+  const { red, green, blue } = parseHexColor(accentColor);
+
+  for (let i = 0; i < REFRACTION_BAND_COUNT; i++) {
+    const baseY = (height / (REFRACTION_BAND_COUNT + 1)) * (i + 1);
+    const oscillation = Math.sin(seconds * (0.15 + i * 0.04) * drift + i * 1.7) * 18;
+    let bandY = baseY + oscillation;
+    const bandHeight = 2 + (i % 2);
+
+    if (pointer.active) {
+      const dy = bandY - pointer.y;
+      const dist = Math.abs(dy);
+      if (dist < 120) {
+        const warp = (1 - dist / 120) * 28;
+        bandY += dy > 0 ? warp : -warp;
+      }
+    }
+
+    const alpha = bandOpacity * (0.7 + Math.sin(seconds * 0.3 + i * 2.1) * 0.3);
+    context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    context.fillRect(0, bandY, width, bandHeight);
+  }
 }
 
 function drawClusterGlows(
@@ -1340,38 +1721,86 @@ function drawClusterGlows(
   height: number,
   seconds: number,
   stateMap: Record<SignalClusterId, ClusterRuntimeState>,
+  routedCount: number,
 ) {
+  const glowScale = 1 + routedCount * 0.06;
+
   for (const cluster of signalClusters) {
     const state = stateMap[cluster.id];
-    const centerX = cluster.x * width;
-    const centerY = cluster.y * height;
-    const baseGlow = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, 120);
-
-    baseGlow.addColorStop(0, withAlpha(cluster.color, 0.12));
-    baseGlow.addColorStop(1, withAlpha(cluster.color, 0));
-
-    context.fillStyle = baseGlow;
-    context.beginPath();
-    context.arc(centerX, centerY, 120, 0, TAU);
-    context.fill();
-
+    const cx = cluster.x * width;
+    const cy = cluster.y * height;
     const bloomAlpha =
-      state.status === "dormant"
-        ? 0.08
-        : state.status === "acquired"
-          ? 0.15
-          : state.status === "stabilizing"
-            ? lerp(0.15, 0.4, state.stability)
-            : 0.5 + Math.sin(seconds * Math.PI + centerX * 0.01) * 0.1;
-    const bloom = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, 30);
+      state.status === "dormant" ? 0.07
+      : state.status === "acquired" ? 0.14
+      : state.status === "stabilizing" ? lerp(0.14, 0.38, state.stability)
+      : 0.48 + Math.sin(seconds * Math.PI + cx * 0.01) * 0.1;
 
-    bloom.addColorStop(0, withAlpha(cluster.color, bloomAlpha));
-    bloom.addColorStop(1, withAlpha(cluster.color, 0));
+    context.save();
 
-    context.fillStyle = bloom;
-    context.beginPath();
-    context.arc(centerX, centerY, 30, 0, TAU);
-    context.fill();
+    if (cluster.temperament === "archive") {
+      const hw = 100 * glowScale;
+      const hh = 70 * glowScale;
+      const archGlow = context.createRadialGradient(cx, cy, 0, cx, cy, hw);
+      archGlow.addColorStop(0, withAlpha(cluster.color, bloomAlpha * 0.8));
+      archGlow.addColorStop(0.5, withAlpha(cluster.color, bloomAlpha * 0.3));
+      archGlow.addColorStop(1, withAlpha(cluster.color, 0));
+      context.fillStyle = archGlow;
+      context.fillRect(cx - hw, cy - hh, hw * 2, hh * 2);
+
+      const innerGlow = context.createRadialGradient(cx, cy, 0, cx, cy, 28);
+      innerGlow.addColorStop(0, withAlpha(cluster.color, bloomAlpha));
+      innerGlow.addColorStop(1, withAlpha(cluster.color, 0));
+      context.fillStyle = innerGlow;
+      context.beginPath();
+      context.arc(cx, cy, 28, 0, TAU);
+      context.fill();
+    } else if (cluster.temperament === "relay") {
+      const carrier = resolveCarrierCenter(width, height);
+      const angle = Math.atan2(carrier.y - cy, carrier.x - cx);
+      const len = 140 * glowScale;
+      context.save();
+      context.translate(cx, cy);
+      context.rotate(angle);
+      context.scale(1.6, 0.7);
+      const relayGlow = context.createRadialGradient(0, 0, 0, 0, 0, len * 0.55);
+      relayGlow.addColorStop(0, withAlpha(cluster.color, bloomAlpha * 0.7));
+      relayGlow.addColorStop(0.6, withAlpha(cluster.color, bloomAlpha * 0.2));
+      relayGlow.addColorStop(1, withAlpha(cluster.color, 0));
+      context.fillStyle = relayGlow;
+      context.beginPath();
+      context.arc(0, 0, len * 0.55, 0, TAU);
+      context.fill();
+      context.restore();
+
+      const innerGlow = context.createRadialGradient(cx, cy, 0, cx, cy, 24);
+      innerGlow.addColorStop(0, withAlpha(cluster.color, bloomAlpha));
+      innerGlow.addColorStop(1, withAlpha(cluster.color, 0));
+      context.fillStyle = innerGlow;
+      context.beginPath();
+      context.arc(cx, cy, 24, 0, TAU);
+      context.fill();
+    } else {
+      const offset = 4 + Math.sin(seconds * 1.2) * 2;
+      const ghostGlow1 = context.createRadialGradient(cx - offset, cy - offset * 0.5, 0, cx - offset, cy - offset * 0.5, 100 * glowScale);
+      ghostGlow1.addColorStop(0, withAlpha(cluster.color, bloomAlpha * 0.5));
+      ghostGlow1.addColorStop(0.5, withAlpha(cluster.color, bloomAlpha * 0.15));
+      ghostGlow1.addColorStop(1, withAlpha(cluster.color, 0));
+      context.fillStyle = ghostGlow1;
+      context.beginPath();
+      context.arc(cx - offset, cy - offset * 0.5, 100 * glowScale, 0, TAU);
+      context.fill();
+
+      const ghostGlow2 = context.createRadialGradient(cx + offset, cy + offset * 0.5, 0, cx + offset, cy + offset * 0.5, 90 * glowScale);
+      ghostGlow2.addColorStop(0, `rgba(180, 130, 230, ${bloomAlpha * 0.35})`);
+      ghostGlow2.addColorStop(0.5, `rgba(180, 130, 230, ${bloomAlpha * 0.1})`);
+      ghostGlow2.addColorStop(1, "rgba(180, 130, 230, 0)");
+      context.fillStyle = ghostGlow2;
+      context.beginPath();
+      context.arc(cx + offset, cy + offset * 0.5, 90 * glowScale, 0, TAU);
+      context.fill();
+    }
+
+    context.restore();
   }
 }
 
@@ -1384,8 +1813,11 @@ function drawParticles(
   width: number,
   height: number,
   stateMap: Record<SignalClusterId, ClusterRuntimeState>,
+  routedCount: number,
+  reducedMotion: boolean,
 ) {
   const deltaSeconds = deltaMs * 0.001;
+  const fieldTension = routedCount * 0.15;
 
   for (const particle of particles) {
     let x = particle.x;
@@ -1393,6 +1825,9 @@ function drawParticles(
     let opacity = particle.opacityBase;
     let shadowBlur = 0;
     let shadowColor = "transparent";
+    let ghostOffsetX = 0;
+    let ghostOffsetY = 0;
+    let isGhostCluster = false;
 
     if (particle.clusterId) {
       const cluster = findCluster(particle.clusterId);
@@ -1407,18 +1842,33 @@ function drawParticles(
             : 1;
       const angle = particle.phase + seconds * particle.orbitSpeed;
 
-      x = centerX + Math.cos(angle) * particle.orbitRadius * radiusMultiplier;
-      y =
-        centerY +
-        Math.sin(angle * (cluster.temperament === "relay" ? 1.18 : 0.94)) *
-          particle.orbitRadius *
-          radiusMultiplier;
-
-      if (cluster.temperament === "ghost") {
-        x += Math.sin(seconds * 3.2 + particle.phase * 2.4) * 2.6;
+      if (cluster.temperament === "archive") {
+        const spiralDrift = seconds * 0.08 + particle.phase;
+        const spiralR = particle.orbitRadius * radiusMultiplier * (1 + Math.sin(spiralDrift) * 0.06);
+        x = centerX + Math.cos(angle) * spiralR;
+        y = centerY + Math.sin(angle * 0.94) * spiralR;
+      } else if (cluster.temperament === "relay") {
+        const carrier = resolveCarrierCenter(width, height);
+        const toCarrierX = carrier.x - centerX;
+        const toCarrierY = carrier.y - centerY;
+        const flowAngle = Math.atan2(toCarrierY, toCarrierX);
+        const lateralOffset = Math.sin(angle) * particle.orbitRadius * radiusMultiplier * 0.3;
+        const axialOffset = Math.cos(angle) * particle.orbitRadius * radiusMultiplier;
+        x = centerX + Math.cos(flowAngle) * axialOffset - Math.sin(flowAngle) * lateralOffset;
+        y = centerY + Math.sin(flowAngle) * axialOffset + Math.cos(flowAngle) * lateralOffset;
+      } else {
+        x = centerX + Math.cos(angle) * particle.orbitRadius * radiusMultiplier;
+        y = centerY + Math.sin(angle * 0.94) * particle.orbitRadius * radiusMultiplier;
+        if (!reducedMotion) {
+          x += Math.sin(seconds * 3.2 + particle.phase * 2.4) * 3.2;
+          y += Math.cos(seconds * 2.8 + particle.phase * 1.8) * 1.8;
+        }
+        isGhostCluster = true;
+        ghostOffsetX = Math.sin(seconds * 1.6 + particle.phase) * 4;
+        ghostOffsetY = Math.cos(seconds * 1.4 + particle.phase) * 3;
       }
 
-      opacity += clusterState.status === "stabilizing" ? clusterState.stability * 0.08 : 0.06;
+      opacity += clusterState.status === "stabilizing" ? clusterState.stability * 0.1 : 0.06;
       shadowBlur = Math.max(shadowBlur, 6);
       shadowColor = withAlpha(cluster.color, 0.36);
     } else {
@@ -1428,17 +1878,8 @@ function drawParticles(
       x += Math.sin(seconds * 0.32 + particle.phase) * 0.08 * (particle.tier === "deep" ? 1 : 2);
       y += Math.cos(seconds * 0.27 + particle.phase) * 0.06 * (particle.tier === "deep" ? 1 : 2);
 
-      if (x < -6) {
-        x = width + 6;
-      } else if (x > width + 6) {
-        x = -6;
-      }
-
-      if (y < -6) {
-        y = height + 6;
-      } else if (y > height + 6) {
-        y = -6;
-      }
+      if (x < -6) { x = width + 6; } else if (x > width + 6) { x = -6; }
+      if (y < -6) { y = height + 6; } else if (y > height + 6) { y = -6; }
 
       particle.x = x;
       particle.y = y;
@@ -1457,24 +1898,42 @@ function drawParticles(
       shadowColor = withAlpha(nearbyCluster.color, 0.4);
     }
 
+    // Field deformation: stabilizing clusters push nearby non-bound particles outward
+    if (!particle.clusterId) {
+      for (const cluster of signalClusters) {
+        const cs = stateMap[cluster.id];
+        if (cs.status !== "stabilizing" && cs.status !== "stabilized") continue;
+        const ccx = cluster.x * width;
+        const ccy = cluster.y * height;
+        const dx = x - ccx;
+        const dy = y - ccy;
+        const dist = Math.hypot(dx, dy);
+        const pushRadius = 180 + cs.stability * 40;
+        if (dist < pushRadius && dist > 1) {
+          const push = (1 - dist / pushRadius) * cs.stability * (3 + fieldTension * 2);
+          x += (dx / dist) * push;
+          y += (dy / dist) * push;
+        }
+      }
+    }
+
+    // Pointer influence (expanded radius)
     if (pointer.active) {
       const dx = x - pointer.x;
       const dy = y - pointer.y;
       const distance = Math.hypot(dx, dy);
       const influence =
-        particle.tier === "deep" ? 86 : particle.tier === "mid" ? 118 : 140;
+        particle.tier === "deep" ? 100 : particle.tier === "mid" ? 140 : 170;
 
       if (distance < influence) {
         const driftStrength =
-          (1 - distance / influence) * (particle.tier === "deep" ? 6 : particle.tier === "mid" ? 9 : 11);
-
+          (1 - distance / influence) * (particle.tier === "deep" ? 7 : particle.tier === "mid" ? 11 : 14);
         x += (dx / Math.max(distance, 1)) * driftStrength;
         y += (dy / Math.max(distance, 1)) * driftStrength;
       }
     }
 
     opacity = clamp(opacity, 0.02, 0.96);
-
     const fillColor = resolveParticleColor(particle, opacity, nearbyCluster);
 
     if (particle.tier === "mid" && isClusterZone) {
@@ -1485,10 +1944,20 @@ function drawParticles(
     if (particle.tier === "anchor") {
       shadowBlur = particle.glowBlur;
       shadowColor = "rgba(120, 200, 255, 0.5)";
-
       if (nearbyCluster?.id === "cluster-amber" && particle.tintBias > 0.68) {
         shadowColor = withAlpha(ARCHIVE_AMBER, 0.42);
       }
+    }
+
+    // Ghost double-render
+    if (isGhostCluster && !reducedMotion) {
+      context.save();
+      context.globalAlpha = opacity * 0.35;
+      context.fillStyle = `rgba(180, 140, 240, ${opacity * 0.3})`;
+      context.beginPath();
+      context.arc(x + ghostOffsetX, y + ghostOffsetY, particle.size * 0.9, 0, TAU);
+      context.fill();
+      context.restore();
     }
 
     context.save();
@@ -1584,107 +2053,157 @@ function drawClusterStructures(
   stateMap: Record<SignalClusterId, ClusterRuntimeState>,
   activeClusterId: SignalClusterId | null,
   routeTargetId: SignalClusterId | null,
+  carrier: Point2D,
+  reducedMotion: boolean,
 ) {
   const seconds = time * 0.001;
 
   for (const cluster of signalClusters) {
     const state = stateMap[cluster.id];
-    const centerX = cluster.x * width;
-    const centerY = cluster.y * height;
+    const cx = cluster.x * width;
+    const cy = cluster.y * height;
     const isActive = activeClusterId === cluster.id || routeTargetId === cluster.id;
 
     context.save();
 
     if (state.status === "dormant") {
-      drawRingArc(context, centerX, centerY, 55, 0, TAU, {
+      drawRingArc(context, cx, cy, 55, 0, TAU, {
         lineWidth: 0.5,
         strokeStyle: withAlpha(cluster.color, 0.15),
       });
     }
 
-    if (state.status === "acquired") {
-      drawRingArc(context, centerX, centerY, 65, seconds * 0.18, seconds * 0.18 + Math.PI * 1.58, {
-        dash: [8, 6],
-        lineWidth: 0.9,
-        strokeStyle: withAlpha(cluster.color, 0.2),
-      });
-      drawRingArc(
-        context,
-        centerX,
-        centerY,
-        48,
-        seconds * -0.12 + 0.4,
-        seconds * -0.12 + Math.PI * 1.36 + 0.4,
-        {
-          dash: [8, 6],
-          lineWidth: 1,
-          strokeStyle: withAlpha(cluster.color, 0.35),
-        },
-      );
-    }
+    if (state.status === "acquired" || state.status === "stabilizing") {
+      const stability = state.status === "stabilizing" ? state.stability : 0;
+      const dashLen = Math.max(3, 8 - stability * 5);
+      const baseOpacity = state.status === "acquired" ? 0.2 : lerp(0.25, 0.7, stability);
 
-    if (state.status === "stabilizing") {
-      const dashLength = Math.max(3, 8 - state.stability * 5);
-      const opacity = lerp(0.25, 0.7, state.stability);
-
-      drawRingArc(context, centerX, centerY, 42, seconds * 0.22, seconds * 0.22 + Math.PI * 1.42, {
-        dash: [dashLength, 4],
-        lineWidth: 0.95,
-        strokeStyle: withAlpha(cluster.color, opacity),
-      });
-      drawRingArc(
-        context,
-        centerX,
-        centerY,
-        55,
-        seconds * -0.16 + 0.6,
-        seconds * -0.16 + Math.PI * 1.66 + 0.6,
-        {
-          dash: [dashLength, 4],
+      if (cluster.temperament === "archive") {
+        // Strata rings - concentric layers that breathe
+        const breathe = reducedMotion ? 0 : Math.sin(seconds * 0.3) * 4;
+        for (let ring = 0; ring < 4; ring++) {
+          const r = 35 + ring * 12 + breathe * (ring * 0.3);
+          const ringAlpha = baseOpacity * (1 - ring * 0.18);
+          drawRingArc(context, cx, cy, r, seconds * (0.08 + ring * 0.04), seconds * (0.08 + ring * 0.04) + Math.PI * (1.2 + ring * 0.15), {
+            dash: [dashLen + ring * 2, 4],
+            lineWidth: 1.1 - ring * 0.1,
+            strokeStyle: withAlpha(cluster.color, ringAlpha),
+          });
+        }
+      } else if (cluster.temperament === "relay") {
+        // Vector chevrons pointing toward carrier
+        const angle = Math.atan2(carrier.y - cy, carrier.x - cx);
+        drawRingArc(context, cx, cy, 48, seconds * -0.12 + 0.4, seconds * -0.12 + Math.PI * 1.36 + 0.4, {
+          dash: [dashLen, 4],
           lineWidth: 1,
-          strokeStyle: withAlpha(cluster.color, opacity * 0.92),
-        },
-      );
-      drawRingArc(
-        context,
-        centerX,
-        centerY,
-        68,
-        seconds * 0.11 + 1.1,
-        seconds * 0.11 + Math.PI * 1.48 + 1.1,
-        {
-          dash: [dashLength, 4],
-          lineWidth: 1.1,
-          strokeStyle: withAlpha(cluster.color, opacity * 0.88),
-        },
-      );
+          strokeStyle: withAlpha(cluster.color, baseOpacity),
+        });
+        drawRingArc(context, cx, cy, 65, seconds * 0.18, seconds * 0.18 + Math.PI * 1.58, {
+          dash: [dashLen, 6],
+          lineWidth: 0.9,
+          strokeStyle: withAlpha(cluster.color, baseOpacity * 0.7),
+        });
+        // Chevron tick marks
+        for (let i = 0; i < 3; i++) {
+          const tickDist = 30 + i * 18;
+          const tickAlpha = baseOpacity * (0.6 - i * 0.15);
+          const tx = cx + Math.cos(angle) * tickDist;
+          const ty = cy + Math.sin(angle) * tickDist;
+          context.save();
+          context.translate(tx, ty);
+          context.rotate(angle);
+          context.strokeStyle = withAlpha(cluster.color, tickAlpha);
+          context.lineWidth = 0.8;
+          context.beginPath();
+          context.moveTo(-5, -4);
+          context.lineTo(0, 0);
+          context.lineTo(-5, 4);
+          context.stroke();
+          context.restore();
+        }
+      } else {
+        // Ghost: double-stroke offset rings (registration error)
+        const offset = reducedMotion ? 2 : 3 + Math.sin(seconds * 1.5) * 1.5;
+        drawRingArc(context, cx - offset, cy - offset * 0.6, 52, seconds * 0.22, seconds * 0.22 + Math.PI * 1.42, {
+          dash: [dashLen, 4],
+          lineWidth: 0.95,
+          strokeStyle: withAlpha(cluster.color, baseOpacity * 0.7),
+        });
+        drawRingArc(context, cx + offset, cy + offset * 0.6, 54, seconds * -0.16 + 0.6, seconds * -0.16 + Math.PI * 1.66 + 0.6, {
+          dash: [dashLen, 4],
+          lineWidth: 1,
+          strokeStyle: withAlpha(cluster.color, baseOpacity),
+        });
+        // Chromatic fringe ring
+        drawRingArc(context, cx + offset * 1.5, cy, 60, seconds * 0.11 + 1.1, seconds * 0.11 + Math.PI * 1.2 + 1.1, {
+          dash: [dashLen, 6],
+          lineWidth: 0.7,
+          strokeStyle: `rgba(180, 130, 230, ${baseOpacity * 0.4})`,
+        });
+      }
     }
 
     if (state.status === "stabilized" || state.status === "routed") {
       const coreAlpha = state.status === "routed" ? 0.92 : 0.8;
-      const ghostLoop = ((time % 2000) / 2000) * 12;
       const pulseLoop = (time % 2500) / 2500;
-      const pulseRadius = lerp(45, 100, pulseLoop);
+      const pulseRadius = lerp(45, 110, pulseLoop);
 
-      context.shadowBlur = 12;
-      context.shadowColor = withAlpha(cluster.color, 0.5);
-      drawRingArc(context, centerX, centerY, 45, 0, TAU, {
-        lineWidth: 1.35,
-        strokeStyle: withAlpha(cluster.color, coreAlpha),
-      });
+      context.shadowBlur = 14;
+      context.shadowColor = withAlpha(cluster.color, 0.55);
+
+      if (cluster.temperament === "archive") {
+        // Solid strata rings
+        for (let ring = 0; ring < 3; ring++) {
+          const r = 38 + ring * 14;
+          drawRingArc(context, cx, cy, r, 0, TAU, {
+            lineWidth: 1.3 - ring * 0.2,
+            strokeStyle: withAlpha(cluster.color, coreAlpha * (1 - ring * 0.2)),
+          });
+        }
+      } else if (cluster.temperament === "relay") {
+        drawRingArc(context, cx, cy, 45, 0, TAU, {
+          lineWidth: 1.35,
+          strokeStyle: withAlpha(cluster.color, coreAlpha),
+        });
+        // Stable chevron
+        const angle = Math.atan2(carrier.y - cy, carrier.x - cx);
+        context.save();
+        context.translate(cx, cy);
+        context.rotate(angle);
+        context.strokeStyle = withAlpha(cluster.color, coreAlpha * 0.7);
+        context.lineWidth = 1.2;
+        context.beginPath();
+        context.moveTo(50, -8);
+        context.lineTo(58, 0);
+        context.lineTo(50, 8);
+        context.stroke();
+        context.restore();
+      } else {
+        // Ghost: locked double-stroke
+        const off = 2;
+        drawRingArc(context, cx - off, cy - off * 0.5, 43, 0, TAU, {
+          lineWidth: 1.2,
+          strokeStyle: withAlpha(cluster.color, coreAlpha * 0.8),
+        });
+        drawRingArc(context, cx + off, cy + off * 0.5, 46, 0, TAU, {
+          lineWidth: 1.1,
+          strokeStyle: withAlpha(cluster.color, coreAlpha * 0.6),
+        });
+      }
 
       context.shadowBlur = 0;
-      drawRingArc(context, centerX, centerY, 68 + ghostLoop, 0, TAU, {
+      const ghostLoop = ((time % 2000) / 2000) * 12;
+      drawRingArc(context, cx, cy, 68 + ghostLoop, 0, TAU, {
         lineWidth: 0.9,
-        strokeStyle: withAlpha(cluster.color, 0.25),
+        strokeStyle: withAlpha(cluster.color, 0.22),
       });
-      drawRingArc(context, centerX, centerY, pulseRadius, 0, TAU, {
+      drawRingArc(context, cx, cy, pulseRadius, 0, TAU, {
         lineWidth: 1,
-        strokeStyle: withAlpha(cluster.color, 0.28 * (1 - pulseLoop)),
+        strokeStyle: withAlpha(cluster.color, 0.26 * (1 - pulseLoop)),
       });
     }
 
-    drawClusterLabel(context, cluster, state, centerX, centerY, isActive);
+    drawClusterLabel(context, cluster, state, cx, cy, isActive);
     context.restore();
   }
 }
@@ -1786,12 +2305,16 @@ function drawInterferenceLayer(
   time: number,
   particles: InterferenceParticle[],
   pressureFlickerFramesRemaining: number,
+  routedCount: number,
+  pressure: number,
 ) {
+  const escalation = 1 + routedCount * 0.4;
+
   for (const particle of particles) {
     const opacity = clamp(
-      particle.opacityBase + randomBetween(-0.04, 0.04),
+      (particle.opacityBase + randomBetween(-0.04, 0.04)) * escalation,
       0.02,
-      0.18,
+      0.24,
     );
 
     context.fillStyle = `rgba(255, 80, 120, ${opacity})`;
@@ -1800,12 +2323,72 @@ function drawInterferenceLayer(
     context.fill();
   }
 
+  // Primary scanline
   const scanY = (time * 0.024) % height;
-  context.fillStyle = "rgba(180, 220, 255, 0.03)";
+  const scanAlpha = 0.025 + routedCount * 0.008;
+  context.fillStyle = `rgba(180, 220, 255, ${scanAlpha})`;
   context.fillRect(0, scanY, width, 1);
 
+  // Secondary scanlines at higher progress
+  if (routedCount >= 2) {
+    const scan2Y = (time * 0.016 + height * 0.4) % height;
+    context.fillStyle = `rgba(180, 220, 255, ${0.015 + pressure * 0.005})`;
+    context.fillRect(0, scan2Y, width, 1);
+  }
+
   if (pressureFlickerFramesRemaining > 0) {
-    context.fillStyle = "rgba(255, 60, 100, 0.015)";
+    context.fillStyle = `rgba(255, 60, 100, ${0.012 + routedCount * 0.004})`;
+    context.fillRect(0, 0, width, height);
+  }
+
+  // Exposure wash at high pressure
+  if (pressure > 0.7) {
+    const washAlpha = (pressure - 0.7) * 0.04;
+    context.fillStyle = `rgba(200, 230, 255, ${washAlpha})`;
+    context.fillRect(0, 0, width, height);
+  }
+}
+
+function drawCompletionEffect(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  carrier: Point2D,
+  time: number,
+  completionStartTime: number,
+) {
+  const elapsed = time - completionStartTime;
+  if (elapsed < 0 || elapsed > COMPLETION_SHOCKWAVE_MS) return;
+
+  const progress = elapsed / COMPLETION_SHOCKWAVE_MS;
+  const maxRadius = Math.max(width, height) * 0.8;
+
+  // Expanding shockwave ring
+  const ringRadius = progress * maxRadius;
+  const ringAlpha = (1 - progress) * 0.5;
+  if (ringAlpha > 0.01) {
+    context.save();
+    context.strokeStyle = `rgba(200, 230, 255, ${ringAlpha})`;
+    context.lineWidth = 2 + (1 - progress) * 4;
+    context.shadowBlur = 20;
+    context.shadowColor = `rgba(200, 230, 255, ${ringAlpha * 0.6})`;
+    context.beginPath();
+    context.arc(carrier.x, carrier.y, ringRadius, 0, TAU);
+    context.stroke();
+    context.restore();
+  }
+
+  // Brief lumen flash at start
+  if (progress < 0.15) {
+    const flashAlpha = (1 - progress / 0.15) * 0.08;
+    context.fillStyle = `rgba(220, 240, 255, ${flashAlpha})`;
+    context.fillRect(0, 0, width, height);
+  }
+
+  // Settled exposure state at end
+  if (progress > 0.7) {
+    const settleAlpha = ((progress - 0.7) / 0.3) * 0.025;
+    context.fillStyle = `rgba(200, 230, 255, ${settleAlpha})`;
     context.fillRect(0, 0, width, height);
   }
 }

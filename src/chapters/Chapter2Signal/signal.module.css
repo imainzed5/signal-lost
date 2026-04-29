@@ -3,10 +3,10 @@
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 16%, rgba(74, 158, 187, 0.12), transparent 24%),
-    radial-gradient(circle at 78% 12%, rgba(155, 109, 214, 0.08), transparent 20%),
-    radial-gradient(circle at 56% 76%, rgba(240, 160, 48, 0.06), transparent 20%),
-    linear-gradient(180deg, #050d18 0%, #050f1b 48%, #020813 100%);
+    radial-gradient(circle at 18% 16%, rgba(74, 158, 187, 0.08), transparent 28%),
+    radial-gradient(circle at 78% 12%, rgba(155, 109, 214, 0.05), transparent 24%),
+    radial-gradient(circle at 56% 76%, rgba(240, 160, 48, 0.04), transparent 22%),
+    linear-gradient(180deg, #040b14 0%, #050e1a 48%, #020710 100%);
   color: #c8dde8;
 }
 
@@ -16,8 +16,8 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    radial-gradient(circle at center, rgba(74, 158, 187, 0.08), transparent 56%);
+    linear-gradient(rgba(255, 255, 255, 0.012), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at 42% 52%, rgba(74, 158, 187, 0.05), transparent 48%);
   mix-blend-mode: screen;
 }
 
@@ -26,8 +26,8 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0, transparent 34%);
-  opacity: 0.4;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0, transparent 30%);
+  opacity: 0.3;
 }
 
 .signalCanvas {
@@ -91,6 +91,8 @@
   line-height: 1.9;
 }
 
+/* ── Sidebar: atmospheric embedded panel ── */
+
 .signalSidebar {
   position: absolute;
   top: 0;
@@ -100,9 +102,49 @@
   width: 280px;
   flex-direction: column;
   padding: 5.75rem 1.25rem 1.25rem;
-  border-left: 1px solid rgba(74, 158, 187, 0.15);
-  background: rgba(5, 13, 24, 0.85);
-  backdrop-filter: blur(8px);
+  border-left: none;
+  background: linear-gradient(
+    90deg,
+    rgba(5, 13, 24, 0.3) 0%,
+    rgba(5, 13, 24, 0.68) 16%,
+    rgba(5, 13, 24, 0.74) 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.signalSidebar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(74, 158, 187, 0.0) 0%,
+    rgba(74, 158, 187, 0.22) 20%,
+    rgba(74, 158, 187, 0.14) 50%,
+    rgba(74, 158, 187, 0.22) 80%,
+    rgba(74, 158, 187, 0.0) 100%
+  );
+  animation: signalEdgeBreathe 5s ease-in-out infinite;
+}
+
+.signalSidebar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 44px;
+  background: linear-gradient(
+    90deg,
+    rgba(74, 158, 187, 0.025) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: signalEdgeBreathe 5s ease-in-out infinite;
 }
 
 .signalSidebarEyebrow {
@@ -133,6 +175,7 @@
   letter-spacing: 0.08em;
   line-height: 1.12;
   text-transform: uppercase;
+  text-shadow: 0 0 16px currentColor;
 }
 
 .signalStatusRow {
@@ -167,7 +210,7 @@
 
 .signalDivider {
   margin: 1rem 0;
-  border-top: 1px solid rgba(74, 158, 187, 0.12);
+  border-top: 1px solid rgba(74, 158, 187, 0.08);
 }
 
 .signalMetricHeader {
@@ -182,9 +225,9 @@
 
 .signalMetricBar {
   position: relative;
-  height: 3px;
+  height: 2px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .signalMetricFill {
@@ -204,7 +247,7 @@
 }
 
 .signalMetricFillFlash {
-  box-shadow: 0 0 8px currentColor;
+  box-shadow: 0 0 10px currentColor;
 }
 
 .signalFieldStateList {
@@ -232,11 +275,12 @@
   line-height: 1.45;
   text-align: right;
   text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(200, 230, 255, 0.1);
 }
 
 .signalFieldDescription {
   margin: 0;
-  color: rgba(200, 221, 232, 0.76);
+  color: rgba(200, 221, 232, 0.72);
   font-size: 0.78rem;
   line-height: 1.78;
 }
@@ -287,15 +331,18 @@
   text-transform: uppercase;
 }
 
+/* ── Directive box ── */
+
 .signalDirectiveBox {
   position: absolute;
   left: 1.5rem;
   bottom: 1.5rem;
   max-width: min(30rem, calc(100vw - 4rem));
-  border-left: 2px solid rgba(74, 158, 187, 1);
-  background: rgba(5, 13, 24, 0.7);
+  border-left: 2px solid rgba(74, 158, 187, 0.6);
+  background: rgba(5, 13, 24, 0.5);
   padding: 0.9rem 1rem 0.92rem 1.05rem;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: border-left-color 300ms ease;
 }
 
@@ -323,6 +370,267 @@
   opacity: 0;
 }
 
+/* ── Choice Layer ── */
+
+.choiceLayer {
+  position: absolute;
+  bottom: 5.2rem;
+  left: 1.5rem;
+  z-index: 18;
+  max-width: 26rem;
+  pointer-events: auto;
+  animation: choiceLayerEnter 600ms ease-out both;
+}
+
+.choiceLayerCommitted .choiceSurface {
+  border-color: rgba(74, 158, 187, 0.18);
+}
+
+.choiceSurface {
+  position: relative;
+  padding: 1.2rem 1.4rem 1.1rem;
+  border: 1px solid rgba(74, 158, 187, 0.1);
+  border-radius: 0.15rem;
+  background: rgba(5, 13, 24, 0.58);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.choiceEdgeLine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(74, 158, 187, 0.5) 0%,
+    rgba(74, 158, 187, 0.12) 60%,
+    transparent 100%
+  );
+  animation: signalEdgeBreathe 4s ease-in-out infinite;
+}
+
+.choiceRevealBlock {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.choiceRevealVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.choiceEyebrow {
+  margin: 0 0 0.5rem;
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: rgba(74, 158, 187, 0.6);
+  text-transform: uppercase;
+}
+
+.choiceTitle {
+  margin: 0 0 0.65rem;
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.choiceDescription {
+  margin: 0 0 0.9rem;
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.choiceOptionsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+
+.choiceOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(74, 158, 187, 0.08);
+  border-radius: 0.1rem;
+  background: rgba(74, 158, 187, 0.02);
+  color: rgba(255, 255, 255, 0.6);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+}
+
+.choiceOption:hover:not(:disabled) {
+  border-color: rgba(74, 158, 187, 0.22);
+  background: rgba(74, 158, 187, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 12px rgba(74, 158, 187, 0.04);
+}
+
+.choiceOptionSelected {
+  border-color: rgba(74, 158, 187, 0.32);
+  background: rgba(74, 158, 187, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 0 18px rgba(74, 158, 187, 0.06), 0 0 8px rgba(74, 158, 187, 0.08);
+}
+
+.choiceOptionDimmed {
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.choiceOptionIndicator {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: rgba(74, 158, 187, 0.5);
+  transition: color 200ms ease;
+}
+
+.choiceOptionSelected .choiceOptionIndicator {
+  color: rgba(74, 158, 187, 0.9);
+}
+
+.choiceOptionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.choiceOptionLabel {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.choiceOptionDescription {
+  font-size: 0.68rem;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.choiceOptionSelected .choiceOptionDescription {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.choiceActionsBlock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.2rem;
+}
+
+.choiceCommitButton {
+  padding: 0.45rem 1rem;
+  border: 1px solid rgba(74, 158, 187, 0.28);
+  border-radius: 0.1rem;
+  background: rgba(74, 158, 187, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.choiceCommitButton:hover:not(:disabled) {
+  border-color: rgba(74, 158, 187, 0.48);
+  background: rgba(74, 158, 187, 0.12);
+  box-shadow: 0 0 14px rgba(74, 158, 187, 0.1);
+}
+
+.choiceCommitButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.choiceLockedLabel {
+  margin: 0;
+  padding: 0.45rem 0;
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: rgba(74, 158, 187, 0.7);
+  text-transform: uppercase;
+  animation: choiceLockedPulse 2s ease-in-out infinite;
+}
+
+.choiceReplayButton {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.1rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.choiceReplayButton:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.choiceContinueLink {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(74, 158, 187, 0.22);
+  border-radius: 0.1rem;
+  background: rgba(74, 158, 187, 0.04);
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "IBM Plex Mono", "Space Mono", monospace;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.choiceContinueLink:hover {
+  border-color: rgba(74, 158, 187, 0.42);
+  background: rgba(74, 158, 187, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ── Keyframes ── */
+
 @keyframes signalBarShift {
   from {
     background-position: 0% 50%;
@@ -344,6 +652,79 @@
   }
 }
 
+@keyframes signalEdgeBreathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes choiceLayerEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes choiceLockedPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .signalSidebar::before,
+  .signalSidebar::after {
+    animation: none;
+  }
+
+  .signalMetricFillAnimating {
+    animation: none;
+  }
+
+  .signalHeader {
+    transition: none;
+  }
+
+  .signalDirectiveCopy {
+    transition: none;
+  }
+
+  .choiceLayer {
+    animation: none;
+  }
+
+  .choiceRevealBlock {
+    transition: none;
+  }
+
+  .choiceEdgeLine {
+    animation: none;
+  }
+
+  .choiceLockedLabel {
+    animation: none;
+  }
+}
+
+/* ── Responsive ── */
+
 @media (max-width: 1100px) {
   .signalIntro {
     max-width: none;
@@ -361,9 +742,18 @@
     position: static;
     width: auto;
     margin: 0 1rem 1rem;
-    border-top: 1px solid rgba(74, 158, 187, 0.12);
+    border-top: 1px solid rgba(74, 158, 187, 0.08);
     border-left: none;
     padding: 1rem;
+    background: rgba(5, 13, 24, 0.65);
+  }
+
+  .signalSidebar::before {
+    display: none;
+  }
+
+  .signalSidebar::after {
+    display: none;
   }
 
   .signalDirectiveBox {
@@ -371,6 +761,12 @@
     left: 1rem;
     bottom: 1rem;
     max-width: none;
+  }
+
+  .choiceLayer {
+    position: static;
+    max-width: none;
+    margin: 0 1rem 1rem;
   }
 }
 
@@ -396,5 +792,13 @@
 
   .signalDirectiveCopy {
     font-size: 0.76rem;
+  }
+
+  .choiceSurface {
+    padding: 1rem 1rem 0.9rem;
+  }
+
+  .choiceTitle {
+    font-size: 0.88rem;
   }
 }

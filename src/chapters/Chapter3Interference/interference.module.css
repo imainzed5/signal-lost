@@ -31,120 +31,806 @@
   animation: interferenceFallbackSweep 8s linear infinite;
 }
 
+/* ======================================================================== */
+/*  INTRO SEQUENCE: staggered UI arrival                                    */
+/* ======================================================================== */
+
+/* --- Intro overlay: black veil that lifts --- */
+
+.introVeil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #050107;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 800ms ease-out;
+}
+
+.introVeilLifted {
+  opacity: 0;
+}
+
+/* --- Intro scan line: horizontal beam sweeping across --- */
+
+.introScanOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.introScanOverlayActive {
+  opacity: 1;
+  animation: introScanFade 4000ms ease-out forwards;
+}
+
+.introScanBeam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 140, 60, 0.0) 10%,
+    rgba(255, 140, 60, 0.6) 30%,
+    rgba(255, 200, 100, 0.9) 50%,
+    rgba(255, 140, 60, 0.6) 70%,
+    rgba(255, 140, 60, 0.0) 90%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 20px 4px rgba(255, 100, 30, 0.25),
+    0 0 60px 8px rgba(255, 60, 20, 0.1);
+  animation: introScanSweep 2800ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+.introScanBeamV {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 140, 60, 0.0) 10%,
+    rgba(255, 100, 40, 0.4) 30%,
+    rgba(255, 160, 80, 0.7) 50%,
+    rgba(255, 100, 40, 0.4) 70%,
+    rgba(255, 140, 60, 0.0) 90%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 16px 3px rgba(255, 80, 20, 0.2),
+    0 0 48px 6px rgba(255, 50, 15, 0.08);
+  animation: introScanSweepV 3200ms cubic-bezier(0.22, 0.61, 0.36, 1) 400ms forwards;
+  opacity: 0;
+}
+
+/* --- Lock pulse: brief flash when intro completes --- */
+
+.introLockPulse {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 80, 30, 0.18) 0%,
+    rgba(255, 40, 10, 0.06) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  animation: introLockFlash 500ms ease-out forwards;
+}
+
+/* --- Intro constriction rings: CSS overlay rings that form during intro --- */
+
+.introConstrictionRing {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 60, 30, 0.0);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(2.5);
+  opacity: 0;
+}
+
+.introConstrictionRingActive {
+  animation: introRingConstrict 2200ms cubic-bezier(0.33, 0, 0.2, 1) forwards;
+}
+
+.introConstrictionRing:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.introConstrictionRing:nth-child(3) {
+  animation-delay: 420ms;
+}
+
+/* --- Containment frame: corner brackets that close around the viewport --- */
+
+.containmentFrame {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.containmentCorner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+}
+
+.containmentCornerVisible {
+  opacity: 1;
+  animation: cornerLock 400ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+.containmentCorner::before,
+.containmentCorner::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 100, 50, 0.45);
+}
+
+/* Top-left */
+.containmentCornerTL {
+  top: 12px;
+  left: 12px;
+}
+
+.containmentCornerTL::before {
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.containmentCornerTL::after {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+/* Top-right */
+.containmentCornerTR {
+  top: 12px;
+  right: 12px;
+}
+
+.containmentCornerTR::before {
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.containmentCornerTR::after {
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 1px;
+}
+
+/* Bottom-left */
+.containmentCornerBL {
+  bottom: 12px;
+  left: 12px;
+}
+
+.containmentCornerBL::before {
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.containmentCornerBL::after {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+/* Bottom-right */
+.containmentCornerBR {
+  bottom: 12px;
+  right: 12px;
+}
+
+.containmentCornerBR::before {
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+}
+
+.containmentCornerBR::after {
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 1px;
+}
+
+/* --- Containment edge ticks: thin marks along edges --- */
+
+.containmentEdge {
+  position: absolute;
+  background: rgba(255, 80, 40, 0.2);
+  opacity: 0;
+}
+
+.containmentEdgeVisible {
+  animation: edgeFadeIn 600ms ease-out forwards;
+}
+
+.containmentEdgeTop {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 1px;
+}
+
+.containmentEdgeBottom {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 1px;
+}
+
+.containmentEdgeLeft {
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60px;
+}
+
+.containmentEdgeRight {
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60px;
+}
+
+/* --- Containment stamp: compact system identifier --- */
+
+.containmentStamp {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  font-family: 'Courier New', monospace;
+  font-size: 0.46rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgba(255, 120, 80, 0.38);
+  text-align: right;
+  line-height: 1.8;
+}
+
+.containmentStampVisible {
+  opacity: 1;
+  transform: translateY(0);
+  animation: stampCorrect 350ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+.containmentStampLine {
+  display: block;
+}
+
+/* --- Containment crosshair: center mark during intro --- */
+
+.containmentCrosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.containmentCrosshairActive {
+  animation: crosshairPulse 2800ms ease-out forwards;
+}
+
+.containmentCrosshair::before,
+.containmentCrosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 100, 50, 0.35);
+}
+
+.containmentCrosshair::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-0.5px);
+}
+
+.containmentCrosshair::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  transform: translateX(-0.5px);
+}
+
+/* ======================================================================== */
+/*  OVERLAY: embedded in the scene                                          */
+/* ======================================================================== */
+
 .interferenceOverlay {
   position: relative;
   z-index: 2;
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
-}
-
-.interferenceIntro {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 6.5rem 1.5rem 1.5rem;
+  justify-content: flex-end;
+  min-height: 100vh;
+  padding: 0 2rem 2.5rem;
+  pointer-events: none;
 }
+
+/* --- Header area: classification status at top --- */
+
+.interferenceHeader {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 6.5rem 2rem 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.interferenceHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* --- Intro element animation states --- */
+
+.introHidden {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0ms, transform 0ms;
+}
+
+.introRevealing {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
+}
+
+/* Title has special jitter-snap behavior */
+.introTitleHidden {
+  opacity: 0;
+  transform: translateX(-12px) scaleX(1.02);
+  filter: blur(2px);
+  transition: none;
+}
+
+.introTitleSnap {
+  opacity: 1;
+  transform: translateX(0) scaleX(1);
+  filter: blur(0px);
+  animation: introTitleCorrect 350ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+/* Classification panel slides from right with correction */
+.introClassificationHidden {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: none;
+}
+
+.introClassificationReveal {
+  opacity: 1;
+  transform: translateX(0);
+  animation: introClassificationSnap 450ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+/* Bottom HUD slides up */
+.introBottomHidden {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: none;
+}
+
+.introBottomReveal {
+  opacity: 1;
+  transform: translateY(0);
+  animation: introBottomArrive 500ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+/* --- Standard element styles --- */
 
 .interferenceMeta {
   margin: 0;
-  color: rgba(255, 162, 162, 0.76);
-  font-size: 0.72rem;
+  color: rgba(255, 140, 140, 0.6);
+  font-family: 'Courier New', monospace;
+  font-size: 0.62rem;
   letter-spacing: 0.38em;
   text-transform: uppercase;
 }
 
 .interferenceTitle {
-  margin: 1rem 0 0;
-  color: #fff1f1;
-  font-size: clamp(3rem, 7vw, 7rem);
+  margin: 0.6rem 0 0;
+  color: rgba(255, 230, 230, 0.88);
+  font-size: clamp(2.4rem, 5.5vw, 5rem);
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.25em;
   line-height: 0.92;
+  text-transform: uppercase;
+  text-shadow: 0 0 60px rgba(255, 60, 60, 0.2);
+}
+
+.interferenceStageLabel {
+  margin: 0.6rem 0 0;
+  color: rgba(255, 180, 120, 0.72);
+  font-family: 'Courier New', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  transition: color 400ms ease;
+}
+
+/* --- Host classification panel: top right --- */
+
+.interferenceClassification {
+  max-width: 20rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 80, 80, 0.12);
+  border-radius: 2px;
+  background: rgba(20, 2, 6, 0.52);
+  backdrop-filter: blur(12px);
+}
+
+.classificationTitle {
+  margin: 0;
+  color: rgba(255, 140, 140, 0.65);
+  font-family: 'Courier New', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.38em;
   text-transform: uppercase;
 }
 
-.interferenceSummary {
-  max-width: 33rem;
-  margin: 1rem 0 0;
-  color: rgba(255, 223, 223, 0.82);
-  font-size: 0.96rem;
-  line-height: 1.9;
+.classificationBody {
+  margin: 0.6rem 0 0;
+  color: rgba(255, 210, 210, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.75;
+}
+
+/* --- Bottom panel: action + resistance log --- */
+
+.interferenceBottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  pointer-events: auto;
+}
+
+.interferenceActionArea {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .interferenceAction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: flex-start;
-  padding: 0.95rem 1.15rem;
-  border: 1px solid rgba(255, 117, 117, 0.2);
-  background: rgba(22, 3, 7, 0.42);
-  color: rgba(255, 214, 214, 0.9);
-  font-size: 0.72rem;
-  letter-spacing: 0.3em;
+  padding: 1rem 1.6rem;
+  border: 1px solid rgba(255, 100, 100, 0.22);
+  border-radius: 2px;
+  background: rgba(22, 3, 7, 0.52);
+  color: rgba(255, 214, 214, 0.92);
+  font-family: 'Courier New', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   backdrop-filter: blur(14px);
   cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 120ms ease;
+  pointer-events: auto;
 }
 
 .interferenceAction:hover {
-  border-color: rgba(255, 117, 117, 0.42);
-  background: rgba(28, 4, 10, 0.58);
+  border-color: rgba(255, 120, 120, 0.48);
+  background: rgba(40, 6, 14, 0.62);
 }
 
-.interferenceSidebar {
+.interferenceAction:active {
+  transform: scale(0.97);
+  border-color: rgba(255, 160, 100, 0.6);
+  background: rgba(60, 8, 18, 0.7);
+}
+
+.interferenceAction:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.interferenceActionHint {
+  margin: 0;
+  color: rgba(255, 180, 180, 0.45);
+  font-family: 'Courier New', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  line-height: 1.6;
+}
+
+/* --- Resistance log panel: bottom right --- */
+
+.interferenceLog {
+  flex: 1;
+  max-width: 28rem;
+  max-height: 16rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 80, 80, 0.1);
+  border-radius: 2px;
+  background: rgba(16, 2, 5, 0.48);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 6.5rem 1.5rem 1.5rem 0;
 }
 
-.interferencePanel {
-  border: 1px solid rgba(255, 117, 117, 0.16);
-  background: rgba(22, 3, 7, 0.54);
-  padding: 1.1rem 1rem;
-  backdrop-filter: blur(16px);
-}
-
-.interferencePanelTitle {
+.interferenceLogTitle {
   margin: 0;
-  color: rgba(255, 162, 162, 0.76);
-  font-size: 0.68rem;
-  letter-spacing: 0.34em;
+  flex: 0 0 auto;
+  color: rgba(255, 140, 140, 0.6);
+  font-family: 'Courier New', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.38em;
   text-transform: uppercase;
 }
 
-.interferencePanelBody {
-  margin: 0.9rem 0 0;
-  color: rgba(255, 226, 226, 0.78);
-  font-size: 0.84rem;
-  line-height: 1.85;
+.interferenceLogEntries {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.interferenceLog {
-  margin-top: 0.9rem;
-  padding-left: 1.1rem;
-  color: rgba(255, 226, 226, 0.78);
-  font-size: 0.8rem;
-  line-height: 1.8;
+.interferenceLogEntry {
+  padding: 0.25rem 0;
+  color: rgba(255, 200, 200, 0.65);
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255, 60, 60, 0.06);
+}
+
+.interferenceLogEntry:last-child {
+  border-bottom: none;
+}
+
+.interferenceLogEntryNew {
+  color: rgba(255, 220, 180, 0.85);
+  animation: logEntryFlash 800ms ease-out;
+}
+
+/* --- Pressure bar --- */
+
+.interferencePresure {
+  margin-top: 0.6rem;
 }
 
 .interferenceMeter {
   position: relative;
-  height: 0.6rem;
-  margin-top: 1rem;
+  height: 0.35rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 117, 117, 0.18);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 80, 80, 0.14);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .interferenceMeterFill {
   position: absolute;
   inset: 0;
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(255, 76, 76, 0.35), rgba(255, 76, 76, 0.96));
+  background: linear-gradient(90deg, rgba(255, 76, 76, 0.3), rgba(255, 76, 76, 0.92));
+  transition: transform 120ms ease-out;
+}
+
+.interferenceMeterLabel {
+  margin: 0.3rem 0 0;
+  color: rgba(255, 160, 160, 0.5);
+  font-family: 'Courier New', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+/* --- Stage transition flash --- */
+
+.interferenceStageFlash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 60, 30, 0.15), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  animation: stageFlash 600ms ease-out forwards;
+}
+
+/* --- Resistance flash overlay --- */
+
+.interferenceResistFlash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 60%, rgba(80, 140, 255, 0.08), transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+  animation: resistFlash 500ms ease-out forwards;
+}
+
+/* ======================================================================== */
+/*  KEYFRAMES                                                                */
+/* ======================================================================== */
+
+@keyframes introScanSweep {
+  0% {
+    top: -2px;
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 0.8;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes introScanSweepV {
+  0% {
+    left: -2px;
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 0.7;
+  }
+
+  80% {
+    opacity: 0.5;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes introScanFade {
+  0%, 70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes introRingConstrict {
+  0% {
+    transform: translate(-50%, -50%) scale(2.5);
+    border-color: rgba(255, 60, 30, 0.0);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.6;
+    border-color: rgba(255, 80, 40, 0.35);
+  }
+
+  70% {
+    opacity: 0.4;
+    border-color: rgba(255, 60, 30, 0.2);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(0.6);
+    border-color: rgba(255, 40, 20, 0.0);
+    opacity: 0;
+  }
+}
+
+@keyframes introTitleCorrect {
+  0% {
+    transform: translateX(-12px) scaleX(1.02);
+    filter: blur(2px);
+    opacity: 0;
+  }
+
+  30% {
+    transform: translateX(3px) scaleX(0.99);
+    filter: blur(0.5px);
+    opacity: 0.9;
+  }
+
+  60% {
+    transform: translateX(-1px) scaleX(1.005);
+    filter: blur(0px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(0) scaleX(1);
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes introClassificationSnap {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateX(-4px);
+    opacity: 0.85;
+  }
+
+  70% {
+    transform: translateX(1px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes introBottomArrive {
+  0% {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes interferenceFallbackSweep {
@@ -164,22 +850,209 @@
   }
 }
 
-@media (max-width: 1040px) {
-  .interferenceOverlay {
-    grid-template-columns: minmax(0, 1fr);
+@keyframes logEntryFlash {
+  0% {
+    color: rgba(255, 240, 200, 0.95);
   }
 
-  .interferenceSidebar {
-    padding: 0 1.5rem 1.5rem;
+  100% {
+    color: rgba(255, 220, 180, 0.85);
+  }
+}
+
+@keyframes stageFlash {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes resistFlash {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cornerLock {
+  0% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+
+  40% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes edgeFadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes stampCorrect {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) translateX(6px);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translateY(-1px) translateX(-1px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes crosshairPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3);
+  }
+
+  15% {
+    opacity: 0.5;
+  }
+
+  40% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  70% {
+    opacity: 0.15;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+}
+
+@keyframes introLockFlash {
+  0% {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ======================================================================== */
+/*  RESPONSIVE                                                               */
+/* ======================================================================== */
+
+@media (max-width: 1040px) {
+  .interferenceHeader {
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 5.5rem 1.5rem 0;
+  }
+
+  .interferenceClassification {
+    max-width: 100%;
+  }
+
+  .interferenceBottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .interferenceLog {
+    max-width: 100%;
+  }
+
+  .interferenceOverlay {
+    padding: 0 1.5rem 2rem;
   }
 }
 
 @media (max-width: 720px) {
-  .interferenceIntro {
-    padding: 5.3rem 1rem 1rem;
+  .interferenceHeader {
+    padding: 5rem 1rem 0;
   }
 
-  .interferenceSidebar {
-    padding: 0 1rem 1rem;
+  .interferenceOverlay {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .interferenceTitle {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .introScanBeam,
+  .introScanBeamV,
+  .introConstrictionRingActive,
+  .introLockPulse,
+  .containmentCrosshairActive {
+    animation-duration: 0.01ms !important;
+  }
+
+  .introTitleSnap {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .introClassificationReveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .introBottomReveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .containmentCornerVisible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .containmentEdgeVisible {
+    animation: none;
+    opacity: 1;
+  }
+
+  .containmentStampVisible {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

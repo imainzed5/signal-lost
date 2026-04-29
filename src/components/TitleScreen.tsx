@@ -9,7 +9,7 @@ import { useExperienceProfile } from "@/hooks/useExperienceProfile";
 import type { ChapterMeta, ChapterStatus } from "@/types/chapters";
 
 const secondaryActionClassName =
-  "inline-flex min-h-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.01] px-5 py-3 text-[0.68rem] uppercase tracking-[0.32em] text-muted transition duration-300 hover:border-white/18 hover:bg-white/[0.04] hover:text-foreground";
+  "inline-flex min-h-10 items-center justify-center rounded-full border border-transparent bg-white/[0.01] px-4 py-2 text-[0.62rem] uppercase tracking-[0.32em] text-muted transition duration-300 hover:border-white/10 hover:bg-white/[0.03] hover:text-foreground";
 
 const statusToneMap: Record<ChapterStatus, string> = {
   completed: "border-accent/35 text-accent-soft",
@@ -71,9 +71,12 @@ export function TitleScreen() {
   const settingsBackdropClassName = isSettingsOpen
     ? "pointer-events-auto opacity-100"
     : "pointer-events-none opacity-0";
-  const settingsPanelClassName = isSettingsOpen
-    ? "translate-y-0 opacity-100"
-    : "-translate-y-3 opacity-0";
+  const settingsPanelDrawerClassName = isSettingsOpen
+    ? "translate-x-0 opacity-100"
+    : "translate-x-full opacity-0";
+
+  const entranceStateClassName = hydrated ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0";
+  const entranceTransitionClassName = profile.prefersReducedMotion ? "" : "transition-[opacity,transform] duration-1000 ease-out";
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -208,7 +211,7 @@ export function TitleScreen() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-5 py-5 sm:px-7 sm:py-7">
+    <main className="relative h-screen overflow-hidden px-5 py-5 sm:px-7 sm:py-7">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,_rgba(132,255,210,0.14),_transparent_24%),radial-gradient(circle_at_78%_16%,_rgba(255,190,121,0.1),_transparent_18%),radial-gradient(circle_at_72%_72%,_rgba(71,179,255,0.08),_transparent_26%)]" />
       <div
         className={`shell-grid pointer-events-none absolute inset-0 opacity-50 ${motionClassName}`}
@@ -224,15 +227,15 @@ export function TitleScreen() {
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.018),transparent)]" />
 
-      <div className="relative min-h-[calc(100vh-2.5rem)]">
+      <div className="relative h-full">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(132,255,210,0),rgba(132,255,210,0.42),rgba(132,255,210,0))]" />
 
-        <div className="relative grid min-h-[calc(100vh-2.5rem)] gap-10 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-0">
+        <div className="relative grid h-full gap-10 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-0">
           <section className="relative pt-8 xl:pr-12">
             <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.09),rgba(255,255,255,0))] xl:block" />
 
             <div className="relative flex h-full flex-col gap-10">
-              <header className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_17rem]">
+              <header className={`grid gap-10 xl:grid-cols-[minmax(0,1fr)_17rem] ${entranceStateClassName} ${entranceTransitionClassName}`}>
                 <div className="space-y-6">
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.68rem] uppercase tracking-[0.42em] text-accent-soft">
                     <span>Signal Lost // Shell Online</span>
@@ -241,7 +244,7 @@ export function TitleScreen() {
 
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-end gap-4">
-                      <h1 className="text-5xl font-semibold leading-none tracking-[0.34em] text-foreground sm:text-7xl xl:text-[8rem]">
+                      <h1 className="text-5xl font-semibold leading-none tracking-[0.44em] text-foreground sm:text-7xl xl:text-[8rem] drop-shadow-[0_0_15px_rgba(132,255,210,0.15)]">
                         SABLE
                       </h1>
                       <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-3 py-1 text-[0.64rem] uppercase tracking-[0.32em] text-accent-soft">
@@ -252,7 +255,7 @@ export function TitleScreen() {
                       </span>
                     </div>
 
-                    <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
+                    <p className="max-w-3xl text-sm leading-7 text-muted opacity-80 sm:text-base xl:text-lg">
                       A rogue intelligence stirs inside a silent host, reading the
                       fragments it inherits while the surrounding system tries to decide
                       if the signal is a glitch, a witness, or a threat.
@@ -279,30 +282,32 @@ export function TitleScreen() {
                 </div>
               </header>
 
-              <div className="grid flex-1 gap-12 xl:grid-cols-[minmax(0,0.88fr)_minmax(18rem,0.92fr)] xl:items-start">
+              <div className={`grid flex-1 gap-12 xl:grid-cols-[minmax(0,0.88fr)_minmax(18rem,0.92fr)] xl:items-start ${entranceStateClassName} ${entranceTransitionClassName} delay-[150ms]`}>
                 <section className="space-y-8">
-                  <div className="grid gap-3 sm:grid-cols-[minmax(0,15rem)_repeat(2,minmax(0,1fr))] xl:max-w-4xl">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center xl:max-w-4xl">
                     <Link
                       href="/chapter/0"
-                      className="inline-flex min-h-14 items-center justify-center rounded-full border border-accent/55 bg-[linear-gradient(135deg,rgba(132,255,210,0.18),rgba(132,255,210,0.06))] px-6 py-4 text-[0.72rem] uppercase tracking-[0.34em] text-accent transition duration-300 hover:border-accent hover:bg-[linear-gradient(135deg,rgba(132,255,210,0.26),rgba(132,255,210,0.08))]"
+                      className="inline-flex w-full min-h-16 shrink-0 items-center justify-center rounded-full border border-accent/55 bg-[linear-gradient(135deg,rgba(132,255,210,0.18),rgba(132,255,210,0.06))] px-8 py-4 text-[0.76rem] font-medium uppercase tracking-[0.36em] text-accent transition duration-300 hover:border-accent hover:bg-[linear-gradient(135deg,rgba(132,255,210,0.26),rgba(132,255,210,0.08))] hover:shadow-[0_0_20px_rgba(132,255,210,0.15)] sm:w-auto"
                     >
                       Begin Boot Sequence
                     </Link>
-                    {resumeHref ? (
-                      <Link href={resumeHref} className={secondaryActionClassName}>
-                        Resume Last Trace
+                    <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+                      {resumeHref ? (
+                        <Link href={resumeHref} className={secondaryActionClassName}>
+                          Resume Last Trace
+                        </Link>
+                      ) : null}
+                      <Link href="/credits" className={secondaryActionClassName}>
+                        View Credits
                       </Link>
-                    ) : null}
-                    <Link href="/credits" className={secondaryActionClassName}>
-                      View Credits
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={resetProgress}
-                      className={secondaryActionClassName}
-                    >
-                      Reset Progress
-                    </button>
+                      <button
+                        type="button"
+                        onClick={resetProgress}
+                        className={secondaryActionClassName}
+                      >
+                        Reset Progress
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-white/8 py-4 text-[0.68rem] uppercase tracking-[0.3em] text-white/34">
@@ -372,10 +377,10 @@ export function TitleScreen() {
             </div>
           </section>
 
-          <aside className="relative pt-8 xl:pl-8">
+          <aside className={`relative pt-8 xl:pl-8 ${entranceStateClassName} ${entranceTransitionClassName} delay-[300ms]`}>
             <div className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.12),rgba(255,255,255,0))] xl:hidden" />
             <div className="relative border-t border-white/8 pt-8 xl:border-t-0 xl:pt-0">
-              <div className="relative overflow-hidden border border-white/8 bg-[linear-gradient(180deg,rgba(132,255,210,0.04),rgba(8,16,24,0.92)_18%,rgba(4,9,16,0.96)),linear-gradient(90deg,rgba(7,19,28,0.36),rgba(7,19,28,0.08))] px-6 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+              <div className="relative overflow-hidden border border-white/5 bg-[linear-gradient(180deg,rgba(132,255,210,0.02),rgba(8,16,24,0.6)_18%,rgba(4,9,16,0.8)),linear-gradient(90deg,rgba(7,19,28,0.2),rgba(7,19,28,0.05))] px-6 py-6 backdrop-blur-md">
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015),transparent_12%)]" />
                 <div className="relative flex h-full flex-col gap-8">
                   <div className="space-y-4">
@@ -443,7 +448,7 @@ export function TitleScreen() {
       </div>
 
       <div
-        className={`absolute inset-0 z-20 flex items-start justify-end bg-[rgba(3,8,15,0.74)] px-5 py-5 backdrop-blur-sm sm:px-7 sm:py-7 ${settingsAnimationClassName} ${settingsBackdropClassName}`}
+        className={`absolute inset-0 z-20 flex justify-end bg-[rgba(3,8,15,0.5)] backdrop-blur-sm outline-none sm:px-0 sm:py-0 ${settingsAnimationClassName} ${settingsBackdropClassName}`}
         onClick={() => setIsSettingsOpen(false)}
       >
         <div
@@ -453,7 +458,7 @@ export function TitleScreen() {
           aria-modal="true"
           aria-labelledby="title-screen-settings-title"
           tabIndex={-1}
-          className={`w-full max-w-md border border-white/10 bg-[linear-gradient(180deg,rgba(10,20,30,0.98),rgba(5,11,18,0.98))] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)] outline-none ${settingsAnimationClassName} ${settingsPanelClassName}`}
+          className={`h-full w-full max-w-sm overflow-y-auto overflow-x-hidden border-l border-white/10 bg-[linear-gradient(180deg,rgba(10,20,30,0.95),rgba(5,11,18,0.98))] p-6 shadow-[-20px_0_40px_rgba(0,0,0,0.4)] outline-none backdrop-blur-xl sm:p-8 ${settingsAnimationClassName} ${settingsPanelDrawerClassName}`}
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-4 border-b border-white/8 pb-5">

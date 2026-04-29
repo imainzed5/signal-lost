@@ -152,10 +152,12 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           chapterId={2}
           choices={chapterTwoChoices}
           choiceLabel="Chapter 2 Choice"
+          choiceInScene
           description="Every channel has answered back. Decide whether SABLE embraces the contact or narrows her footprint before the host begins to fight back."
-          renderScene={(sceneVersion, handleComplete) => (
-            <Chapter2Signal key={sceneVersion} onComplete={handleComplete} />
+          renderScene={(sceneVersion, handleComplete, sceneChoice) => (
+            <Chapter2Signal key={sceneVersion} onComplete={handleComplete} sceneChoice={sceneChoice} />
           )}
+          showReveal={false}
           title="Choose how visible the signal becomes."
         />
       );
@@ -169,6 +171,7 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           renderScene={(sceneVersion, handleComplete) => (
             <Chapter3Interference key={sceneVersion} onComplete={handleComplete} />
           )}
+          showReveal={false}
           title="Choose how the interference is answered."
         />
       );
