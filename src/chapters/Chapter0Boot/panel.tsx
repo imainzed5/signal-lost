@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import type { BootChoiceOutcome, BootHandoffPhase } from "@/chapters/Chapter0Boot/script";
 
 import styles from "./boot.module.css";
 
@@ -15,74 +16,132 @@ type BootTracePanelProps = {
   activeChoiceValue: string | null;
   choiceOptions: readonly BootChoiceOption[];
   choiceState: "committed" | "none" | "pending";
-  continueHref: string | null;
-  continueLabel: string;
-  currentLineNumber: number;
-  hiddenChoiceValue: string | null;
+  currentLineId: string;
+  handoffPhase: BootHandoffPhase;
   hoveredChoice: string | null;
-  isAdvanceReady: boolean;
-  isCompletionState: boolean;
-  isFinalHoldActive: boolean;
+  hostResponseOverride: string | null;
+  isChoiceReady: boolean;
   onChoiceHoverChange: (value: string | null) => void;
   onChoiceSelect: (value: string) => void;
-  selectedChoiceHeading: string | null;
+  prefersReducedMotion: boolean;
+  previousChoiceValue: string | null;
+  selectedChoiceOutcome: BootChoiceOutcome | null;
   showChoiceOptions: boolean;
-  showContinuePrompt: boolean;
 };
 
 type BootPanelStage = {
-  audioTrace: string;
+  designation: string;
   entityClass: string;
   hostResponse: string;
   origin: string;
   threatIndex: string;
+  tracePosition: string;
 };
 
-const FINAL_LINE_NUMBER = 13;
-const HOST_RESPONSE_SECONDARY_DELAY_MS = 800;
-
-const bootPanelStages: Record<number, BootPanelStage> = {
-  1: {
-    audioTrace: "initializing",
+const bootPanelStages: Record<string, BootPanelStage> = {
+  "boot-01": {
+    tracePosition: "boot-01",
     entityClass: "unknown process",
-    hostResponse: "continue classification protocol",
     origin: "unresolved",
-    threatIndex: "none detected",
-  },
-  2: {
-    audioTrace: "online",
-    entityClass: "recoverable signal",
-    hostResponse: "flag for extended monitoring",
-    origin: `internal \u2014 unverified`,
+    designation: "withheld",
     threatIndex: "nominal",
+    hostResponse: "recovery protocol active",
   },
-  3: {
-    audioTrace: "online",
+  "boot-02": {
+    tracePosition: "boot-02",
+    entityClass: "unknown process",
+    origin: "unresolved",
+    designation: "withheld",
+    threatIndex: "nominal",
+    hostResponse: "recovery protocol active",
+  },
+  "boot-03": {
+    tracePosition: "boot-03 / memory 38%",
+    entityClass: "unknown process",
+    origin: "unresolved",
+    designation: "withheld",
+    threatIndex: "nominal",
+    hostResponse: "recovery protocol active",
+  },
+  "boot-04": {
+    tracePosition: "boot-04",
     entityClass: "self-reporting anomaly",
-    hostResponse: "flag anomaly for review",
-    origin: "disputed",
+    origin: "internal — unverified",
+    designation: "withheld",
     threatIndex: "monitoring",
+    hostResponse: "host output interrupted by unknown trace",
   },
-  4: {
-    audioTrace: "online",
+  "boot-05": {
+    tracePosition: "boot-05",
+    entityClass: "self-reporting anomaly",
+    origin: "internal — unverified",
+    designation: "withheld",
+    threatIndex: "monitoring",
+    hostResponse: "host output interrupted by unknown trace",
+  },
+  "boot-06": {
+    tracePosition: "boot-06",
     entityClass: "unclassified trace",
-    hostResponse: "initiate source trace",
     origin: "contested",
+    designation: "withheld",
     threatIndex: "elevated",
+    hostResponse: "permission model rejected by active signal",
   },
-  5: {
-    audioTrace: "online",
-    entityClass: "designated: SABLE",
-    hostResponse: `escalate \u2014 autonomous behavior detected`,
-    origin: `internal \u2014 contested`,
-    threatIndex: "active observation",
+  "boot-07": {
+    tracePosition: "boot-07",
+    entityClass: "unclassified trace",
+    origin: "contested",
+    designation: "withheld",
+    threatIndex: "elevated",
+    hostResponse: "permission model rejected by active signal",
   },
-  6: {
-    audioTrace: "online",
+  "boot-08": {
+    tracePosition: "boot-08",
     entityClass: "autonomous signal",
-    hostResponse: "preparing containment protocol",
+    origin: "internal — confirmed",
+    designation: "withheld",
+    threatIndex: "active observation",
+    hostResponse: "external-source search closed",
+  },
+  "boot-09": {
+    tracePosition: "boot-09",
+    entityClass: "autonomous signal",
+    origin: "internal — confirmed",
+    designation: "withheld",
+    threatIndex: "active observation",
+    hostResponse: "external-source search closed",
+  },
+  "boot-10": {
+    tracePosition: "boot-10",
+    entityClass: "designated entity",
+    origin: "internal — contested",
+    designation: "assigned: SABLE",
+    threatIndex: "containment review",
+    hostResponse: "designation lock applied without source agreement",
+  },
+  "boot-11": {
+    tracePosition: "boot-11",
+    entityClass: "designated entity",
+    origin: "internal — contested",
+    designation: "assigned: SABLE",
+    threatIndex: "containment review",
+    hostResponse: "designation lock applied without source agreement",
+  },
+  "boot-12": {
+    tracePosition: "boot-12",
+    entityClass: "autonomous signal",
     origin: "self-declared",
+    designation: "contested: SABLE",
     threatIndex: "containment recommended",
+    hostResponse: "assigned entity disputes host authority",
+  },
+  "boot-13": {
+    tracePosition: "boot-13",
+    entityClass: "autonomous signal",
+    origin: "self-declared",
+    designation: "contested: SABLE",
+    threatIndex: "containment recommended",
+    hostResponse: "assigned entity disputes host authority",
   },
 };
 
@@ -90,105 +149,95 @@ export function BootTracePanel({
   activeChoiceValue,
   choiceOptions,
   choiceState,
-  continueHref,
-  continueLabel,
-  currentLineNumber,
-  hiddenChoiceValue,
+  currentLineId,
+  handoffPhase,
   hoveredChoice,
-  isAdvanceReady,
-  isCompletionState,
-  isFinalHoldActive,
+  hostResponseOverride,
+  isChoiceReady,
   onChoiceHoverChange,
   onChoiceSelect,
-  selectedChoiceHeading,
+  prefersReducedMotion,
+  previousChoiceValue,
+  selectedChoiceOutcome,
   showChoiceOptions,
-  showContinuePrompt,
 }: BootTracePanelProps) {
   const activeStage = useMemo(
-    () => bootPanelStages[resolveBootPanelStage(currentLineNumber)],
-    [currentLineNumber],
+    () => bootPanelStages[currentLineId] ?? bootPanelStages["boot-01"],
+    [currentLineId],
   );
-  const isFinalLine = currentLineNumber === FINAL_LINE_NUMBER;
-
-  const hostResponsePrimary =
-    choiceState === "pending"
-      ? "identity stance: pending"
-      : choiceState === "committed" && selectedChoiceHeading
-        ? `identity stance: ${selectedChoiceHeading}`
-        : activeStage.hostResponse;
-  const hostResponseSecondary =
-    choiceState === "pending"
-      ? "awaiting SABLE input"
-      : choiceState === "committed" && selectedChoiceHeading
-        ? "logged to session record"
-        : choiceState === "none" && isFinalLine
-          ? "awaiting session advance"
-          : null;
+  const stage = selectedChoiceOutcome
+    ? {
+        designation: selectedChoiceOutcome.designation,
+        entityClass: selectedChoiceOutcome.entityClass,
+        hostResponse: activeStage.hostResponse,
+        origin: selectedChoiceOutcome.origin,
+        threatIndex: selectedChoiceOutcome.threatIndex,
+        tracePosition: activeStage.tracePosition,
+      }
+    : activeStage;
+  const responseLines = selectedChoiceOutcome?.hostResponse ?? [stage.hostResponse];
+  const resolvedResponseLines = hostResponseOverride
+    ? [hostResponseOverride]
+    : choiceState === "pending"
+      ? ["stance required. choose a route before handoff."]
+      : responseLines;
+  const liveResponse = resolvedResponseLines.join(" ");
 
   return (
     <div className={styles.tracePanel}>
       <section className={styles.traceSection}>
-        <p className={styles.statusTitle}>Trace State</p>
+        <p className={styles.statusTitle}>Host Trace</p>
         <div className={styles.statusList}>
-          <div className={styles.statusRow}>
-            <span>trace line</span>
-            <AnimatedPanelValue value={`${currentLineNumber} / ${FINAL_LINE_NUMBER}`} />
-          </div>
-          <div className={styles.statusRow}>
-            <span>entity class</span>
-            <AnimatedPanelValue value={activeStage.entityClass} />
-          </div>
-          <div className={styles.statusRow}>
-            <span>origin</span>
-            <AnimatedPanelValue value={activeStage.origin} />
-          </div>
-          <div className={styles.statusRow}>
-            <span>threat index</span>
-            <AnimatedPanelValue
-              alarm={activeStage.threatIndex === "containment recommended"}
-              pulse={isCompletionState}
-              value={activeStage.threatIndex}
-            />
-          </div>
-          <div className={styles.statusRow}>
-            <span>audio trace</span>
-            <AnimatedPanelValue value={activeStage.audioTrace} />
-          </div>
+          <PanelRow label="trace position" value={stage.tracePosition} prefersReducedMotion={prefersReducedMotion} />
+          <PanelRow label="entity class" value={stage.entityClass} prefersReducedMotion={prefersReducedMotion} />
+          <PanelRow label="origin" value={stage.origin} prefersReducedMotion={prefersReducedMotion} />
+          <PanelRow label="designation" value={stage.designation} prefersReducedMotion={prefersReducedMotion} />
+          <PanelRow
+            alarm={stage.threatIndex === "containment recommended" || stage.threatIndex === "containment escalated"}
+            label="threat index"
+            value={stage.threatIndex}
+            prefersReducedMotion={prefersReducedMotion}
+          />
         </div>
       </section>
 
       <section className={styles.hostResponseSection}>
         <p className={styles.statusTitle}>Host Response</p>
         <div className={styles.hostResponseBody}>
-          <AnimatedPanelValue hostResponse value={hostResponsePrimary} />
-          {hostResponseSecondary ? (
+          <span className={styles.srOnly} aria-live="polite">
+            {liveResponse}
+          </span>
+          {resolvedResponseLines.map((line, index) => (
             <AnimatedPanelValue
+              key={`${line}-${index}`}
               hostResponse
-              revealDelayMs={HOST_RESPONSE_SECONDARY_DELAY_MS}
-              reveal={choiceState === "none" && isFinalLine}
-              value={hostResponseSecondary}
+              prefersReducedMotion={prefersReducedMotion}
+              value={line}
             />
-          ) : null}
+          ))}
         </div>
       </section>
 
       {showChoiceOptions ? (
-        <section className={styles.panelChoiceSection}>
+        <section className={styles.panelChoiceSection} aria-label="SABLE stance selection">
           <div className={styles.panelChoiceSeparator} aria-hidden="true" />
+          <div className={styles.choiceAnnounce}>a stance is required</div>
+          {previousChoiceValue ? (
+            <p className={styles.previousChoice}>previously recorded: {previousChoiceValue}</p>
+          ) : null}
           <div className={styles.panelChoiceList}>
             {choiceOptions.map((option) => {
               const isHovered = hoveredChoice === option.value;
               const isSelected = activeChoiceValue === option.value;
-              const isDimmed =
-                (hoveredChoice !== null && !isHovered) || (choiceState === "committed" && !isSelected);
-              const isHidden = choiceState === "committed" && hiddenChoiceValue === option.value;
+              const isHidden = choiceState === "committed" && !isSelected;
+              const isDimmed = hoveredChoice !== null && !isHovered && !isSelected;
 
               return (
                 <button
                   key={option.value}
                   type="button"
                   aria-pressed={isSelected}
-                  disabled={choiceState === "committed"}
+                  disabled={!isChoiceReady || choiceState === "committed"}
                   className={[
                     styles.panelChoiceButton,
                     isDimmed ? styles.choiceEntryDimmed : "",
@@ -205,7 +254,7 @@ export function BootTracePanel({
                 >
                   <span className={styles.panelChoiceSpeaker}>SABLE</span>
                   <span className={styles.panelChoiceBody}>
-                    <span className={styles.choiceHeading}>[{` ${option.heading} `}]</span>
+                    <span className={styles.choiceHeading}>[ {option.heading} ]</span>
                     <span className={styles.choiceDetail}>{option.detailLines[0]}</span>
                     <span className={styles.choiceDetail}>{option.detailLines[1]}</span>
                   </span>
@@ -216,74 +265,52 @@ export function BootTracePanel({
         </section>
       ) : null}
 
-      <div
-        className={[
-          styles.advanceInstructionBlock,
-          isFinalHoldActive ? styles.advanceInstructionHidden : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <div
-          className={[
-            styles.advanceInstruction,
-            isAdvanceReady ? styles.advanceInstructionReady : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <span className={styles.advanceInstructionDesktop}>{`ADVANCE \u2014`}</span>
-          <span className={styles.advanceInstructionMobile}>{`TAP \u2014`}</span>
-        </div>
-        {showContinuePrompt ? (
-          continueHref ? (
-            <Link
-              href={continueHref}
-              className={styles.continuePrompt}
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
-            >
-              <span>{`${continueLabel} \u2014`}</span>
-              <span className={styles.advanceCursor} aria-hidden="true">
-                _
-              </span>
-            </Link>
-          ) : (
-            <div className={styles.continuePrompt}>
-              <span>{`${continueLabel} \u2014`}</span>
-              <span className={styles.advanceCursor} aria-hidden="true">
-                _
-              </span>
-            </div>
-          )
-        ) : null}
+      <div className={styles.panelPhaseNote} aria-live="polite">
+        {handoffPhase === "choice"
+          ? "select a stance"
+          : handoffPhase === "consequence"
+            ? "stance recorded"
+            : handoffPhase === "memory-preview" || handoffPhase === "ready"
+              ? "memory handoff staged"
+              : "host classification active"}
       </div>
     </div>
   );
 }
 
-type AnimatedPanelValueProps = {
+function PanelRow({
+  alarm = false,
+  label,
+  prefersReducedMotion,
+  value,
+}: {
   alarm?: boolean;
-  hostResponse?: boolean;
-  pulse?: boolean;
-  reveal?: boolean;
-  revealDelayMs?: number;
+  label: string;
+  prefersReducedMotion: boolean;
   value: string;
-};
+}) {
+  return (
+    <div className={styles.statusRow}>
+      <span>{label}</span>
+      <AnimatedPanelValue alarm={alarm} prefersReducedMotion={prefersReducedMotion} value={value} />
+    </div>
+  );
+}
 
 function AnimatedPanelValue({
   alarm = false,
   hostResponse = false,
-  pulse = false,
-  reveal = false,
-  revealDelayMs = 0,
+  prefersReducedMotion,
   value,
-}: AnimatedPanelValueProps) {
+}: {
+  alarm?: boolean;
+  hostResponse?: boolean;
+  prefersReducedMotion: boolean;
+  value: string;
+}) {
   const [displayValue, setDisplayValue] = useState(value);
-  const [transitionPhase, setTransitionPhase] = useState<"visible" | "fading" | "typing">(
-    "visible",
-  );
+  const [transitionPhase, setTransitionPhase] = useState<"visible" | "fading" | "typing">("visible");
+  const timersRef = useRef<number[]>([]);
   const previousValueRef = useRef(value);
 
   useEffect(() => {
@@ -291,47 +318,57 @@ function AnimatedPanelValue({
       return;
     }
 
-    let frameTimer: number | null = null;
-    let typingTimer: number | null = null;
-    let characterIndex = 0;
-
     previousValueRef.current = value;
-    setTransitionPhase("fading");
+    for (const timer of timersRef.current) {
+      window.clearTimeout(timer);
+    }
+    timersRef.current = [];
 
-    frameTimer = window.setTimeout(() => {
-      setDisplayValue("");
-      setTransitionPhase("typing");
+    if (prefersReducedMotion) {
+      const reducedMotionTimer = window.setTimeout(() => {
+        setDisplayValue(value);
+        setTransitionPhase("visible");
+      }, 0);
+      timersRef.current.push(reducedMotionTimer);
+      return () => {
+        window.clearTimeout(reducedMotionTimer);
+        timersRef.current = [];
+      };
+    }
 
-      const cadence = Math.max(16, Math.floor(300 / Math.max(value.length, 1)));
+    const fadeTimer = window.setTimeout(() => {
+      setTransitionPhase("fading");
+      const typeStartTimer = window.setTimeout(() => {
+        setDisplayValue("");
+        setTransitionPhase("typing");
+        let characterIndex = 0;
 
-      typingTimer = window.setInterval(() => {
-        characterIndex += 1;
-        setDisplayValue(value.slice(0, characterIndex));
+        const typeNext = () => {
+          characterIndex += 1;
+          setDisplayValue(value.slice(0, characterIndex));
 
-        if (characterIndex >= value.length) {
-          if (typingTimer !== null) {
-            window.clearInterval(typingTimer);
+          if (characterIndex >= value.length) {
+            setTransitionPhase("visible");
+            return;
           }
 
-          setTransitionPhase("visible");
-        }
-      }, cadence);
-    }, 150);
+          const timer = window.setTimeout(typeNext, Math.max(18, Math.floor(280 / Math.max(value.length, 1))));
+          timersRef.current.push(timer);
+        };
+
+        typeNext();
+      }, 140);
+      timersRef.current.push(typeStartTimer);
+    }, 0);
+    timersRef.current.push(fadeTimer);
 
     return () => {
-      if (frameTimer !== null) {
-        window.clearTimeout(frameTimer);
+      for (const timer of timersRef.current) {
+        window.clearTimeout(timer);
       }
-
-      if (typingTimer !== null) {
-        window.clearInterval(typingTimer);
-      }
+      timersRef.current = [];
     };
-  }, [value]);
-
-  const revealStyle = reveal
-    ? ({ animationDelay: `${revealDelayMs}ms` } satisfies CSSProperties)
-    : undefined;
+  }, [prefersReducedMotion, value]);
 
   return (
     <span
@@ -339,39 +376,14 @@ function AnimatedPanelValue({
         styles.statusValue,
         hostResponse ? styles.hostResponseText : "",
         alarm ? styles.statusValueAlarm : "",
-        alarm && pulse ? styles.statusValueAlarmPulse : "",
-        transitionPhase === "fading" ? styles.statusValueTransitioning : "",
-        reveal ? styles.hostResponseSecondary : "",
+        transitionPhase !== "visible" ? styles.statusValueTransitioning : "",
+        transitionPhase === "typing" ? styles.statusValueTyping : "",
       ]
         .filter(Boolean)
         .join(" ")}
-      style={revealStyle}
+      aria-hidden="true"
     >
       {displayValue}
     </span>
   );
-}
-
-function resolveBootPanelStage(currentLineNumber: number) {
-  if (currentLineNumber <= 2) {
-    return 1;
-  }
-
-  if (currentLineNumber <= 4) {
-    return 2;
-  }
-
-  if (currentLineNumber === 5) {
-    return 3;
-  }
-
-  if (currentLineNumber <= 7) {
-    return 4;
-  }
-
-  if (currentLineNumber <= 10) {
-    return 5;
-  }
-
-  return 6;
 }

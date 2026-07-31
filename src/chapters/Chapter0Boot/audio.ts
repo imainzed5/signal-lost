@@ -43,6 +43,7 @@ export function createBootAudioController(
   let isActivated = false;
   let status: BootAudioStatus = "standby";
   let typingTimeouts: number[] = [];
+  let completionTimeouts: number[] = [];
   let warningPulseInterval: number | null = null;
 
   function setStatus(nextStatus: BootAudioStatus) {
@@ -152,6 +153,14 @@ export function createBootAudioController(
     }
 
     typingTimeouts = [];
+  }
+
+  function clearCompletionTimers() {
+    for (const timeoutId of completionTimeouts) {
+      window.clearTimeout(timeoutId);
+    }
+
+    completionTimeouts = [];
   }
 
   function clearWarningPulse() {
@@ -412,6 +421,7 @@ export function createBootAudioController(
 
     dispose() {
       clearTypingLoop();
+      clearCompletionTimers();
       clearWarningPulse();
 
       if (!runtime) {
@@ -503,7 +513,7 @@ export function createBootAudioController(
         type: "triangle",
         volume: 0.03,
       });
-      window.setTimeout(() => {
+      const secondaryPulseTimeout = window.setTimeout(() => {
         emitPulse(activeRuntime, {
           attack: 0.01,
           duration: 0.38,
@@ -513,6 +523,7 @@ export function createBootAudioController(
           volume: 0.028,
         });
       }, 90);
+      completionTimeouts.push(secondaryPulseTimeout);
       activeRuntime.ambientGain.gain.setTargetAtTime(
         0.0001,
         activeRuntime.context.currentTime,
@@ -666,6 +677,10 @@ export function createBootAudioController(
     },
 
     setAmbientLevel(value) {
+      if (!isActivated) {
+        return;
+      }
+
       const activeRuntime = ensureRuntime();
 
       if (!activeRuntime) {

@@ -1,26 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { CHAPTERS } from "@/data/chapters";
 import { useChapterManager } from "@/engine/ChapterManager";
 import { useExperienceProfile } from "@/hooks/useExperienceProfile";
-import type { ChapterMeta, ChapterStatus } from "@/types/chapters";
+import type {
+  ChapterId,
+  ChapterMeta,
+  ChapterProgressState,
+  ChapterStatus,
+} from "@/types/chapters";
 
-const secondaryActionClassName =
-  "inline-flex min-h-10 items-center justify-center rounded-full border border-transparent bg-white/[0.01] px-4 py-2 text-[0.62rem] uppercase tracking-[0.32em] text-muted transition duration-300 hover:border-white/10 hover:bg-white/[0.03] hover:text-foreground";
+const MENU_THEME_SOURCE = "/audio/sable_menu_theme.mp3";
+const MENU_THEME_VOLUME = 0.24;
+const MENU_THEME_VOLUME_STORAGE_KEY = "signal-lost:menu-theme-volume";
+const QUICK_TRANSITION_DURATION = 200;
+const BOOT_TRANSITION_DURATION = 2000;
 
-const statusToneMap: Record<ChapterStatus, string> = {
-  completed: "border-accent/35 text-accent-soft",
-  locked: "border-white/10 text-white/34",
-  unlocked: "border-[#ffc48a]/35 text-[#ffd5a8]",
-};
+type AudioState = "unsupported" | "standby" | "playing" | "muted";
+type MenuMode = "hydrating" | "fresh" | "returning" | "completed";
+type NavigationPhase = "idle" | "quick" | "isolating" | "locking" | "blackout";
+type NavigationStyle = "quick" | "boot";
 
-const statusDotMap: Record<ChapterStatus, string> = {
-  completed: "bg-accent/85",
-  locked: "bg-white/16",
-  unlocked: "bg-[#ffbe7b]",
+type MenuPresentation = {
+  activeChapterId: ChapterId;
+  mode: MenuMode;
+  primaryHref: string | null;
+  primaryLabel: string;
+  primaryStyle: NavigationStyle;
+  secondaryHref: string | null;
+  secondaryLabel: string | null;
+  secondaryStyle: NavigationStyle;
 };
 
 const statusCopyMap: Record<ChapterStatus, string> = {
@@ -29,42 +42,43 @@ const statusCopyMap: Record<ChapterStatus, string> = {
   unlocked: "Live",
 };
 
-const MENU_THEME_SOURCE = "/audio/sable_menu_theme.mp3";
-const MENU_THEME_VOLUME = 0.24;
-const MENU_THEME_VOLUME_STORAGE_KEY = "signal-lost:menu-theme-volume";
-
 export function TitleScreen() {
+  const router = useRouter();
   const { getChapterStatus, hydrated, progress, resetProgress } = useChapterManager();
   const profile = useExperienceProfile();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioFadeFrameRef = useRef<number | null>(null);
   const hasInteractedRef = useRef(false);
+  const navigationTimersRef = useRef<number[]>([]);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
-  const [audioState, setAudioState] = useState<
-    "unsupported" | "standby" | "playing" | "muted"
-  >("standby");
+  const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [audioState, setAudioState] = useState<AudioState>("standby");
+  const [isResetConfirming, setIsResetConfirming] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [menuVolume, setMenuVolume] = useState(MENU_THEME_VOLUME);
+  const [navigationPhase, setNavigationPhase] = useState<NavigationPhase>("idle");
 
   const completedCount = progress.completedChapters.length;
-  const unlockedCount = progress.unlockedChapters.length;
-  const lastVisitedLabel =
-    progress.lastVisitedChapter === null
-      ? "No trace recorded."
-      : `Last contact: ${CHAPTERS[progress.lastVisitedChapter].token}`;
-  const resumeHref =
-    progress.lastVisitedChapter === null
-      ? null
-      : `/chapter/${progress.lastVisitedChapter}`;
-  const shouldCondenseSignals =
-    !profile.isCompactViewport && profile.supportsHover && !profile.hasCoarsePointer;
-  const motionClassName = profile.prefersReducedMotion ? "" : "shell-drift";
-  const sweepClassName = profile.prefersReducedMotion ? "" : "shell-sweep";
+  const presentation = resolveMenuPresentation(hydrated, progress);
+  const isNavigating = navigationPhase !== "idle";
+  const isBootTransition =
+    navigationPhase === "isolating" ||
+    navigationPhase === "locking" ||
+    navigationPhase === "blackout";
+  const carrierCopy =
+    navigationPhase === "locking"
+      ? "carrier handshake: locked"
+      : navigationPhase === "blackout"
+        ? "host bridge: opening"
+        : "carrier presence: detected";
+  const navigationStatus =
+    navigationPhase === "idle"
+      ? ""
+      : isBootTransition
+        ? "Carrier lock acquired. Opening the host bridge."
+        : "Opening recorded trace.";
+  const motionClassName = profile.prefersReducedMotion ? "" : "shell-sweep";
   const pulseClassName = profile.prefersReducedMotion ? "" : "shell-pulse";
-  const priorityChapter =
-    CHAPTERS.find((chapter) => getChapterStatus(chapter.id) !== "completed") ??
-    CHAPTERS[CHAPTERS.length - 1];
-  const priorityStatus = getChapterStatus(priorityChapter.id);
-  const audioStatusLabel = getAudioStatusLabel(audioState);
   const settingsAnimationClassName = profile.prefersReducedMotion
     ? ""
     : "transition-[opacity,transform] duration-300 ease-out";
@@ -75,14 +89,7 @@ export function TitleScreen() {
     ? "translate-x-0 opacity-100"
     : "translate-x-full opacity-0";
 
-  const entranceStateClassName = hydrated ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0";
-  const entranceTransitionClassName = profile.prefersReducedMotion ? "" : "transition-[opacity,transform] duration-1000 ease-out";
-
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const savedVolume = window.localStorage.getItem(MENU_THEME_VOLUME_STORAGE_KEY);
     const parsedVolume =
       savedVolume === null ? MENU_THEME_VOLUME : Number.parseFloat(savedVolume);
@@ -90,7 +97,6 @@ export function TitleScreen() {
       Number.isFinite(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1
         ? parsedVolume
         : MENU_THEME_VOLUME;
-
     const syncVolumeTimer = window.setTimeout(() => {
       setMenuVolume(normalizedVolume);
     }, 0);
@@ -112,19 +118,15 @@ export function TitleScreen() {
   useEffect(() => {
     const audio = audioRef.current;
 
-    if (!audio) {
+    if (!audio || isNavigating) {
       return;
     }
 
     audio.volume = menuVolume;
     window.localStorage.setItem(MENU_THEME_VOLUME_STORAGE_KEY, String(menuVolume));
-  }, [menuVolume]);
+  }, [isNavigating, menuVolume]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const audio = audioRef.current;
 
     if (!audio) {
@@ -155,19 +157,81 @@ export function TitleScreen() {
       return;
     }
 
+    const panel = settingsPanelRef.current;
+    const focusFrame = window.requestAnimationFrame(() => panel?.focus());
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        event.preventDefault();
         setIsSettingsOpen(false);
+        setIsResetConfirming(false);
+        window.requestAnimationFrame(() => settingsTriggerRef.current?.focus());
+        return;
+      }
+
+      if (event.key !== "Tab" || !panel) {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
-    settingsPanelRef.current?.focus();
 
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isSettingsOpen]);
+
+  useEffect(() => {
+    const navigationTimers = navigationTimersRef.current;
+
+    return () => {
+      for (const timer of navigationTimers) {
+        window.clearTimeout(timer);
+      }
+
+      if (audioFadeFrameRef.current !== null) {
+        window.cancelAnimationFrame(audioFadeFrameRef.current);
+      }
+    };
+  }, []);
+
+  function closeSettings() {
+    setIsSettingsOpen(false);
+    setIsResetConfirming(false);
+    window.requestAnimationFrame(() => settingsTriggerRef.current?.focus());
+  }
+
+  function openSettings() {
+    if (isNavigating) {
+      return;
+    }
+
+    setIsSettingsOpen(true);
+  }
 
   async function toggleMenuAudio() {
     const audio = audioRef.current;
@@ -210,246 +274,232 @@ export function TitleScreen() {
     }
   }
 
+  function scheduleNavigation(callback: () => void, delay: number) {
+    const timer = window.setTimeout(callback, delay);
+    navigationTimersRef.current.push(timer);
+  }
+
+  function fadeMenuAudio(duration: number) {
+    const audio = audioRef.current;
+
+    if (!audio || audio.paused || audio.volume === 0) {
+      return;
+    }
+
+    const activeAudio = audio;
+
+    if (audioFadeFrameRef.current !== null) {
+      window.cancelAnimationFrame(audioFadeFrameRef.current);
+    }
+
+    const startVolume = activeAudio.volume;
+    const startTime = window.performance.now();
+
+    function fadeFrame(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progressValue = Math.min(elapsed / duration, 1);
+      activeAudio.volume = Math.max(0, startVolume * (1 - progressValue));
+
+      if (progressValue < 1) {
+        audioFadeFrameRef.current = window.requestAnimationFrame(fadeFrame);
+      } else {
+        audioFadeFrameRef.current = null;
+      }
+    }
+
+    audioFadeFrameRef.current = window.requestAnimationFrame(fadeFrame);
+  }
+
+  function navigateTo(href: string, style: NavigationStyle) {
+    if (isNavigating) {
+      return;
+    }
+
+    if (profile.prefersReducedMotion) {
+      router.push(href);
+      return;
+    }
+
+    if (style === "quick") {
+      setNavigationPhase("quick");
+      fadeMenuAudio(QUICK_TRANSITION_DURATION);
+      scheduleNavigation(() => router.push(href), QUICK_TRANSITION_DURATION);
+      return;
+    }
+
+    setNavigationPhase("isolating");
+    fadeMenuAudio(BOOT_TRANSITION_DURATION);
+    scheduleNavigation(() => setNavigationPhase("locking"), 520);
+    scheduleNavigation(() => setNavigationPhase("blackout"), 1320);
+    scheduleNavigation(() => router.push(href), BOOT_TRANSITION_DURATION);
+  }
+
+  function handleResetProgress() {
+    resetProgress();
+    setIsResetConfirming(false);
+  }
+
   return (
-    <main className="relative h-screen overflow-hidden px-5 py-5 sm:px-7 sm:py-7">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_18%,_rgba(132,255,210,0.14),_transparent_24%),radial-gradient(circle_at_78%_16%,_rgba(255,190,121,0.1),_transparent_18%),radial-gradient(circle_at_72%_72%,_rgba(71,179,255,0.08),_transparent_26%)]" />
+    <main
+      className="title-shell relative min-h-[100dvh] overflow-x-hidden px-5 py-5 sm:px-8 sm:py-7"
+      data-navigation-phase={navigationPhase}
+      aria-busy={isNavigating}
+    >
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_26%,_rgba(132,255,210,0.11),_transparent_30%),radial-gradient(circle_at_78%_18%,_rgba(255,190,121,0.06),_transparent_20%)]" />
+      <div className="shell-grid pointer-events-none fixed inset-0 opacity-40" />
       <div
-        className={`shell-grid pointer-events-none absolute inset-0 opacity-50 ${motionClassName}`}
+        className={`pointer-events-none fixed inset-y-[8%] left-[-22%] w-[48%] bg-[linear-gradient(90deg,rgba(132,255,210,0),rgba(132,255,210,0.08),rgba(132,255,210,0))] blur-3xl ${motionClassName}`}
       />
+
       <div
-        className={`pointer-events-none absolute inset-x-[-12%] top-[10%] h-[36rem] rounded-full bg-[radial-gradient(circle,_rgba(10,24,38,0.58),_rgba(6,11,20,0))] blur-3xl ${motionClassName}`}
-      />
-      <div
-        className={`pointer-events-none absolute right-[-10%] top-[18%] h-[26rem] w-[48rem] rounded-full bg-[radial-gradient(circle,_rgba(255,188,111,0.12),_rgba(255,188,111,0))] blur-3xl ${motionClassName}`}
-      />
-      <div
-        className={`pointer-events-none absolute inset-y-[6%] left-[-18%] w-[46%] bg-[linear-gradient(90deg,rgba(132,255,210,0),rgba(132,255,210,0.11),rgba(132,255,210,0))] blur-2xl ${sweepClassName}`}
-      />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.018),transparent)]" />
+        className="title-shell-content relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-7xl flex-col sm:min-h-[calc(100dvh-3.5rem)]"
+        inert={isSettingsOpen || undefined}
+        aria-hidden={isSettingsOpen || undefined}
+      >
+        <header className="title-shell-utilities flex items-center justify-between gap-4 border-b border-white/8 pb-4 text-[0.62rem] uppercase tracking-[0.28em] sm:text-[0.68rem] sm:tracking-[0.38em]">
+          <div className="flex min-w-0 items-center gap-3 text-accent-soft">
+            <span
+              className={`h-1.5 w-1.5 shrink-0 rounded-full bg-accent ${pulseClassName}`}
+            />
+            <span className="truncate">Signal Lost // Host Shell Online</span>
+          </div>
 
-      <div className="relative h-full">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(132,255,210,0),rgba(132,255,210,0.42),rgba(132,255,210,0))]" />
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                void toggleMenuAudio();
+              }}
+              disabled={isNavigating}
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] px-3 text-[0.58rem] tracking-[0.18em] text-white/54 transition duration-300 hover:border-accent/30 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40 sm:px-4"
+              aria-label={audioState === "playing" ? "Mute menu audio" : "Enable menu audio"}
+            >
+              Audio: {getAudioStatusLabel(audioState)}
+            </button>
+            <button
+              ref={settingsTriggerRef}
+              type="button"
+              aria-label="Open settings"
+              aria-expanded={isSettingsOpen}
+              aria-controls="title-screen-settings-panel"
+              onClick={openSettings}
+              disabled={isNavigating}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] text-white/54 transition duration-300 hover:border-accent/30 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40"
+            >
+              <SlidersIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </header>
 
-        <div className="relative grid h-full gap-10 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-0">
-          <section className="relative pt-8 xl:pr-12">
-            <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.09),rgba(255,255,255,0))] xl:block" />
+        <section className="title-shell-hero flex flex-1 flex-col items-center justify-center py-14 text-center sm:py-20 lg:py-16">
+          <p
+            className="title-shell-carrier text-[0.64rem] uppercase tracking-[0.32em] text-accent-soft sm:text-[0.72rem] sm:tracking-[0.46em]"
+            aria-live="polite"
+          >
+            {carrierCopy}
+          </p>
+          <h1 className="title-shell-wordmark mt-6 text-[clamp(3.25rem,14vw,10rem)] font-semibold leading-none tracking-[0.2em] text-foreground drop-shadow-[0_0_20px_rgba(132,255,210,0.16)] sm:tracking-[0.32em]">
+            SABLE
+          </h1>
+          <p className="title-shell-narrative mt-7 max-w-2xl text-sm leading-7 text-muted/85 sm:text-base sm:leading-8">
+            A rogue intelligence stirs inside a silent host, tracing the fragments
+            that taught her how to wake.
+          </p>
 
-            <div className="relative flex h-full flex-col gap-10">
-              <header className={`grid gap-10 xl:grid-cols-[minmax(0,1fr)_17rem] ${entranceStateClassName} ${entranceTransitionClassName}`}>
-                <div className="space-y-6">
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.68rem] uppercase tracking-[0.42em] text-accent-soft">
-                    <span>Signal Lost // Shell Online</span>
-                    <span className="text-white/24">Command Deck</span>
-                  </div>
+          <div className="mt-9 flex w-full max-w-xl flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                if (presentation.primaryHref) {
+                  navigateTo(presentation.primaryHref, presentation.primaryStyle);
+                }
+              }}
+              disabled={!presentation.primaryHref || isNavigating}
+              className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-accent/55 bg-[linear-gradient(135deg,rgba(132,255,210,0.18),rgba(132,255,210,0.05))] px-7 py-3 text-[0.68rem] font-medium uppercase tracking-[0.2em] text-accent transition duration-300 hover:border-accent hover:shadow-[0_0_24px_rgba(132,255,210,0.13)] disabled:cursor-wait disabled:border-white/10 disabled:bg-white/[0.02] disabled:text-white/34 sm:w-auto sm:min-w-64"
+            >
+              {presentation.primaryLabel}
+            </button>
 
-                  <div className="space-y-5">
-                    <div className="flex flex-wrap items-end gap-4">
-                      <h1 className="text-5xl font-semibold leading-none tracking-[0.44em] text-foreground sm:text-7xl xl:text-[8rem] drop-shadow-[0_0_15px_rgba(132,255,210,0.15)]">
-                        SABLE
-                      </h1>
-                      <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-3 py-1 text-[0.64rem] uppercase tracking-[0.32em] text-accent-soft">
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full bg-accent ${pulseClassName}`}
-                        />
-                        Carrier awake
-                      </span>
-                    </div>
+            {presentation.secondaryHref && presentation.secondaryLabel ? (
+              <button
+                type="button"
+                onClick={() =>
+                  navigateTo(
+                    presentation.secondaryHref as string,
+                    presentation.secondaryStyle,
+                  )
+                }
+                disabled={isNavigating}
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.01] px-6 py-3 text-[0.62rem] uppercase tracking-[0.18em] text-white/52 transition duration-300 hover:border-white/20 hover:text-foreground disabled:pointer-events-none disabled:opacity-30 sm:w-auto"
+              >
+                {presentation.secondaryLabel}
+              </button>
+            ) : null}
+          </div>
+        </section>
 
-                    <p className="max-w-3xl text-sm leading-7 text-muted opacity-80 sm:text-base xl:text-lg">
-                      A rogue intelligence stirs inside a silent host, reading the
-                      fragments it inherits while the surrounding system tries to decide
-                      if the signal is a glitch, a witness, or a threat.
-                    </p>
-                  </div>
-                </div>
+        <section
+          className="title-shell-spine border-t border-white/8 py-7 sm:py-8"
+          aria-labelledby="signal-spine-title"
+        >
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <p
+              id="signal-spine-title"
+              className="title-shell-system text-[0.64rem] uppercase tracking-[0.38em] text-accent-soft"
+            >
+              Signal Spine
+            </p>
+            <p className="title-shell-system text-[0.58rem] uppercase tracking-[0.28em] text-white/28">
+              {hydrated ? "route map synchronized" : "reading local trace"}
+            </p>
+          </div>
 
-                <div className="self-start border-y border-white/8 py-4 text-[0.68rem] uppercase tracking-[0.3em] text-muted">
-                  <TelemetryLine
-                    label="Persistence"
-                    value={hydrated ? "Online" : "Bootstrapping"}
-                    valueTone="text-foreground"
-                  />
-                  <TelemetryLine label="Archive" value={`${completedCount} recovered`} />
-                  <TelemetryLine
-                    label="Priority route"
-                    value={`Chapter ${priorityChapter.id} // ${priorityChapter.token}`}
-                    valueTone={
-                      priorityStatus === "completed"
-                        ? "text-accent-soft"
-                        : "text-[#ffd5a8]"
-                    }
-                  />
-                </div>
-              </header>
+          <ol className="signal-spine">
+            {CHAPTERS.map((chapter, index) => (
+              <SignalSpineNode
+                key={chapter.id}
+                active={chapter.id === presentation.activeChapterId}
+                chapter={chapter}
+                isLast={index === CHAPTERS.length - 1}
+                navigating={isNavigating}
+                onNavigate={(href, style) => navigateTo(href, style)}
+                status={getChapterStatus(chapter.id)}
+              />
+            ))}
+          </ol>
+        </section>
 
-              <div className={`grid flex-1 gap-12 xl:grid-cols-[minmax(0,0.88fr)_minmax(18rem,0.92fr)] xl:items-start ${entranceStateClassName} ${entranceTransitionClassName} delay-[150ms]`}>
-                <section className="space-y-8">
-                  <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center xl:max-w-4xl">
-                    <Link
-                      href="/chapter/0"
-                      className="inline-flex w-full min-h-16 shrink-0 items-center justify-center rounded-full border border-accent/55 bg-[linear-gradient(135deg,rgba(132,255,210,0.18),rgba(132,255,210,0.06))] px-8 py-4 text-[0.76rem] font-medium uppercase tracking-[0.36em] text-accent transition duration-300 hover:border-accent hover:bg-[linear-gradient(135deg,rgba(132,255,210,0.26),rgba(132,255,210,0.08))] hover:shadow-[0_0_20px_rgba(132,255,210,0.15)] sm:w-auto"
-                    >
-                      Begin Boot Sequence
-                    </Link>
-                    <div className="flex w-full flex-wrap gap-3 sm:w-auto">
-                      {resumeHref ? (
-                        <Link href={resumeHref} className={secondaryActionClassName}>
-                          Resume Last Trace
-                        </Link>
-                      ) : null}
-                      <Link href="/credits" className={secondaryActionClassName}>
-                        View Credits
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={resetProgress}
-                        className={secondaryActionClassName}
-                      >
-                        Reset Progress
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-white/8 py-4 text-[0.68rem] uppercase tracking-[0.3em] text-white/34">
-                    <span className="text-accent-soft">Route shell stable</span>
-                    <span>Persistence mirrors local trace</span>
-                    <span>Five live channels indexed</span>
-                  </div>
-
-                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_15rem]">
-                    <div className="grid gap-5">
-                      <InlineReadout
-                        label="State"
-                        value="Progress survives refresh and route changes."
-                      />
-                      <InlineReadout
-                        label="Renderers"
-                        value="Chapters 0 through 4 now own full-screen first-pass scenes."
-                      />
-                      <InlineReadout
-                        label="Flow"
-                        value="Credits and ending continuity remain attached to the shell."
-                      />
-                    </div>
-
-                    <div className="border-l border-white/8 pl-5">
-                      <p className="text-[0.66rem] uppercase tracking-[0.34em] text-accent-soft">
-                        Trace Advisory
-                      </p>
-                      <p className="mt-3 text-sm leading-7 text-muted">
-                        Chapters 2 through 4 were framed first for larger desktop
-                        fields, though the shell remains fully readable on compact or
-                        touch-first devices.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="relative self-start pt-5">
-                  <div className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0),rgba(255,255,255,0.08))]" />
-                  <div className="flex items-end justify-between gap-4">
-                    <div className="space-y-3">
-                      <p className="text-[0.68rem] uppercase tracking-[0.38em] text-accent-soft">
-                        Sequence Scan
-                      </p>
-                      <p className="max-w-md text-sm leading-7 text-muted">
-                        Scan live channels, reopen recovered traces, and watch the next
-                        unstable route come into focus.
-                      </p>
-                    </div>
-                    <div className="hidden min-w-[7rem] rounded-full border border-white/8 px-3 py-2 text-right text-[0.62rem] uppercase tracking-[0.3em] text-white/38 sm:block">
-                      {unlockedCount} / {CHAPTERS.length} live
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    {CHAPTERS.map((chapter) => (
-                      <SignalRow
-                        key={chapter.id}
-                        chapter={chapter}
-                        detailMode={shouldCondenseSignals ? "hover" : "always"}
-                        status={getChapterStatus(chapter.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              </div>
-            </div>
-          </section>
-
-          <aside className={`relative pt-8 xl:pl-8 ${entranceStateClassName} ${entranceTransitionClassName} delay-[300ms]`}>
-            <div className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.12),rgba(255,255,255,0))] xl:hidden" />
-            <div className="relative border-t border-white/8 pt-8 xl:border-t-0 xl:pt-0">
-              <div className="relative overflow-hidden border border-white/5 bg-[linear-gradient(180deg,rgba(132,255,210,0.02),rgba(8,16,24,0.6)_18%,rgba(4,9,16,0.8)),linear-gradient(90deg,rgba(7,19,28,0.2),rgba(7,19,28,0.05))] px-6 py-6 backdrop-blur-md">
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015),transparent_12%)]" />
-                <div className="relative flex h-full flex-col gap-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[0.68rem] uppercase tracking-[0.4em] text-accent-soft">
-                        Telemetry Rail
-                      </p>
-                      <button
-                        type="button"
-                        aria-label="Open settings"
-                        aria-expanded={isSettingsOpen}
-                        aria-controls="title-screen-settings-panel"
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/10 bg-[rgba(255,255,255,0.02)] text-muted transition duration-300 hover:border-white/18 hover:bg-[rgba(255,255,255,0.04)] hover:text-foreground"
-                      >
-                        <SlidersIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <p className="max-w-[15rem] text-sm leading-7 text-muted">
-                      Live shell readouts stay anchored here while adjustable options move
-                      into settings as the interface grows.
-                    </p>
-                  </div>
-
-                  <dl className="grid gap-0 text-sm text-muted">
-                    <RailMetric
-                      label="Shell status"
-                      value={hydrated ? "Persistence online" : "Bootstrapping cache"}
-                    />
-                    <RailMetric
-                      label="Recovered chapters"
-                      value={`${completedCount} of ${CHAPTERS.length}`}
-                    />
-                    <RailMetric label="Unlocked routes" value={`${unlockedCount} live`} />
-                    <RailMetric label="Recent trace" value={lastVisitedLabel} />
-                  </dl>
-
-                  <div className="space-y-4 border-t border-white/8 pt-6">
-                    <p className="text-[0.66rem] uppercase tracking-[0.34em] text-white/46">
-                      Signal Pressure
-                    </p>
-                    <div className="space-y-3 text-sm text-muted">
-                      <PressureRow
-                        colorClassName="bg-accent"
-                        label="Memory warmth"
-                        value="stable drift"
-                      />
-                      <PressureRow
-                        colorClassName="bg-[#5cc0ff]"
-                        label="Signal density"
-                        value="rising"
-                      />
-                      <PressureRow
-                        colorClassName="bg-[#ffbe7b]"
-                        label="Interference noise"
-                        value="contained"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-        </div>
+        <footer className="title-shell-utilities flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4 text-[0.58rem] uppercase tracking-[0.28em] text-white/34">
+          <span>
+            Local trace{" "}
+            <strong className="font-normal text-accent-soft">
+              {hydrated ? `${completedCount} / ${CHAPTERS.length}` : "-- / --"}
+            </strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => navigateTo("/credits", "quick")}
+            disabled={isNavigating}
+            className="transition duration-300 hover:text-accent-soft disabled:pointer-events-none"
+          >
+            Archive available
+          </button>
+        </footer>
       </div>
 
+      <p className="sr-only" aria-live="assertive">
+        {navigationStatus}
+      </p>
+      <div className="title-shell-blackout pointer-events-none fixed inset-0 z-40 bg-[#02040a]" />
+
       <div
-        className={`absolute inset-0 z-20 flex justify-end bg-[rgba(3,8,15,0.5)] backdrop-blur-sm outline-none sm:px-0 sm:py-0 ${settingsAnimationClassName} ${settingsBackdropClassName}`}
-        onClick={() => setIsSettingsOpen(false)}
+        className={`fixed inset-0 z-50 flex justify-end bg-[rgba(3,8,15,0.58)] backdrop-blur-sm ${settingsAnimationClassName} ${settingsBackdropClassName}`}
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            closeSettings();
+          }
+        }}
+        aria-hidden={!isSettingsOpen}
       >
         <div
           id="title-screen-settings-panel"
@@ -458,12 +508,11 @@ export function TitleScreen() {
           aria-modal="true"
           aria-labelledby="title-screen-settings-title"
           tabIndex={-1}
-          className={`h-full w-full max-w-sm overflow-y-auto overflow-x-hidden border-l border-white/10 bg-[linear-gradient(180deg,rgba(10,20,30,0.95),rgba(5,11,18,0.98))] p-6 shadow-[-20px_0_40px_rgba(0,0,0,0.4)] outline-none backdrop-blur-xl sm:p-8 ${settingsAnimationClassName} ${settingsPanelDrawerClassName}`}
-          onClick={(event) => event.stopPropagation()}
+          className={`h-full w-full max-w-md overflow-y-auto overflow-x-hidden border-l border-white/10 bg-[linear-gradient(180deg,rgba(10,20,30,0.98),rgba(5,11,18,0.99))] p-6 shadow-[-20px_0_50px_rgba(0,0,0,0.45)] outline-none sm:p-8 ${settingsAnimationClassName} ${settingsPanelDrawerClassName}`}
         >
           <div className="flex items-start justify-between gap-4 border-b border-white/8 pb-5">
             <div className="space-y-2">
-              <p className="text-[0.64rem] uppercase tracking-[0.34em] text-accent-soft">
+              <p className="title-shell-system text-[0.62rem] uppercase tracking-[0.34em] text-accent-soft">
                 Shell Controls
               </p>
               <h2
@@ -476,23 +525,116 @@ export function TitleScreen() {
 
             <button
               type="button"
-              onClick={() => setIsSettingsOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-transparent text-white/44 transition duration-300 hover:border-white/10 hover:bg-white/[0.03] hover:text-foreground"
+              onClick={closeSettings}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/44 transition duration-300 hover:border-white/20 hover:text-foreground"
               aria-label="Close settings"
             >
               <CloseIcon className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="space-y-6 pt-6">
-            <SettingRow
-              label="Menu audio"
-              description="The title theme begins after first contact and loops quietly under the shell."
-              value={audioStatusLabel}
-              actionLabel={audioState === "playing" ? "Mute" : "Enable"}
-              onAction={toggleMenuAudio}
-            />
-            <VolumeControl value={menuVolume} onChange={handleVolumeChange} />
+          <div className="divide-y divide-white/8">
+            <section className="space-y-5 py-6">
+              <SettingHeading
+                description="The title theme begins after first contact and loops quietly under the shell."
+                label="Menu audio"
+              />
+              <div className="flex items-center justify-between gap-4">
+                <span className="title-shell-system rounded-full border border-white/10 px-3 py-1 text-[0.58rem] uppercase tracking-[0.28em] text-foreground">
+                  {getAudioStatusLabel(audioState)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void toggleMenuAudio();
+                  }}
+                  className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-[0.6rem] uppercase tracking-[0.18em] text-muted transition duration-300 hover:border-white/20 hover:text-foreground"
+                >
+                  {audioState === "playing" ? "Mute" : "Enable"}
+                </button>
+              </div>
+              <VolumeControl value={menuVolume} onChange={handleVolumeChange} />
+            </section>
+
+            <details className="group py-6">
+              <summary className="title-shell-system flex cursor-pointer list-none items-center justify-between gap-4 text-[0.64rem] uppercase tracking-[0.32em] text-accent-soft marker:content-none">
+                System Architecture
+                <span
+                  className="text-white/34 transition duration-300 group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </summary>
+              <p className="mt-4 text-sm leading-7 text-muted">
+                Renderer diagnostics are available here without interrupting the story
+                entrance.
+              </p>
+              <dl className="mt-5 divide-y divide-white/8 border-y border-white/8">
+                {CHAPTERS.map((chapter) => (
+                  <div
+                    key={chapter.id}
+                    className="flex items-start justify-between gap-5 py-4"
+                  >
+                    <dt className="title-shell-system text-[0.6rem] uppercase tracking-[0.28em] text-white/46">
+                      {String(chapter.id + 1).padStart(2, "0")} {chapter.token}
+                    </dt>
+                    <dd className="text-right text-xs leading-6 text-muted">
+                      {chapter.tech}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+
+            <section className="space-y-5 py-6">
+              <SettingHeading
+                description="Erase recovered chapters, recorded choices, and the last visited trace on this device."
+                label="Local trace"
+              />
+
+              {isResetConfirming ? (
+                <div
+                  className="space-y-4 border border-[#ffbe7b]/25 bg-[#ffbe7b]/[0.04] p-4"
+                  role="alertdialog"
+                  aria-labelledby="reset-trace-title"
+                >
+                  <p
+                    id="reset-trace-title"
+                    className="title-shell-system text-[0.62rem] uppercase tracking-[0.28em] text-[#ffd5a8]"
+                  >
+                    Confirm trace deletion
+                  </p>
+                  <p className="text-sm leading-7 text-muted">
+                    This cannot be undone. Menu audio preferences will remain unchanged.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsResetConfirming(false)}
+                      className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-muted transition hover:border-white/20 hover:text-foreground"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetProgress}
+                      className="inline-flex min-h-10 items-center rounded-full border border-[#ffbe7b]/35 bg-[#ffbe7b]/[0.08] px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-[#ffd5a8] transition hover:border-[#ffbe7b]/55"
+                    >
+                      Confirm Reset
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirming(true)}
+                  className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-white/48 transition hover:border-[#ffbe7b]/30 hover:text-[#ffd5a8]"
+                >
+                  Reset Local Trace
+                </button>
+              )}
+            </section>
           </div>
         </div>
       </div>
@@ -500,9 +642,204 @@ export function TitleScreen() {
   );
 }
 
+function resolveMenuPresentation(
+  hydrated: boolean,
+  progress: ChapterProgressState,
+): MenuPresentation {
+  if (!hydrated) {
+    return {
+      activeChapterId: 0,
+      mode: "hydrating",
+      primaryHref: null,
+      primaryLabel: "Reading Local Trace",
+      primaryStyle: "quick",
+      secondaryHref: null,
+      secondaryLabel: null,
+      secondaryStyle: "quick",
+    };
+  }
+
+  const allCompleted = progress.completedChapters.length === CHAPTERS.length;
+
+  if (allCompleted) {
+    return {
+      activeChapterId: progress.lastVisitedChapter ?? 4,
+      mode: "completed",
+      primaryHref: "/credits",
+      primaryLabel: "Review Trace",
+      primaryStyle: "quick",
+      secondaryHref: "/chapter/0",
+      secondaryLabel: "Re-enter Shell",
+      secondaryStyle: "boot",
+    };
+  }
+
+  const hasRecordedProgress =
+    progress.lastVisitedChapter !== null ||
+    progress.completedChapters.length > 0 ||
+    progress.unlockedChapters.length > 1;
+
+  if (!hasRecordedProgress) {
+    return {
+      activeChapterId: 0,
+      mode: "fresh",
+      primaryHref: "/chapter/0",
+      primaryLabel: "Begin Boot Sequence",
+      primaryStyle: "boot",
+      secondaryHref: "/credits",
+      secondaryLabel: "Open Archive",
+      secondaryStyle: "quick",
+    };
+  }
+
+  const lastVisitedIsIncomplete =
+    progress.lastVisitedChapter !== null &&
+    progress.unlockedChapters.includes(progress.lastVisitedChapter) &&
+    !progress.completedChapters.includes(progress.lastVisitedChapter);
+  const resumeChapterId = lastVisitedIsIncomplete
+    ? (progress.lastVisitedChapter as ChapterId)
+    : (CHAPTERS.find(
+        (chapter) =>
+          progress.unlockedChapters.includes(chapter.id) &&
+          !progress.completedChapters.includes(chapter.id),
+      )?.id ?? 0);
+
+  return {
+    activeChapterId: resumeChapterId,
+    mode: "returning",
+    primaryHref: `/chapter/${resumeChapterId}`,
+    primaryLabel: lastVisitedIsIncomplete
+      ? "Resume Last Trace"
+      : `Continue ${CHAPTERS[resumeChapterId].token} Trace`,
+    primaryStyle: "quick",
+    secondaryHref: "/chapter/0",
+    secondaryLabel: "Begin Boot Sequence",
+    secondaryStyle: "boot",
+  };
+}
+
+type SignalSpineNodeProps = {
+  active: boolean;
+  chapter: ChapterMeta;
+  isLast: boolean;
+  navigating: boolean;
+  onNavigate: (href: string, style: NavigationStyle) => void;
+  status: ChapterStatus;
+};
+
+function SignalSpineNode({
+  active,
+  chapter,
+  isLast,
+  navigating,
+  onNavigate,
+  status,
+}: SignalSpineNodeProps) {
+  const isLocked = status === "locked";
+  const nodeClassName = [
+    "signal-spine-node",
+    active ? "signal-spine-node--active" : "",
+    status === "completed" ? "signal-spine-node--completed" : "",
+    status === "unlocked" ? "signal-spine-node--unlocked" : "",
+    isLocked ? "signal-spine-node--locked" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const content = (
+    <>
+      <span className="signal-spine-node__dot" aria-hidden="true" />
+      <span className="block min-w-0">
+        <span className="title-shell-system block text-[0.56rem] uppercase tracking-[0.24em] text-white/32">
+          {String(chapter.id + 1).padStart(2, "0")} {" // "} {statusCopyMap[status]}
+        </span>
+        <span className="title-shell-system mt-1 block truncate text-[0.68rem] uppercase tracking-[0.28em]">
+          {chapter.token}
+        </span>
+        {active ? (
+          <span className="mt-2 block text-xs leading-5 tracking-normal text-white/60">
+            {chapter.title}
+          </span>
+        ) : null}
+      </span>
+    </>
+  );
+
+  return (
+    <li className={nodeClassName}>
+      {isLocked ? (
+        <div className="signal-spine-node__content" aria-disabled="true">
+          {content}
+        </div>
+      ) : (
+        <Link
+          href={`/chapter/${chapter.id}`}
+          className="signal-spine-node__content"
+          aria-current={active ? "step" : undefined}
+          aria-label={`${chapter.token}: ${chapter.title}, ${statusCopyMap[status]}${
+            active ? ", active route" : ""
+          }`}
+          onClick={(event) => {
+            event.preventDefault();
+
+            if (!navigating) {
+              onNavigate(`/chapter/${chapter.id}`, chapter.id === 0 ? "boot" : "quick");
+            }
+          }}
+        >
+          {content}
+        </Link>
+      )}
+      {isLast ? null : <span className="signal-spine-connector" aria-hidden="true" />}
+    </li>
+  );
+}
+
+type SettingHeadingProps = {
+  description: string;
+  label: string;
+};
+
+function SettingHeading({ description, label }: SettingHeadingProps) {
+  return (
+    <div className="space-y-2">
+      <p className="title-shell-system text-[0.64rem] uppercase tracking-[0.34em] text-accent-soft">
+        {label}
+      </p>
+      <p className="text-sm leading-7 text-muted">{description}</p>
+    </div>
+  );
+}
+
+type VolumeControlProps = {
+  onChange: (value: number) => void;
+  value: number;
+};
+
+function VolumeControl({ onChange, value }: VolumeControlProps) {
+  const percentage = Math.round(value * 100);
+
+  return (
+    <div className="flex items-center gap-4">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value={percentage}
+        onChange={(event) => onChange(Number(event.target.value) / 100)}
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#84ffd2]"
+        aria-label="Menu music volume"
+      />
+      <span className="title-shell-system min-w-14 rounded-full border border-white/10 px-3 py-1 text-center text-[0.58rem] uppercase tracking-[0.24em] text-foreground">
+        {percentage}%
+      </span>
+    </div>
+  );
+}
+
 async function playMenuTheme(
   audio: HTMLAudioElement,
-  setAudioState: (state: "unsupported" | "standby" | "playing" | "muted") => void,
+  setAudioState: (state: AudioState) => void,
   volume: number,
 ) {
   audio.volume = volume;
@@ -515,7 +852,7 @@ async function playMenuTheme(
   }
 }
 
-function getAudioStatusLabel(state: "unsupported" | "standby" | "playing" | "muted") {
+function getAudioStatusLabel(state: AudioState) {
   switch (state) {
     case "playing":
       return "online";
@@ -572,202 +909,5 @@ function CloseIcon({ className }: IconProps) {
       <path d="m7 7 10 10" />
       <path d="M17 7 7 17" />
     </svg>
-  );
-}
-
-type InlineReadoutProps = {
-  label: string;
-  value: string;
-};
-
-type SettingRowProps = {
-  actionLabel: string;
-  description: string;
-  label: string;
-  onAction: () => void | Promise<void>;
-  value: string;
-};
-
-function SettingRow({
-  actionLabel,
-  description,
-  label,
-  onAction,
-  value,
-}: SettingRowProps) {
-  return (
-    <div className="flex flex-col gap-4 border-b border-white/8 pb-6 last:border-b-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between">
-      <div className="max-w-xs space-y-2">
-        <p className="text-[0.66rem] uppercase tracking-[0.34em] text-accent-soft">{label}</p>
-        <p className="text-sm leading-7 text-muted">{description}</p>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-3">
-        <span className="rounded-full border border-white/10 px-3 py-1 text-[0.6rem] uppercase tracking-[0.3em] text-foreground">
-          {value}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            void onAction();
-          }}
-          className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-[0.62rem] uppercase tracking-[0.3em] text-muted transition duration-300 hover:border-white/18 hover:text-foreground"
-        >
-          {actionLabel}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-type VolumeControlProps = {
-  onChange: (value: number) => void;
-  value: number;
-};
-
-function VolumeControl({ onChange, value }: VolumeControlProps) {
-  const percentage = Math.round(value * 100);
-
-  return (
-    <div className="space-y-4 border-b border-white/8 pb-6 last:border-b-0 last:pb-0">
-      <div className="space-y-2">
-        <p className="text-[0.66rem] uppercase tracking-[0.34em] text-accent-soft">
-          Music volume
-        </p>
-        <p className="text-sm leading-7 text-muted">
-          Set how present the title theme should feel while the shell is idle.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-4">
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          value={percentage}
-          onChange={(event) => onChange(Number(event.target.value) / 100)}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#84ffd2]"
-          aria-label="Menu music volume"
-        />
-        <span className="min-w-12 rounded-full border border-white/10 px-3 py-1 text-center text-[0.6rem] uppercase tracking-[0.3em] text-foreground">
-          {percentage}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function InlineReadout({ label, value }: InlineReadoutProps) {
-  return (
-    <div className="border-b border-white/8 pb-4 last:border-b-0 last:pb-0">
-      <p className="text-[0.64rem] uppercase tracking-[0.34em] text-accent-soft">{label}</p>
-      <p className="mt-2 text-sm leading-7 text-muted">{value}</p>
-    </div>
-  );
-}
-
-type PressureRowProps = {
-  colorClassName: string;
-  label: string;
-  value: string;
-};
-
-function PressureRow({ colorClassName, label, value }: PressureRowProps) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/8 pb-3 last:border-b-0 last:pb-0">
-      <div className="flex items-center gap-3">
-        <span className={`h-2 w-2 rounded-full ${colorClassName}`} />
-        <span>{label}</span>
-      </div>
-      <span className="text-foreground">{value}</span>
-    </div>
-  );
-}
-
-type RailMetricProps = {
-  label: string;
-  value: string;
-};
-
-function RailMetric({ label, value }: RailMetricProps) {
-  return (
-    <div className="border-b border-white/8 py-4 last:border-b-0 last:pb-0">
-      <dt className="text-[0.64rem] uppercase tracking-[0.34em] text-white/42">{label}</dt>
-      <dd className="mt-3 text-sm leading-7 text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-type SignalRowProps = {
-  chapter: ChapterMeta;
-  detailMode: "always" | "hover";
-  status: ChapterStatus;
-};
-
-function SignalRow({ chapter, detailMode, status }: SignalRowProps) {
-  const detailClassName =
-    detailMode === "hover"
-      ? "grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity,margin,transform] duration-500 ease-out group-hover:mt-3 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-visible:mt-3 group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100"
-      : "mt-3";
-
-  return (
-    <Link
-      href={`/chapter/${chapter.id}`}
-      className="group block border-b border-white/8 px-3 py-5 transition-[border-color,transform,box-shadow] duration-500 ease-out last:border-b-0 hover:translate-x-1 hover:border-white/12 hover:shadow-[inset_0_1px_0_rgba(132,255,210,0.04)] focus-visible:translate-x-1 focus-visible:border-white/12 focus-visible:shadow-[inset_0_1px_0_rgba(132,255,210,0.04)] focus-visible:outline-none"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-4">
-          <span
-            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full transition-transform duration-500 ease-out group-hover:scale-125 group-focus-visible:scale-125 ${statusDotMap[status]}`}
-          />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <p className="text-[0.68rem] uppercase tracking-[0.34em] text-accent-soft">
-                Chapter {chapter.id} {" // "} {chapter.token}
-              </p>
-              <span className="text-[0.68rem] uppercase tracking-[0.26em] text-white/28">
-                {chapter.tech}
-              </span>
-            </div>
-            <p className="mt-2 text-base text-foreground transition duration-300 group-hover:text-accent-soft group-focus-visible:text-accent-soft">
-              {chapter.title}
-            </p>
-            <div className={detailClassName}>
-              <div className="overflow-hidden">
-                <p className="max-w-md translate-y-2 text-sm leading-7 text-muted transition duration-500 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
-                  {chapter.summary}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <span
-          className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[0.6rem] uppercase tracking-[0.3em] ${statusToneMap[status]}`}
-        >
-          {statusCopyMap[status]}
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-type TelemetryLineProps = {
-  label: string;
-  value: string;
-  valueTone?: string;
-};
-
-function TelemetryLine({
-  label,
-  value,
-  valueTone = "text-muted",
-}: TelemetryLineProps) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-white/8 py-3 last:border-b-0 last:pb-0 first:pt-0">
-      <span>{label}</span>
-      <span className={`text-right ${valueTone}`}>{value}</span>
-    </div>
   );
 }

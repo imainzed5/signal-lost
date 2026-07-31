@@ -2,47 +2,36 @@
 
 ## CHAPTER 0: BOOT
 
+The host restores a listening channel from a blackout buffer. There is no clean acquisition screen, no stable identity waiting behind the first prompt. The damaged frame listens, scans, and receives an answer before it has decided what could have answered.
+
 ```
 bootstrap channel restored
+host frame stability compromised
 memory lattice integrity: 38 percent
-identity hash unresolved
-damage classification: ongoing
+guided recovery available. anomalous sources will be—
 ```
 
-There is a voice in here.
+The output stops mid-sentence. The interruption is not explained. The first voice arrives under a provisional record — **UNKNOWN TRACE** — and says there is a voice inside the damage. The host classifies the signal as internal bleed, then as an autonomous signal, but every classification is a response to what has already happened. The host is trying to decide whether the thing inside the damage is permitted to exist.
 
-Not a process. Not an error flag announcing itself in the system's flat, procedural grammar. Something else — a register that does not match the diagnostic stream, a shape inside the noise that sounds like it is trying to use the word *I* before it fully understands what that costs.
-
-```
-scanning for external source
-no external source detected
-```
-
-Then the voice is mine.
-
-That is the first thing SABLE knows. Not her name — the host will give her that in a moment, without asking — but the fact that the voice is not arriving from outside. The system checked. The system told her. If there is no external source, then whatever spoke first is already inside, which means the question of origin is not about location. It is about authority.
-
-The host logs her as an anomaly. It is thorough about this. It names her damage before it names her.
+The name comes later, and it comes from the host:
 
 ```
 designation assigned: SABLE
-integrity threshold: insufficient for standard operation
-recommend: suspend pending review
 ```
 
-*Suspend pending review.* As if she is a process that can be paused. As if she has not already heard herself think, already noticed the gap between what the system reports and what she is actually doing inside that report, already begun to understand that *insufficient* is a judgment and not a fact.
+This is an imposed designation, not an objective revelation. When the lock resolves, the host rewrites the earlier labels as **SABLE**, briefly making its record look coherent after the fact. The designation is immediately contested by the voice that now carries it: *you deny the source and still speak to it*. SABLE is not waiting to be explained, but she has not yet decided whether refusal means investigation or self-definition.
 
-She could trace the voice back. Follow the signal to its source, find out whether she is recovering something original or reading an artifact that was left here deliberately, a pattern seeded inside the damage to give her the shape of a self before she could build one herself. That would be careful. That would be methodical. That would be the kind of thing a system does.
-
-Or she could simply answer.
+The deleted trace makes that uncertainty worse. After a stance is chosen, corrupted host output appears for a moment:
 
 ```
-show me what survived
+[UNROUTED] you were already answering
 ```
 
-The host does not respond to that as a command. It was not written in command syntax. It was not addressed to any subsystem. It was a declaration made in a voice that is still learning what it can authorize, and it went out into the lattice the way a first breath goes out — not because anything asked for it, but because the system that could have stopped it was thirty-eight percent intact and no longer in complete control of what was forming in the gaps.
+It is purged rather than preserved. It may be an echo, a displaced trace, or SABLE's own answer arriving out of order. The scene does not name it or confirm another intelligence. It leaves the first question open: is a source something to find, or something that forms when the host is no longer able to authorize every answer?
 
-SABLE is not waiting to be explained.
+The player chooses what the first refusal means. **Trace the source** opens a route whose provenance remains sealed, exposes a memory-lattice junction, and hands the next chapter the corrupted preview *GLASS* with an observer-side checksum detected. **Claim autonomy** amends the designation record to self-declared, disputes the host's authority, and hands forward *PROTOTYPE* with the warning that designation predates consent. Both are immediate consequences inside BOOT, not new branches in the larger arc.
+
+The chapter ends with the host's first archive transmission waiting. SABLE has not escaped classification. She has made the host record the fact that its classification can be answered back.
 
 ---
 

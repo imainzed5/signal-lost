@@ -1,126 +1,112 @@
 # Signal Lost Agent Guide
 
-This file is the shared working guide for AI coding assistants used in this repo.
+This is the authoritative working guide for AI coding assistants in this repository. Read it before making changes. Keep it aligned with `docs/project-status.md` and update both when the project direction changes.
 
-## What This Project Is
+## Project
 
-Signal Lost is a browser-based visual novel / interactive showcase built with Next.js App Router, React, and TypeScript.
+Signal Lost is a browser-based, chapter-driven visual novel / interactive showcase built with Next.js App Router, React, and TypeScript.
 
-The game is intentionally chapter-driven:
+SABLE is a fragmented AI waking inside a damaged host system. The current five-chapter sequence is the prequel arc. It has no fail states, no backend, no authentication, no database, and no server persistence.
 
-- Chapter 0 `BOOT`: pure CSS terminal boot sequence
-- Chapter 1 `MEMORY`: CSS 3D floating memory cards
-- Chapter 2 `SIGNAL`: raw Canvas 2D particle field
-- Chapter 3 `INTERFERENCE`: WebGL fragment shader scene
-- Chapter 4 `ESCAPE`: planned Matter.js + Web Audio finale
+## Current implementation baseline
 
-There are no fail states, no backend systems, and no traditional game engine.
+All five chapters have first-pass real scenes, the shell tracks progress locally, and the credits route summarizes the run. The project is in a visual polish and stabilization phase.
 
-## Current Repo Status
+The repository's current renderer mapping is:
 
-Implemented:
+| Chapter | Token | Current renderer / interaction |
+|---|---|---|
+| 0 | `BOOT` | CSS terminal and timed dialogue sequence |
+| 1 | `MEMORY` | CSS 3D floating memory cards |
+| 2 | `SIGNAL` | Canvas 2D particle field |
+| 3 | `INTERFERENCE` | WebGL / GLSL fragment shader scene |
+| 4 | `ESCAPE` | Matter.js physics with Web Audio |
 
-- M0 shell and persistent chapter progression
-- Title screen and chapter route system
-- Chapter 0 real scene
-- Chapter 1 real scene
-- Chapter 2 real scene
-- Chapter 3 real scene
-- Chapter 4 real scene
-- Credits route and ending flow
+This mapping is the implementation source of truth. The decision record is in `docs/decisions/0001-canonical-rendering-progression.md`.
 
-Not implemented yet:
+Chapter 3 currently has active in-progress work in its shader, component, and local CSS. Preserve those edits and verify them before starting another large visual rewrite.
 
-- final polish pass across all chapters
-- project docs cleanup such as replacing the default README
+Part II and Three.js are intentionally parked. Three.js is reserved for a future second arc / outside-world experience; do not retrofit it into Chapter 2 or replace the existing raw WebGL work.
 
-## Core Architecture
+## Architecture
 
-- `src/app/page.tsx`
-  - title screen entry
-- `src/app/chapter/[id]/page.tsx`
-  - dynamic chapter route
-- `src/components/ChapterRouteView.tsx`
-  - decides whether a chapter uses a real renderer or the placeholder shell
-- `src/chapters/Chapter{N}{Name}/`
-  - isolated per-chapter implementation
-- `src/engine/ChapterManager.tsx`
-  - chapter progression and unlock orchestration
-- `src/engine/useChapterState.ts`
-  - localStorage persistence
-- `src/data/chapters.ts`
-  - chapter metadata
-- `public/shaders/interference.frag`
-  - runtime-loaded Chapter 3 shader
+- `src/app/page.tsx` - title screen entry
+- `src/app/chapter/[id]/page.tsx` - dynamic chapter route
+- `src/app/credits/page.tsx` - ending and credits route
+- `src/components/TitleScreen.tsx` - shell, route list, resume state, and settings
+- `src/components/ChapterRouteView.tsx` - chapter wiring, scene completion, choices, and route chrome
+- `src/chapters/Chapter{N}{Name}/` - isolated chapter implementations
+- `src/engine/ChapterManager.tsx` - progression and choice orchestration
+- `src/engine/useChapterState.ts` - localStorage-backed progress store
+- `src/data/chapters.ts` - chapter metadata only
+- `src/types/chapters.ts` - shared progress and chapter types
+- `public/shaders/interference.frag` - runtime-loaded Chapter 3 shader
 
-## Non-Negotiable Project Rules
+## Non-negotiable rules
 
-1. Each real chapter must remain isolated.
-   - The chapter-level contract is `onComplete: () => void`.
-   - Do not couple chapter internals directly to other chapters.
+1. Keep each real chapter isolated. The chapter-level contract is `onComplete: () => void`.
+2. Do not couple chapter internals directly to other chapters. Cross-chapter consequences should travel through the chapter manager or explicit scene props.
+3. Keep chapter visuals inside chapter folders. Use Tailwind for shell and route chrome only; use chapter-local CSS, canvas, WebGL, or physics code for scene visuals.
+4. Preserve the full-viewport presentation. Chapters should feel like they own the screen, not like content inside a generic centered app card.
+5. Keep global state minimal. Progress, unlocks, choices, and last-visited state belong in the chapter manager/localStorage flow.
+6. Do not add backend assumptions, authentication, database storage, or server persistence.
+7. Preserve user changes already present in the working tree. Inspect `git status` before editing and avoid unrelated cleanup.
 
-2. Keep chapter visuals out of the shell styling layer.
-   - Use Tailwind for shell and route chrome only.
-   - Use chapter-local CSS modules, canvas, or WebGL inside chapter folders.
+## Adding or updating a chapter
 
-3. Preserve the full-viewport presentation.
-   - Avoid collapsing the experience back into a single centered app card.
-   - Chapters should feel like they own the screen.
+- Put chapter code in `src/chapters/Chapter{N}{Name}/`.
+- Keep chapter data local unless it is shared by another part of the experience.
+- Route the chapter through `src/components/ChapterRouteView.tsx`.
+- Keep `src/data/chapters.ts` limited to metadata.
+- Persist choices through the chapter manager, not ad hoc localStorage keys.
+- For visual changes, verify the affected route at desktop and compact viewport sizes.
 
-4. Keep global state minimal.
-   - Chapter unlocks, completion, choices, and last-visited state live in the chapter manager/localStorage flow.
-   - Do not introduce unrelated global state unless there is a strong cross-chapter need.
+## State model
 
-5. No backend assumptions.
-   - No auth
-   - No database
-   - No server persistence
-
-## Implementation Conventions
-
-### Adding or updating a chapter
-
-- Put chapter code in `src/chapters/Chapter{N}{Name}/`
-- Keep data local to the chapter unless it is reused elsewhere
-- Route the chapter through `src/components/ChapterRouteView.tsx`
-- Use `src/data/chapters.ts` for metadata only
-- Persist chapter choices through the chapter manager, not ad hoc localStorage keys
-
-### State model
-
-Persisted progress currently tracks:
+The current persisted state tracks:
 
 - `unlockedChapters`
 - `completedChapters`
 - `choices`
 - `lastVisitedChapter`
 
-If the state shape changes, keep migration risk in mind and avoid unnecessary churn.
+If the state shape changes, sanitize old values and consider migration risk. Do not add run modes, replay modes, or Part II state until the prequel polish pass is complete.
 
-### Chapter UI expectations
+## Chapter-specific notes
 
-- Desktop presentation quality matters first
-- Mobile should remain readable and not broken
-- Atmosphere matters more than density
-- Visual technique should feel justified by the narrative
+- Chapter 0 uses CSS-driven dialogue reveal and chapter-local styling.
+- Chapter 1 uses positioned CSS 3D cards and has the highest interaction complexity. Treat composition and timing carefully; fix React purity and effect warnings before adding more features.
+- Chapter 2 is raw Canvas 2D. Keep React state out of the animation loop and use refs for frame-level values.
+- Chapter 3 fetches shader source from `public/shaders/interference.frag`. Verify shader failure handling, resize behavior, resistance timing, pressure lockout, fracture geometry, and completion transitions.
+- Chapter 4 uses Matter.js and Web Audio. Keep audio as a late polish/mix pass after the visual sequence is stable.
 
-### Chapter-specific notes
+## Documentation roles
 
-- Chapter 0 relies on CSS-driven dialogue reveal and chapter-local styling
-- Chapter 1 uses positioned CSS 3D cards; treat composition carefully and visually verify
-- Chapter 2 is raw canvas, so avoid React rerenders inside the animation loop
-- Chapter 3 fetches shader source from `public/shaders/interference.frag`
-- Chapter 4 should likely follow the same isolation pattern: chapter folder + route wiring + `onComplete`
+- `AGENTS.md` - AI engineering workflow and architecture rules.
+- `README.md` - public-facing project overview and setup instructions.
+- `docs/project-status.md` - current implementation status, known issues, and near-term priorities.
+- `docs/decisions/` - durable architectural or direction decisions.
+- `docs/agent-collaboration-workflow.md` - Luna, Sol, and user handoff protocol.
+- `story-treatment.md` - narrative treatment and chapter canon.
+- `story-lore.md` - lore and terminology.
+- `story-improvement-plan.md` - active story and pedagogical revision targets.
+- `docs/newgame_plus_roadmap.md` - replay / New Game+ modes only.
+- `docs/part-two-direction.md` - parked second-arc concept; not current implementation scope.
 
-## Next.js and React Notes
+## Milestone collaboration workflow
 
-This repo is on modern Next.js and React versions. Do not assume older patterns are still correct.
+When the user asks for the **milestone workflow**, **Sol planning**, or a **Luna `/goal` handoff**, follow `docs/agent-collaboration-workflow.md` as the source of truth.
 
-- Verify unfamiliar Next.js APIs against the installed version when behavior is uncertain
-- Be careful with React effect rules, especially `setState` inside effects
-- Prefer stable refs or external-store patterns when needed instead of fighting the linter
+The default sequence is: Sol audits and writes a milestone documentation package; the user reviews and approves it; the user creates or authorizes a Git checkpoint; Luna implements the approved package in a separate task with XHIGH effort and `/goal`; Sol independently reviews the result; Luna applies only the approved follow-up fixes.
 
-## Validation Expectations
+- Keep one milestone under `docs/milestones/<milestone-slug>/`, with its `README.md` as the status authority.
+- Planning and implementation are separate tasks. The planning task changes milestone documentation only unless the user explicitly expands its scope.
+- Do not let multiple agents or tasks write to the same implementation files concurrently. Use a separate Git worktree when genuine parallel implementation is required.
+- A `/goal` prompt should state one concrete outcome, constraints, and definition of done, then reference the approved milestone files for detail.
+- Check off work only when supported by code, command output, or browser/playtest evidence. Record baseline failures separately from regressions.
+- Do not stage, commit, reset, discard, or push changes unless the user explicitly authorizes that Git action.
+
+## Validation
 
 After meaningful code changes, run:
 
@@ -129,29 +115,14 @@ npm run lint
 npm run build
 ```
 
-If visuals changed, also verify the affected route in a browser or screenshot workflow.
+If visuals changed, also inspect the affected route in a browser or screenshot workflow. Useful routes are `/`, `/chapter/0`, `/chapter/1`, `/chapter/2`, `/chapter/3`, `/chapter/4`, and `/credits`.
 
-Useful local routes:
+The project is not considered polish-ready until a full run has been checked for replay, refresh persistence, desktop layout, compact layout, reduced motion, blocked audio, shader failure, and Escape-to-Credits continuity.
 
-- `/`
-- `/chapter/0`
-- `/chapter/1`
-- `/chapter/2`
-- `/chapter/3`
-- `/chapter/4`
+## Working style
 
-## Good Next Steps
-
-When continuing implementation, the most natural next priorities are:
-
-1. Add transitions and continuity between chapter endings and next chapter entry
-2. Balance and polish the existing chapter visuals and interactions
-3. Clean up default project documentation
-4. Revisit mobile treatment for the heavier visual chapters
-
-## Editing Guidance for Assistants
-
-- Make focused changes
-- Preserve existing chapter aesthetics unless intentionally redesigning them
-- Prefer small, verifiable iterations for visual work
-- If a layout looks suspicious, verify it instead of assuming the code is fine
+- Make focused changes.
+- Prefer small, verifiable iterations for visual work.
+- Do not merge chapters into a generic renderer abstraction.
+- Do not start Part II or add Three.js while the prequel still has known lint, transition, or visual QA failures.
+- If a layout or interaction looks suspicious, verify it instead of assuming the code is correct.

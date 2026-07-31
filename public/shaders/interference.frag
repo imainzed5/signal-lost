@@ -10,6 +10,19 @@ uniform float u_resistance;
 uniform float u_intro;
 uniform float u_settled;
 
+// New mechanic uniforms
+uniform float u_scanPhase;
+uniform float u_scanCount;
+uniform vec2  u_fracturePos;
+uniform float u_fractureIntensity;
+uniform float u_counterPulse;
+uniform float u_deflectWindow;
+uniform float u_rupture;
+uniform float u_ruptureProgress;
+uniform vec2  u_ruptureOrigin;
+uniform float u_pulseWindow;
+uniform float u_absorbed;
+
 float random(vec2 st) {
   return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
 }
@@ -120,11 +133,132 @@ void main() {
   // not yet resolved into a directional threat. Grows with stage.
   float scanPresence = mix(0.03, 0.25, stage / 3.0);
 
+  // --- Pulse window: localized brightness opening at field center ---
+  float pulseWindow = clamp(u_pulseWindow, 0.0, 1.0);
+  // Radial bloom: full effect at center, fades to zero at 35% viewport radius
+  float windowBloom = pulseWindow * smoothstep(0.35, 0.0, radial) * settled;
+  // Closed-state pressure: center darkens, vignette deepens
+  float closedFactor = (1.0 - pulseWindow) * settled;
+  float closedDarken = closedFactor * 0.10;
+  float closedVigDeepen = closedFactor * 0.08;
+  // Legacy pulseGlow feeds into plasma composition (kept for continuity)
+  float pulseGlow = windowBloom * 0.18;
+
+  // --- Scan vectors (Direction D): sweeping bright lines ---
+  float scanVectorEffect = 0.0;
+  float scanVectorPresence = 0.0;
+  int scanCount = int(clamp(u_scanCount, 0.0, 3.0));
+  float scanPhase = u_scanPhase;
+  if (scanCount > 0) {
+    for (int i = 0; i < 3; i++) {
+      if (i >= scanCount) break;
+      float offset = float(i) * 2.094; // 2π/3 spacing
+      float vecAngle = scanPhase * 6.2832 + offset + u_time * 0.12;
+      float vecPos = sin(vecAngle) * 0.5;
+      // Alternate between horizontal and vertical sweep
+      float sweep;
+      if (i == 0) {
+        sweep = 1.0 - smoothstep(0.0, 0.06, abs(centeredUv.y - vecPos));
+      } else if (i == 1) {
+        sweep = 1.0 - smoothstep(0.0, 0.06, abs(centeredUv.x - vecPos));
+      } else {
+        // Diagonal sweep
+        float diagVal = (centeredUv.x + centeredUv.y) * 0.7071;
+        sweep = 1.0 - smoothstep(0.0, 0.06, abs(diagVal - vecPos));
+      }
+      sweep *= smoothstep(0.0, 0.15, radial); // fade near center
+      scanVectorEffect += sweep;
+    }
+    scanVectorPresence = min(scanVectorEffect, 1.0);
+  }
+
+  // --- Fracture point: stress crack in containment ---
+  float fractureEffect = 0.0;
+  float fractureIntensity = clamp(u_fractureIntensity, 0.0, 1.0);
+  if (fractureIntensity > 0.0) {
+    vec2 fractureUv = (u_fracturePos - 0.5) * vec2(aspect, 1.0);
+    float fractureDist = length(centeredUv - fractureUv);
+
+    // Crack core: bright stress point
+    float crackCore = smoothstep(0.08, 0.0, fractureDist) * fractureIntensity;
+
+    // Crack branches: radial lines from fracture point
+    vec2 toFracture = centeredUv - fractureUv;
+    float crackAngle = atan(toFracture.y, toFracture.x);
+    float crackBranch = abs(sin(crackAngle * 4.0 + u_time * 0.5));
+    crackBranch = smoothstep(0.7, 1.0, crackBranch);
+    crackBranch *= smoothstep(0.25, 0.02, fractureDist) * fractureIntensity * 0.6;
+
+    // High-frequency noise at crack location
+    float crackNoise = noise(centeredUv * 40.0 + u_time * 2.0) * smoothstep(0.12, 0.0, fractureDist) * fractureIntensity * 0.3;
+
+    fractureEffect = crackCore + crackBranch + crackNoise;
+  }
+
+  // --- Counter-pulse ring (Direction F) ---
+  float counterPulse = clamp(u_counterPulse, 0.0, 1.0);
+  float counterPulseRing = 0.0;
+  if (counterPulse > 0.01) {
+    float ringRadius = counterPulse * 0.8; // expands outward
+    float ringEdge = smoothstep(0.04, 0.0, abs(radial - ringRadius));
+    counterPulseRing = ringEdge * (1.0 - counterPulse) * 0.6; // fades as it expands
+  }
+
+  // --- Deflect window visual: brief inward ripple ---
+  float deflectWindow = clamp(u_deflectWindow, 0.0, 1.0);
+  float deflectVisual = 0.0;
+  if (deflectWindow > 0.01) {
+    float deflectRadius = (1.0 - deflectWindow) * 0.7;
+    float deflectEdge = smoothstep(0.05, 0.0, abs(radial - deflectRadius));
+    deflectVisual = deflectEdge * deflectWindow * 0.35;
+  }
+
+  // --- Rupture sequence ---
+  float rupture = clamp(u_rupture, 0.0, 1.0);
+  float ruptureProgress = clamp(u_ruptureProgress, 0.0, 1.0);
+  float ruptureEffect = 0.0;
+  float ruptureDarkening = 0.0;
+
+  if (rupture > 0.5) {
+    vec2 ruptureOriginUv = (u_ruptureOrigin - 0.5) * vec2(aspect, 1.0);
+    float ruptureDist = length(centeredUv - ruptureOriginUv);
+
+    // Phase 1 (0.0-0.22): crack opens from fracture point
+    float crackOpen = smoothstep(0.0, 0.22, ruptureProgress);
+    float crackWidth = crackOpen * 0.15;
+    vec2 toRupture = centeredUv - ruptureOriginUv;
+    float ruptureAngle = atan(toRupture.y, toRupture.x);
+
+    // Branching cracks
+    float crackLine = abs(sin(ruptureAngle * 3.0));
+    crackLine = smoothstep(0.85, 1.0, crackLine);
+    float crackReach = crackOpen * 1.2;
+    crackLine *= smoothstep(crackReach, 0.0, ruptureDist);
+
+    // Phase 2 (0.22-0.55): cracks reach corners, field brightens at crack
+    float crackSpread = smoothstep(0.22, 0.55, ruptureProgress);
+    float crackBrightness = crackLine * mix(0.4, 1.0, crackSpread);
+
+    // Phase 3 (0.55-0.78): field tears open — silence along cracks
+    float tearOpen = smoothstep(0.55, 0.78, ruptureProgress);
+    float tearSilence = crackLine * tearOpen;
+
+    // Phase 4 (0.78-1.0): hold and fade
+    float fadeFactor = smoothstep(0.78, 1.0, ruptureProgress);
+
+    // Bright amber-white at rupture origin
+    float originGlow = smoothstep(0.15, 0.0, ruptureDist) * crackOpen;
+
+    ruptureEffect = (crackBrightness * 0.7 + originGlow * 0.8) * (1.0 - fadeFactor * 0.6);
+    ruptureDarkening = tearSilence * 0.7 + fadeFactor * 0.4;
+  }
+
   // --- Plasma composition ---
   float plasma = mix(layerA, layerB, 0.6);
   plasma += rings * ringPresence;
   plasma += introPressureRings;
   plasma += scanBeam * scanPresence;
+  plasma += pulseGlow;
   // Radial center glow: very faint at stage 0 (searching), grows with stage
   float radialGlowStrength = mix(0.06, 0.28, stage / 3.0);
   plasma += smoothstep(1.1, 0.1, radial) * radialGlowStrength;
@@ -168,6 +302,41 @@ void main() {
   // Ring edges glow
   color += vec3(0.12, 0.02, 0.04) * rings * ringPresence * intensity;
 
+  // --- Scan vector overlay: warm orange-red tint ---
+  vec3 scanVectorColor = vec3(1.0, 0.45, 0.18);
+  color = mix(color, scanVectorColor, scanVectorPresence * 0.35 * settled);
+
+  // --- Pulse window breathing: amber-white bloom when open, darkening when closed ---
+  // Open: 12% color blend toward amber-white + 18% luminance boost at center
+  vec3 windowWarmth = vec3(1.0, 0.85, 0.6);
+  color = mix(color, windowWarmth, windowBloom * 0.12);
+  color *= (1.0 + windowBloom * 0.18);
+  // Closed: center darkens below base luminance
+  color *= (1.0 - closedDarken * smoothstep(0.4, 0.0, radial));
+
+  // --- Absorbed attempt ripple: field asserts itself ---
+  float absorbed = clamp(u_absorbed, 0.0, 1.0);
+  if (absorbed < 0.99) {
+    float absorbedAge = absorbed; // 0.0 = just happened, 1.0 = fully faded
+    float rippleRadius = absorbedAge * 0.40;
+    float rippleEdge = smoothstep(0.06, 0.0, abs(radial - rippleRadius));
+    float rippleStrength = (1.0 - absorbedAge) * 0.25;
+    // Use the field's own base red — not rose, not amber
+    color += rippleEdge * rippleStrength * glow;
+  }
+
+  // --- Fracture point: amber glow at stress point ---
+  vec3 fractureColor = vec3(1.0, 0.78, 0.28);
+  color = mix(color, fractureColor, fractureEffect * 0.65);
+
+  // --- Counter-pulse ring: deep rose color ---
+  vec3 counterPulseColor = vec3(0.88, 0.38, 0.56);
+  color = mix(color, counterPulseColor, counterPulseRing);
+
+  // --- Deflect window: cooler blue-white ripple ---
+  vec3 deflectColor = vec3(0.55, 0.72, 1.0);
+  color = mix(color, deflectColor, deflectVisual);
+
   // --- Resistance tear effect ---
   vec3 tearColor = vec3(0.04, 0.06, 0.12);
   vec3 tearEdgeColor = vec3(0.5, 0.7, 1.0);
@@ -181,6 +350,15 @@ void main() {
   // --- Intro static noise overlay ---
   color += introStatic * vec3(0.4, 0.05, 0.08);
 
+  // --- Rupture effects ---
+  if (rupture > 0.5) {
+    // Bright rupture glow
+    vec3 ruptureGlowColor = vec3(1.0, 0.85, 0.5);
+    color = mix(color, ruptureGlowColor, ruptureEffect);
+    // Tear darkening — silence where cracks opened
+    color *= (1.0 - ruptureDarkening);
+  }
+
   // --- Scan lines ---
   float scan = sin(gl_FragCoord.y * 1.25 + u_time * 8.0) * 0.02;
   color += scan * intensity;
@@ -190,7 +368,8 @@ void main() {
   float vignetteRadius = mix(1.2, 0.7, stage / 3.0);
   // Extra constriction at stage 0 once settled — makes frame feel closed-in
   float stage0VigBoost = (1.0 - min(stage, 1.0)) * settled * 0.25;
-  float vignette = smoothstep(vignetteRadius - stage0VigBoost, (vignetteRadius - stage0VigBoost) * 0.35, radial);
+  float vignetteInner = vignetteRadius - stage0VigBoost - closedVigDeepen;
+  float vignette = smoothstep(vignetteInner, vignetteInner * 0.35, radial);
   color *= mix(0.38, 1.0, vignette);
 
   // --- Intro visibility: multiply by intro vignette and reveal ---
@@ -201,6 +380,9 @@ void main() {
   // --- Lock-in pulse: brief brightness spike at the end of intro ---
   float lockPulse = introLock * (1.0 - smoothstep(0.92, 1.0, intro)) * 0.35;
   color += lockPulse * vec3(0.6, 0.12, 0.08);
+
+  // --- Intensity spike during scan vector contact ---
+  // (handled via u_intensity from JS side)
 
   gl_FragColor = vec4(color, 1.0);
 }

@@ -968,6 +968,108 @@
 }
 
 /* ======================================================================== */
+/*  RUPTURE SEQUENCE                                                         */
+/* ======================================================================== */
+
+/* Corner brackets glitch and fragment during rupture */
+.ruptureGlitch {
+  animation: ruptureCornerGlitch 600ms cubic-bezier(0.22, 0.68, 0.36, 1) forwards;
+}
+
+/* Edge marks flash rose then go dark */
+.ruptureEdgeFlash {
+  animation: ruptureEdgeFlash 800ms ease-out forwards;
+}
+
+/* Containment frame fades out at end of rupture */
+.containmentFrameRupture {
+  animation: ruptureFrameFade 2800ms ease-out forwards;
+}
+
+@keyframes ruptureCornerGlitch {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+
+  10% {
+    transform: translate(3px, -2px);
+    opacity: 0.8;
+  }
+
+  20% {
+    transform: translate(-4px, 1px);
+    opacity: 0.6;
+  }
+
+  30% {
+    transform: translate(2px, 3px);
+    opacity: 0.9;
+  }
+
+  40% {
+    transform: translate(-1px, -3px);
+    opacity: 0.4;
+  }
+
+  55% {
+    transform: translate(5px, 2px);
+    opacity: 0.7;
+  }
+
+  70% {
+    transform: translate(-2px, -1px);
+    opacity: 0.3;
+  }
+
+  85% {
+    transform: translate(1px, 2px);
+    opacity: 0.15;
+  }
+
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes ruptureEdgeFlash {
+  0% {
+    background: rgba(255, 80, 40, 0.2);
+    opacity: 1;
+  }
+
+  25% {
+    background: rgba(224, 96, 144, 0.8);
+    opacity: 1;
+  }
+
+  50% {
+    background: rgba(224, 96, 144, 0.4);
+    opacity: 0.6;
+  }
+
+  100% {
+    background: rgba(20, 5, 10, 0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes ruptureFrameFade {
+  0%, 60% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ======================================================================== */
 /*  RESPONSIVE                                                               */
 /* ======================================================================== */
 
@@ -1054,5 +1156,20 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  .ruptureGlitch {
+    animation: none;
+    opacity: 0;
+  }
+
+  .ruptureEdgeFlash {
+    animation: none;
+    opacity: 0;
+  }
+
+  .containmentFrameRupture {
+    animation: none;
+    opacity: 0;
   }
 }

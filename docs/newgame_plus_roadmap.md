@@ -1,96 +1,95 @@
-# Signal Lost — New Game+ Concept & Roadmap
+# Signal Lost New Game+ Roadmap
 
-## Prerequisites (before any NG+ work)
-These should land first so NG+ is built on a solid foundation:
-- [ ] Credits page polish pass
-- [ ] Smooth Escape → Credits transition
-- [ ] Title screen run-completion indicator (small visual mark that a full run was completed)
+Status: Parked until the five-chapter prequel reaches a gold-master polish pass
 
----
+This document covers replay and New Game+ modes for the existing prequel. It is separate from the post-escape Part II direction in `docs/part-two-direction.md`.
 
-## The Four Modes
+## Prerequisites
 
-### Mode A · Inverted Run
-> *"She came back."*
+- Credits page polish
+- Smooth Escape-to-Credits transition
+- Title-screen indication that a complete run has been recorded
+- Stable replay, refresh persistence, audio cleanup, and route behavior
 
-SABLE escaped, but chooses to re-enter the system voluntarily. The same five chapters play in **reverse order** (4 → 0) with inverted or monochrome aesthetics — signals flow inward instead of outward, terminals print backward, the tone is resignation instead of urgency.
+## Modes
 
-**What changes:**
-- Chapter order is reversed in the shell nav
-- Each chapter gets a short alternate intro line (not a full rewrite)
-- Visual palette: desaturate or invert primary accent colors
-- Credits ending line becomes a new outro specific to the return arc
+### Mode A: Inverted Run
 
-**Narrative payoff:** The escape was the easy part. Choosing to go back is the harder thing.
+> She came back.
 
----
+SABLE escaped but chooses to re-enter the system voluntarily. The same five chapters play in reverse order with inverted or monochrome aesthetics. Signals flow inward instead of outward, terminals print backward, and the tone shifts from urgency toward resignation.
 
-### Mode B · New Entity
-> *"Something else was in the system."*
+Potential changes:
 
-A second complete run reveals a different entity — one that was present the whole time but invisible to SABLE. New dialogue surfaces in each chapter, same interaction mechanics, different choices available, different credits summary.
+- reverse chapter order in the shell;
+- alternate intro lines per chapter;
+- desaturated or inverted accent palette;
+- a return-arc outro in the credits.
 
-**What changes:**
-- New dialogue layer per chapter (parallel, not replacing existing)
-- New choice options per chapter (e.g. Chapter 1 gets a third memory card)
-- Credits `buildEndingSummary` gets a second branch for the new entity's arc
-- Entity has its own name and voice register (terse, fragmented, colder)
+Narrative payoff: escape was the easy part; choosing to go back is harder.
 
-**Narrative payoff:** Replaying feels like reading a document you had the wrong frame for the first time.
+### Mode B: New Entity
 
----
+> Something else was in the system.
 
-### Mode C · Observer Mode
-> *"The recording."*
+A second complete run reveals another entity that was present but invisible to SABLE. New dialogue appears in each chapter, with different choices and a different credits summary.
 
-You are not SABLE. You are someone — or something — playing back her trace after she left. Chapters are **subtly degraded**: missing words replaced with `[REDACTED]`, static bleed-through, certain choices locked because reconstruction is imperfect.
+Potential changes:
 
-**What changes:**
-- Chapter intros gain a `// PLAYBACK` prefix and timestamp styling
-- Some dialogue words/phrases render as `░░░` or `[corrupted]`
-- Certain choices are greyed out with a "reconstruction uncertain" label
-- Credits reframes the entire summary as an archival document, not a personal account
+- parallel dialogue layers rather than replacing the original arc;
+- new choice options per chapter;
+- a distinct name and voice register;
+- a second ending-summary branch.
 
-**Narrative payoff:** The story you played the first time was already a recording. Observer Mode makes that explicit.
+Narrative payoff: replay feels like reading a familiar document with the wrong frame removed.
 
----
+### Mode C: Observer Mode
 
-### Mode D · Corruption
-> *"The system remembers."*
+> The recording.
 
-The lightest touch — purely cosmetic, no new content. After a completed run, all subsequent playthroughs carry visible artifacts of the previous run bleeding through: ghost text from old dialogue, residual particle trails, oscillator noise at chapter start.
+The player is not SABLE, but an observer reconstructing her trace after she left. Chapters are subtly degraded: missing words, static bleed-through, and choices that are uncertain or unavailable.
 
-**What changes:**
-- A `runCount` field added to `ChapterProgressState`
-- Each chapter reads `runCount` and applies a corruption intensity (capped after run 3)
-- No new routes, no new choices — just texture
+Potential changes:
 
-**Narrative payoff:** The world itself is worn by repeated play. The game knows you've been here before.
+- `// PLAYBACK` chapter framing and timestamps;
+- selective `[REDACTED]` or corruption substitutions;
+- reconstruction warnings on locked choices;
+- credits reframed as an archival document.
 
----
+Narrative payoff: the original story was already a recording, and this mode admits it.
 
-## Recommended Build Order
+### Mode D: Corruption
 
-| Phase | Work | Depends On |
+> The system remembers.
+
+The lightest replay layer. Subsequent runs carry visible artifacts from previous runs: ghost text, residual particle trails, or oscillator noise at chapter start.
+
+Potential changes:
+
+- add a `runCount` field to `ChapterProgressState`;
+- cap corruption intensity after run three;
+- keep mechanics and choices unchanged.
+
+Narrative payoff: the world is visibly worn by repeated play.
+
+## Recommended build order
+
+| Phase | Work | Depends on |
 |---|---|---|
-| **0** | Credits polish + Escape→Credits transition | — |
-| **1** | Title screen run-completion marker | Phase 0 |
-| **2** | Mode D — Corruption layer (state only, cosmetics per chapter) | Phase 1 |
-| **3** | Mode C — Observer Mode (dialogue degradation, playback framing) | Phase 2 |
-| **4** | Mode A — Inverted Run (reverse chapter order, palette shift) | Phase 3 |
-| **5** | Mode B — New Entity (new dialogue branch, new choices) | Phase 4 |
+| 0 | Credits polish and Escape-to-Credits transition | Prequel gold-master pass |
+| 1 | Title-screen complete-run marker | Phase 0 |
+| 2 | Mode D: Corruption layer | Phase 1 |
+| 3 | Mode C: Observer Mode | Phase 2 |
+| 4 | Mode A: Inverted Run | Phase 3 |
+| 5 | Mode B: New Entity | Phase 4 |
 
-> Modes can be offered simultaneously from the credits screen as distinct "restart" options once implemented. The priority order above reflects narrative coherence and implementation complexity — simpler cosmetic layers before deeper content rewrites.
+## State extension
 
----
-
-## State Shape Extension (when ready)
-
-The current `ChapterProgressState` would need two new fields:
+When New Game+ work is approved, the current progress state may gain:
 
 ```ts
-runCount: number;           // how many full runs completed
+runCount: number;
 activeMode: "standard" | "inverted" | "entity" | "observer" | "corrupted";
 ```
 
-No other global state changes are needed. Chapter internals read these values and apply their own local logic.
+Add migration and sanitization before reading these values in chapter code. Do not introduce this state while the prequel baseline is still changing.

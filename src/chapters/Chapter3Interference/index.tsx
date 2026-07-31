@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
+import { useChapterManager } from "@/engine/ChapterManager";
 import styles from "./interference.module.css";
 
 type Chapter3InterferenceProps = {
@@ -69,19 +70,31 @@ const CHAPTER3_COMPLETE_SOURCE = "/audio/chapter3/chapter3_containment_fracture.
 /*  Resistance log entries                                                    */
 /* -------------------------------------------------------------------------- */
 
-function getResistanceLogEntry(count: number): string {
-  const entries: string[] = [
-    ">> Disruption registered. Field integrity dropped 12%. Repairing.",
-    ">> Second pulse. The anomaly is not random — it is choosing when to push.",
-    ">> Pattern emerging. Resistance occurs at intervals the host can predict.",
-    ">> Containment bands realigned. The next disruption will cost her more.",
-    ">> Signal is learning to time the gaps. Adjusting scan frequency.",
-    ">> Pressure field rebuilt 8% faster than last cycle. She noticed.",
-    ">> Sixth breach. The anomaly is using the host's own rebuild latency.",
-    ">> Final containment layer stressed. One more will create an opening.",
-  ];
-
-  return entries[Math.min(count, entries.length - 1)];
+function getResistanceLogEntry(count: number, legibility: number, isRegular: boolean): string {
+  switch (count) {
+    case 0:
+      return ">> Disruption registered. Field integrity dropped 12%. Repairing.";
+    case 1:
+      return isRegular
+        ? ">> Second pulse. Interval consistent. The anomaly has a rhythm."
+        : ">> Second pulse. Interval irregular. Deliberate or noise — unclear.";
+    case 2:
+      return legibility > 0.5
+        ? ">> Pattern emerging. Signal clarity increasing. Host is listening."
+        : ">> Pattern fragmentary. Signal edges remain difficult to resolve.";
+    case 3:
+      return ">> Containment bands realigned. The next disruption will cost her more.";
+    case 4:
+      return isRegular
+        ? ">> Timing predictable within 180ms. Adjusting window to match."
+        : ">> Timing irregular. The anomaly is varying deliberately.";
+    case 5:
+      return ">> Pressure field rebuilt 8% faster than last cycle. She noticed.";
+    case 6:
+      return ">> Sixth breach. The anomaly is using the host's own rebuild latency.";
+    default:
+      return ">> Final containment layer stressed. One more will create an opening.";
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -152,6 +165,40 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
   const introProgressRef = useRef(0);
   const introTimersRef = useRef<number[]>([]);
 
+  /* --- Chapter 2 choice carry-over for legibility starting value --- */
+  const { getChapterChoice } = useChapterManager();
+  const ch2Choice = getChapterChoice(2);
+  const startingLegibility = ch2Choice === "Mask the signal" ? 0.15
+    : ch2Choice === "Answer the chorus" ? 0.40
+    : 0.25;
+
+  /* --- Mechanic refs (mutable, read in render loop) --- */
+  const legibilityRef = useRef(startingLegibility);
+  const pulseWindowOpenRef = useRef(false);
+  const pulseWindowCycleStartRef = useRef(0);
+  const scanPhaseRef = useRef(0);
+  const scanCountRef = useRef(0);
+  const resistHistoryRef = useRef<number[]>([]);
+  const patternOffsetRef = useRef(0);
+  const isRegularRef = useRef(false);
+  const fracturePosRef = useRef<[number, number]>([0.3, 0.6]);
+  const fractureIntensityRef = useRef(0);
+  const fractureMigrationTimerRef = useRef(0);
+  const counterPulseRef = useRef(0);
+  const deflectWindowRef = useRef(0);
+  const deflectWindowActiveRef = useRef(false);
+  const deflectStartTimeRef = useRef(0);
+  const ruptureRef = useRef(0);
+  const ruptureProgressRef = useRef(0);
+  const ruptureOriginRef = useRef<[number, number]>([0.5, 0.5]);
+  const ruptureStartTimeRef = useRef(0);
+  const finalAttemptCountRef = useRef(0);
+  const fractionalResistRef = useRef(0);
+  const intensitySpikeRef = useRef(0);
+  const pulseWindowUniformRef = useRef(0);
+  const absorbedAtRef = useRef<number>(0);
+
+  /* --- React state (for UI rendering) --- */
   const [shaderStatus, setShaderStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -162,6 +209,7 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
   const [, setCurrentStage] = useState<InterferenceStage>(0);
   const [stageFlashKey, setStageFlashKey] = useState(0);
   const [resistFlashKey, setResistFlashKey] = useState(0);
+  const [isRupturing, setIsRupturing] = useState(false);
 
   /* --- Intro state --- */
   const [introPhase, setIntroPhase] = useState<
@@ -451,6 +499,19 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
         const introLocation = sceneGl.getUniformLocation(program, "u_intro");
         const settledLocation = sceneGl.getUniformLocation(program, "u_settled");
 
+        // New mechanic uniform locations
+        const scanPhaseLocation = sceneGl.getUniformLocation(program, "u_scanPhase");
+        const scanCountLocation = sceneGl.getUniformLocation(program, "u_scanCount");
+        const fracturePosLocation = sceneGl.getUniformLocation(program, "u_fracturePos");
+        const fractureIntensityLocation = sceneGl.getUniformLocation(program, "u_fractureIntensity");
+        const counterPulseLocation = sceneGl.getUniformLocation(program, "u_counterPulse");
+        const deflectWindowLocation = sceneGl.getUniformLocation(program, "u_deflectWindow");
+        const ruptureLocation = sceneGl.getUniformLocation(program, "u_rupture");
+        const ruptureProgressLocation = sceneGl.getUniformLocation(program, "u_ruptureProgress");
+        const ruptureOriginLocation = sceneGl.getUniformLocation(program, "u_ruptureOrigin");
+        const pulseWindowLocation = sceneGl.getUniformLocation(program, "u_pulseWindow");
+        const absorbedLocation = sceneGl.getUniformLocation(program, "u_absorbed");
+
         function resizeCanvas() {
           const nextWidth = sceneCanvas.clientWidth;
           const nextHeight = sceneCanvas.clientHeight;
@@ -489,9 +550,93 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
           cooldownRef.current *= 0.958;
           // Resistance visual decays smoothly
           resistanceRef.current *= 0.94;
+          // Intensity spike decays
+          intensitySpikeRef.current *= 0.92;
 
-          const intensity = Math.max(0.16, pressure - cooldownRef.current * 0.55);
+          const legibility = legibilityRef.current;
           const stage = deriveStage(resistanceCountRef.current);
+
+          /* --- Pulse window cycling (Direction A) --- */
+          const baseOpenMs = 1400;
+          const baseClosedMs = 2200;
+          const openDuration = baseOpenMs * (1 - legibility * 0.5);
+          let closedDuration = baseClosedMs;
+          // Apply pattern drift offset from Direction C
+          closedDuration = Math.max(800, closedDuration - patternOffsetRef.current);
+          const cycleDuration = openDuration + closedDuration;
+
+          if (settledValue >= 1.0) {
+            const cycleTime = (now - pulseWindowCycleStartRef.current) % cycleDuration;
+            const wasOpen = pulseWindowOpenRef.current;
+            pulseWindowOpenRef.current = cycleTime < openDuration;
+
+            // Reset cycle start if transitioning to keep phase aligned
+            if (!wasOpen && pulseWindowOpenRef.current) {
+              pulseWindowCycleStartRef.current = now;
+            }
+
+            // Smooth pulse window uniform: 180ms ramp-up, 240ms ramp-down
+            if (pulseWindowOpenRef.current) {
+              // Ramp toward 1.0 over 180ms
+              pulseWindowUniformRef.current = Math.min(1.0,
+                pulseWindowUniformRef.current + (16.67 / 180));
+            } else {
+              // Ramp toward 0.0 over 240ms
+              pulseWindowUniformRef.current = Math.max(0.0,
+                pulseWindowUniformRef.current - (16.67 / 240));
+            }
+          }
+
+          /* --- Scan vector phase (Direction D) --- */
+          const baseSpeed = 0.3;
+          const scanSpeed = baseSpeed * (1 + legibility * 0.8);
+          scanPhaseRef.current = (scanPhaseRef.current + scanSpeed * 0.016) % 1.0;
+          // Scan count: 1 at stage 1, 2 at stage 2, 3 at stage 3
+          scanCountRef.current = stage >= 1 ? Math.min(stage, 3) : 0;
+
+          /* --- Fracture point migration (Direction C, stage 2+) --- */
+          if (stage >= 2) {
+            const baseMigration = 10000; // 10s base
+            const migrationRate = baseMigration / (1 + legibility * 1.2);
+            fractureMigrationTimerRef.current += 16.67; // ~1 frame
+            if (fractureMigrationTimerRef.current >= migrationRate) {
+              fractureMigrationTimerRef.current = 0;
+              fracturePosRef.current = [
+                0.2 + Math.random() * 0.6,
+                0.2 + Math.random() * 0.6,
+              ];
+              fractureIntensityRef.current = 0.1;
+            }
+            // Fracture intensity grows over time toward 1.0
+            fractureIntensityRef.current = Math.min(1.0,
+              fractureIntensityRef.current + 0.002);
+          }
+
+          /* --- Counter-pulse decay (Direction F) --- */
+          counterPulseRef.current *= 0.97; // ~800ms to near-zero at 60fps
+          if (counterPulseRef.current < 0.01) counterPulseRef.current = 0;
+
+          /* --- Deflect window decay --- */
+          if (deflectWindowActiveRef.current) {
+            const baseDeflect = 600;
+            const deflectDuration = baseDeflect * (1 - legibility * 0.4);
+            const deflectElapsed = now - deflectStartTimeRef.current;
+            if (deflectElapsed > deflectDuration) {
+              deflectWindowActiveRef.current = false;
+              deflectWindowRef.current = 0;
+            } else {
+              deflectWindowRef.current = 1.0 - (deflectElapsed / deflectDuration);
+            }
+          }
+
+          /* --- Rupture progression --- */
+          if (ruptureRef.current > 0 && ruptureStartTimeRef.current > 0) {
+            const ruptureElapsed = now - ruptureStartTimeRef.current;
+            ruptureProgressRef.current = Math.min(1.0, ruptureElapsed / 1800);
+          }
+
+          const intensity = Math.max(0.16,
+            pressure - cooldownRef.current * 0.55 + intensitySpikeRef.current);
 
           sceneGl.useProgram(program);
           sceneGl.bindBuffer(sceneGl.ARRAY_BUFFER, positionBuffer);
@@ -524,6 +669,48 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
 
           if (settledLocation) {
             sceneGl.uniform1f(settledLocation, settledValue);
+          }
+
+          // New mechanic uniforms
+          if (scanPhaseLocation) {
+            sceneGl.uniform1f(scanPhaseLocation, scanPhaseRef.current);
+          }
+          if (scanCountLocation) {
+            sceneGl.uniform1f(scanCountLocation, scanCountRef.current);
+          }
+          if (fracturePosLocation) {
+            sceneGl.uniform2f(fracturePosLocation,
+              fracturePosRef.current[0], fracturePosRef.current[1]);
+          }
+          if (fractureIntensityLocation) {
+            sceneGl.uniform1f(fractureIntensityLocation, fractureIntensityRef.current);
+          }
+          if (counterPulseLocation) {
+            sceneGl.uniform1f(counterPulseLocation, counterPulseRef.current);
+          }
+          if (deflectWindowLocation) {
+            sceneGl.uniform1f(deflectWindowLocation, deflectWindowRef.current);
+          }
+          if (ruptureLocation) {
+            sceneGl.uniform1f(ruptureLocation, ruptureRef.current);
+          }
+          if (ruptureProgressLocation) {
+            sceneGl.uniform1f(ruptureProgressLocation, ruptureProgressRef.current);
+          }
+          if (ruptureOriginLocation) {
+            sceneGl.uniform2f(ruptureOriginLocation,
+              ruptureOriginRef.current[0], ruptureOriginRef.current[1]);
+          }
+          if (pulseWindowLocation) {
+            sceneGl.uniform1f(pulseWindowLocation, pulseWindowUniformRef.current);
+          }
+
+          // Absorbed attempt: 0.0 = just happened, 1.0 = fully decayed
+          const absorbedAge = absorbedAtRef.current > 0
+            ? Math.min((now - absorbedAtRef.current) / 400, 1.0)
+            : 1.0;
+          if (absorbedLocation) {
+            sceneGl.uniform1f(absorbedLocation, absorbedAge);
           }
 
           sceneGl.drawArrays(sceneGl.TRIANGLES, 0, 6);
@@ -576,13 +763,117 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
       return;
     }
 
-    // Visual flash
+    const now = performance.now();
+    const stage = deriveStage(resistanceCountRef.current);
+
+    /* --- Stage 3 deflect check: if deflect window is active, this is a
+           deflect attempt, not a new resist --- */
+    if (deflectWindowActiveRef.current && stage >= 3) {
+      deflectWindowActiveRef.current = false;
+      deflectWindowRef.current = 0;
+      // Successful deflect: nullify counter-pulse, small pressure relief
+      counterPulseRef.current = 0;
+      cooldownRef.current = Math.max(0, cooldownRef.current - 0.15);
+      return;
+    }
+
+    /* --- Pulse window gating (Direction A) --- */
+    if (!pulseWindowOpenRef.current) {
+      // Outside pulse window: absorbed. Faint ripple, no resist.
+      absorbedAtRef.current = performance.now();
+      return;
+    }
+
+    /* --- Determine legibility increment based on context --- */
+    const isScanVectorActive = scanCountRef.current > 0;
+    // Check if any scan vector is near center (approximation: scanPhase near 0.5)
+    const scanPhaseFrac = scanPhaseRef.current;
+    const nearScanPass = isScanVectorActive &&
+      (Math.abs(Math.sin(scanPhaseFrac * Math.PI * 2)) > 0.7);
+
+    // Check fracture point proximity (is the pulse window aligned with fracture?)
+    const fractureDist = Math.abs(fracturePosRef.current[0] - 0.5) +
+      Math.abs(fracturePosRef.current[1] - 0.5);
+    const nearFracture = stage >= 2 && fractureIntensityRef.current > 0.3 &&
+      fractureDist < 0.35;
+
+    let legibilityGain: number;
+    if (nearScanPass) {
+      legibilityGain = 0.08; // Resisting during scan — seen clearly
+    } else if (nearFracture) {
+      legibilityGain = 0.03; // Resisting at fracture — noise
+    } else {
+      legibilityGain = 0.05; // Baseline clean gap
+    }
+
+    /* --- Pattern tracking (Direction C, stage 2+) --- */
+    const history = resistHistoryRef.current;
+    history.push(now);
+    if (history.length > 3) {
+      history.shift();
+    }
+
+    let isRegular = false;
+    if (history.length >= 3) {
+      const interval1 = history[1] - history[0];
+      const interval2 = history[2] - history[1];
+      const variance = Math.abs(interval2 - interval1);
+      isRegular = variance < 300;
+    }
+    isRegularRef.current = isRegular;
+
+    if (isRegular) {
+      legibilityGain += 0.03; // Pattern regularity penalty
+      // Window drift: offset increases by 150ms per regular resist, cap 600ms
+      patternOffsetRef.current = Math.min(600, patternOffsetRef.current + 150);
+    } else {
+      // Offset resets gradually
+      patternOffsetRef.current = Math.max(0, patternOffsetRef.current - 100);
+    }
+
+    // Apply legibility gain, ceiling at 0.95
+    legibilityRef.current = Math.min(0.95,
+      legibilityRef.current + legibilityGain);
+
+    /* --- Scan vector intensity spike --- */
+    if (nearScanPass) {
+      intensitySpikeRef.current = 0.3; // Visible pressure spike
+    }
+
+    /* --- Visual flash --- */
     cooldownRef.current = Math.min(cooldownRef.current + 0.58, 1.2);
     resistanceRef.current = 1.0;
 
+    /* --- Determine resistance credit --- */
+    let resistCredit = 1.0;
+    if (nearFracture) {
+      resistCredit = 1.4; // Fracture point partial credit
+    }
+
+    /* --- Accumulate fractional resistance --- */
+    fractionalResistRef.current += resistCredit;
+    const effectiveCount = Math.floor(fractionalResistRef.current);
+
     // Use ref to get stable current count (avoids double-fire in StrictMode)
     const currentCount = resistanceCountRef.current;
-    const nextCount = currentCount + 1;
+
+    // Only advance if fractional total crossed a new integer
+    if (effectiveCount <= currentCount) {
+      // Credit accumulated but no new full resist yet
+      playCue(CHAPTER3_RESIST_SOURCE, 0.12);
+
+      // Still fire counter-pulse in stage 3
+      if (stage >= 3) {
+        counterPulseRef.current = 1.0;
+        setTimeout(() => {
+          deflectWindowActiveRef.current = true;
+          deflectStartTimeRef.current = performance.now();
+        }, 200);
+      }
+      return;
+    }
+
+    const nextCount = effectiveCount;
     resistanceCountRef.current = nextCount;
 
     const nextStage = deriveStage(nextCount);
@@ -592,7 +883,7 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
     setResistanceCount(nextCount);
     setLogEntries((prev) => [
       ...prev,
-      getResistanceLogEntry(currentCount),
+      getResistanceLogEntry(currentCount, legibilityRef.current, isRegular),
     ]);
 
     // Stage transition flash
@@ -616,20 +907,69 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
 
     playCue(CHAPTER3_RESIST_SOURCE, 0.12);
 
-    // Completion
+    /* --- Counter-pulse (Direction F, stage 3+) --- */
+    if (stage >= 3 && nextCount < RESISTANCE_THRESHOLD) {
+      counterPulseRef.current = 1.0;
+      setTimeout(() => {
+        deflectWindowActiveRef.current = true;
+        deflectStartTimeRef.current = performance.now();
+      }, 200);
+    }
+
+    /* --- Completion: rupture sequence --- */
     if (nextCount >= RESISTANCE_THRESHOLD) {
+      // Final resist condition check (stage 3 only)
+      if (nextStage >= 3) {
+        finalAttemptCountRef.current += 1;
+
+        const inPulseWindow = pulseWindowOpenRef.current;
+        const inScanGap = !nearScanPass;
+        const atFracture = nearFracture;
+        const inDeflectOrClean = deflectWindowActiveRef.current || !isRegular;
+        const allMet = inPulseWindow && inScanGap && atFracture && inDeflectOrClean;
+
+        // Three-attempt fallback
+        if (!allMet && finalAttemptCountRef.current < 3) {
+          // Partial credit: 0.7 only
+          fractionalResistRef.current -= 0.3;
+          resistanceCountRef.current = currentCount;
+          setResistanceCount(currentCount);
+          // Stronger counter-pulse
+          counterPulseRef.current = 1.0;
+          intensitySpikeRef.current = 0.4;
+          return;
+        }
+      }
+
       completedRef.current = true;
       playCue(CHAPTER3_COMPLETE_SOURCE, 0.16);
-      onComplete();
+
+      // Start rupture sequence
+      ruptureRef.current = 1.0;
+      ruptureOriginRef.current = [...fracturePosRef.current];
+      ruptureStartTimeRef.current = performance.now();
+      setIsRupturing(true);
+
+      // Fire onComplete after 2800ms rupture sequence
+      setTimeout(() => {
+        onComplete();
+      }, 2800);
     }
   }
+
+  /* ---------------------------------------------------------------------- */
+  /*  Counter-pulse absorption: passive penalty on missed deflect            */
+  /* ---------------------------------------------------------------------- */
+
+  // Absorption is handled in the draw loop — if counter-pulse decays to 0
+  // without deflect, the progress penalty is the visual tightening via intensity.
 
   /* ---------------------------------------------------------------------- */
   /*  Derived display values                                                */
   /* ---------------------------------------------------------------------- */
 
   const displayStage = deriveStage(resistanceCount);
-  const isComplete = resistanceCount >= RESISTANCE_THRESHOLD;
+  const isComplete = resistanceCount >= RESISTANCE_THRESHOLD || isRupturing;
   const introSettled = introPhase === "settled";
 
   return (
@@ -688,46 +1028,46 @@ export function Chapter3Interference({ onComplete }: Chapter3InterferenceProps) 
       ) : null}
 
       {/* --- Containment frame: corner brackets and edge marks --- */}
-      <div className={styles.containmentFrame}>
+      <div className={`${styles.containmentFrame} ${isRupturing ? styles.containmentFrameRupture : ""}`}>
         <div
           className={`${styles.containmentCorner} ${styles.containmentCornerTL} ${
             introCornersVisible ? styles.containmentCornerVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureGlitch : ""}`}
         />
         <div
           className={`${styles.containmentCorner} ${styles.containmentCornerTR} ${
             introCornersVisible ? styles.containmentCornerVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureGlitch : ""}`}
         />
         <div
           className={`${styles.containmentCorner} ${styles.containmentCornerBL} ${
             introCornersVisible ? styles.containmentCornerVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureGlitch : ""}`}
         />
         <div
           className={`${styles.containmentCorner} ${styles.containmentCornerBR} ${
             introCornersVisible ? styles.containmentCornerVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureGlitch : ""}`}
         />
         <div
           className={`${styles.containmentEdge} ${styles.containmentEdgeTop} ${
             introEdgesVisible ? styles.containmentEdgeVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureEdgeFlash : ""}`}
         />
         <div
           className={`${styles.containmentEdge} ${styles.containmentEdgeBottom} ${
             introEdgesVisible ? styles.containmentEdgeVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureEdgeFlash : ""}`}
         />
         <div
           className={`${styles.containmentEdge} ${styles.containmentEdgeLeft} ${
             introEdgesVisible ? styles.containmentEdgeVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureEdgeFlash : ""}`}
         />
         <div
           className={`${styles.containmentEdge} ${styles.containmentEdgeRight} ${
             introEdgesVisible ? styles.containmentEdgeVisible : ""
-          }`}
+          } ${isRupturing ? styles.ruptureEdgeFlash : ""}`}
         />
       </div>
 
