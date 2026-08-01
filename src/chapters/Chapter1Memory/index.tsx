@@ -244,6 +244,11 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
   const runArchiveEvent = useCallback(
     (eventId: ArchiveEventId, onFinished: () => void, leadMs?: number) => {
       const config = ARCHIVE_EVENT_CONFIGS[eventId];
+      const configuredLeadMs =
+        leadMs ?? (prefersReducedMotion ? REDUCED_TIMING.warningLead : TIMING.warningLead);
+      const dialogSettledLeadMs =
+        TIMING.response +
+        (prefersReducedMotion ? REDUCED_TIMING.warningLead : TIMING.warningLead);
       setSequenceLocked(true);
       clearGroup("archive-lead");
       clearGroup("archive-event");
@@ -267,7 +272,8 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
             setLines: setArchiveEventLines,
           });
         },
-        leadMs ?? (prefersReducedMotion ? REDUCED_TIMING.warningLead : TIMING.warningLead),
+        // Let the recovery response finish before the host warning interrupts the field.
+        Math.max(configuredLeadMs, dialogSettledLeadMs),
       );
     },
     [clearGroup, prefersReducedMotion, schedule, typeLines],
