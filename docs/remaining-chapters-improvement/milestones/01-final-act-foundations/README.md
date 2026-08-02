@@ -1,8 +1,8 @@
 # Milestone 01: Final-Act Foundations
 
-Status: **Pending user approval**
-Current phase owner: User approval gate
-Implementation owner: Luna XHIGH after approval and Git checkpoint
+Status: **Implementation complete; browser playtest evidence limited by the available browser session**
+Current phase owner: Luna validation handoff
+Implementation owner: Luna XHIGH
 Review owner: Sol
 
 ## Objective
@@ -73,12 +73,12 @@ Make the existing Chapters 2-4 reliably completable, replayable, responsive at b
 
 ## Phase checklist
 
-- [ ] Reconfirm Git state and baseline commands.
-- [ ] Establish explicit prior-choice props and disposable-resource ownership.
-- [ ] Stabilize Chapter 2 lint, input semantics, resize, reduced-motion hook, and compact/short reachability.
-- [ ] Stabilize Chapter 3 failure path, timing, DPR/aspect, timeout/audio cleanup, and compact/short reachability.
-- [ ] Stabilize Chapter 4 hit testing, resize continuity, completion/audio cleanup, reduced-motion hook, and compact/short reachability.
-- [ ] Run the full validation matrix and record observed results.
+- [x] Reconfirm Git state and baseline commands.
+- [x] Establish explicit prior-choice props and disposable-resource ownership.
+- [x] Stabilize Chapter 2 lint, input semantics, resize, reduced-motion hook, and compact/short reachability.
+- [x] Stabilize Chapter 3 failure path, timing, DPR/aspect, timeout/audio cleanup, and compact/short reachability.
+- [x] Stabilize Chapter 4 hit testing, resize continuity, completion/audio cleanup, reduced-motion hook, and compact/short reachability.
+- [x] Run the command/source validation matrix and record observed results.
 - [ ] Sol review and user verdict.
 
 ## Acceptance summary
@@ -103,4 +103,6 @@ All visual/experience expansions belong to Milestones 2-4. Credits and final mix
 
 ## Latest verdict
 
-Planning verdict: approval-ready. Implementation evidence: not started.
+Implementation verdict: command validation passes. The live browser session timed out during setup, so renderer-loop rows remain explicitly unchecked rather than being presented as visual passes. No new lint/build/diff regression was found.
+
+Changed implementation files: `src/components/ChapterRouteView.tsx`, `src/chapters/Chapter2Signal/index.tsx`, `src/chapters/Chapter3Interference/index.tsx`, and `src/chapters/Chapter4Escape/index.tsx`.

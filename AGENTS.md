@@ -10,7 +10,7 @@ SABLE is a fragmented AI waking inside a damaged host system. The current five-c
 
 ## Current implementation baseline
 
-All five chapters have first-pass real scenes, the shell tracks progress locally, and the credits route summarizes the run. The project is in a visual polish and stabilization phase.
+All five chapters have real scenes, the shell tracks progress locally, and the credits route is the story-first endpoint for the prequel arc. The Chapters 2-4 final-act improvement program is implemented; remaining work should be limited to evidence-backed polish or explicitly approved defects.
 
 The repository's current renderer mapping is:
 
@@ -24,7 +24,7 @@ The repository's current renderer mapping is:
 
 This mapping is the implementation source of truth. The decision record is in `docs/decisions/0001-canonical-rendering-progression.md`.
 
-Chapter 3 currently has active in-progress work in its shader, component, and local CSS. Preserve those edits and verify them before starting another large visual rewrite.
+Chapter 3's final-act shader, component, and local CSS work is complete. Preserve those chapter-local edits and verify them before starting another large visual rewrite.
 
 Part II and Three.js are intentionally parked. Three.js is reserved for a future second arc / outside-world experience; do not retrofit it into Chapter 2 or replace the existing raw WebGL work.
 
@@ -77,8 +77,8 @@ If the state shape changes, sanitize old values and consider migration risk. Do 
 - Chapter 0 uses CSS-driven dialogue reveal and chapter-local styling.
 - Chapter 1 uses positioned CSS 3D cards and has the highest interaction complexity. Treat composition and timing carefully; fix React purity and effect warnings before adding more features.
 - Chapter 2 is raw Canvas 2D. Keep React state out of the animation loop and use refs for frame-level values.
-- Chapter 3 fetches shader source from `public/shaders/interference.frag`. Verify shader failure handling, resize behavior, resistance timing, pressure lockout, fracture geometry, and completion transitions.
-- Chapter 4 uses Matter.js and Web Audio. Keep audio as a late polish/mix pass after the visual sequence is stable.
+- Chapter 3 fetches shader source from `public/shaders/interference.frag`. Preserve its adaptive containment, shader-failure fallback, resize behavior, pressure assistance, fracture geometry, and completion transitions.
+- Chapter 4 uses Matter.js and Web Audio. Preserve the authored four-act structural release, guarded audio states, compact pointer-safe layout, and Escape-to-Credits handoff.
 
 ## Documentation roles
 

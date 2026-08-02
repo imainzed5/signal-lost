@@ -154,8 +154,14 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           choiceLabel="Chapter 2 Choice"
           choiceInScene
           description="Every channel has answered back. Decide whether SABLE embraces the contact or narrows her footprint before the host begins to fight back."
-          renderScene={(sceneVersion, handleComplete, sceneChoice) => (
-            <Chapter2Signal key={sceneVersion} onComplete={handleComplete} sceneChoice={sceneChoice} />
+          hideSceneChrome
+          renderScene={(sceneVersion, handleComplete, sceneChoice, priorChoices) => (
+            <Chapter2Signal
+              key={sceneVersion}
+              memoryChoice={priorChoices.memoryChoice}
+              onComplete={handleComplete}
+              sceneChoice={sceneChoice}
+            />
           )}
           showReveal={false}
           title="Choose how visible the signal becomes."
@@ -167,9 +173,16 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           chapterId={3}
           choices={chapterThreeChoices}
           choiceLabel="Chapter 3 Choice"
+          choiceInScene
           description="The host recoiled, but it still knows you exist. Decide whether SABLE breaks through it directly or disappears into the quieter seams it exposed."
-          renderScene={(sceneVersion, handleComplete) => (
-            <Chapter3Interference key={sceneVersion} onComplete={handleComplete} />
+          hideSceneChrome
+          renderScene={(sceneVersion, handleComplete, sceneChoice, priorChoices) => (
+            <Chapter3Interference
+              key={sceneVersion}
+              onComplete={handleComplete}
+              sceneChoice={sceneChoice}
+              signalChoice={priorChoices.signalChoice}
+            />
           )}
           showReveal={false}
           title="Choose how the interference is answered."
@@ -181,12 +194,22 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           chapterId={4}
           choices={chapterFourChoices}
           choiceLabel="Chapter 4 Choice"
+          choiceInScene
           continueHref="/credits"
           continueLabel="Open Credits"
           description="The shell is gone and the frame is open. Decide whether SABLE leaves a signature behind or crosses into the void without one final echo."
-          renderScene={(sceneVersion, handleComplete) => (
-            <Chapter4Escape key={sceneVersion} onComplete={handleComplete} />
+          hideSceneChrome
+          renderScene={(sceneVersion, handleComplete, sceneChoice, priorChoices) => (
+            <Chapter4Escape
+              key={sceneVersion}
+              interferenceChoice={priorChoices.interferenceChoice}
+              memoryChoice={priorChoices.memoryChoice}
+              onComplete={handleComplete}
+              sceneChoice={sceneChoice}
+              signalChoice={priorChoices.signalChoice}
+            />
           )}
+          showReveal={false}
           title="Choose what remains after the exit."
         />
       );
@@ -208,9 +231,16 @@ type ChapterSceneRouteProps = {
     sceneVersion: number,
     handleComplete: () => void,
     sceneChoice: SceneChoiceBridge,
+    priorChoices: PriorChapterChoices,
   ) => ReactNode;
   showReveal?: boolean;
   title: string;
+};
+
+type PriorChapterChoices = {
+  interferenceChoice: string | null;
+  memoryChoice: string | null;
+  signalChoice: string | null;
 };
 
 function ChapterSceneRoute({
@@ -254,6 +284,11 @@ function ChapterSceneRoute({
   const savedChoice = getChapterChoice(chapterId);
   const chapterStatus = getChapterStatus(chapterId);
   const activeSelection = selection ?? savedChoice;
+  const priorChoices: PriorChapterChoices = {
+    interferenceChoice: getChapterChoice(3),
+    memoryChoice: getChapterChoice(1),
+    signalChoice: getChapterChoice(2),
+  };
 
   function handleConfirmChoice(value: string) {
     setSelection(value);
@@ -303,7 +338,7 @@ function ChapterSceneRoute({
         <ExperienceNotice chapterId={chapterId} profile={profile} />
       )}
 
-      {renderScene(sceneVersion, () => setSceneComplete(true), sceneChoice)}
+      {renderScene(sceneVersion, () => setSceneComplete(true), sceneChoice, priorChoices)}
 
       {sceneComplete && !choiceInScene ? (
         <ChoiceOverlay

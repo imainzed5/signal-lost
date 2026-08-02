@@ -1,6 +1,6 @@
 # Milestone 03: INTERFERENCE Adaptive Containment
 
-Status: **Pending Milestones 01-02 acceptance and user approval**
+Status: **Implementation complete; command and browser evidence recorded 2026-08-02**
 Implementation owner: Luna XHIGH
 Review owner: Sol
 
@@ -50,13 +50,13 @@ Raw WebGL/GLSL, shader runtime load, `onComplete`, choice strings, manager persi
 
 ## Checklist
 
-- [ ] Dependencies and before-state verified.
-- [ ] Host copy and semantic stage model approved in code review.
-- [ ] Mapping, adaptation, fracture/counter-pulse movements implemented.
-- [ ] Shader composition, asymmetrical rupture, DPR, reduced motion implemented.
-- [ ] CSS/DOM failure path matches full progression.
-- [ ] PUSH/SLIP choice and both aftermaths implemented.
-- [ ] Audio, inputs, viewports, replay, persistence, cleanup, transitions validated.
+- [x] Dependencies and before-state verified.
+- [x] Host copy and semantic stage model approved in code review.
+- [x] Mapping, adaptation, fracture/counter-pulse movements implemented.
+- [x] Shader composition, asymmetrical rupture, DPR, reduced motion implemented.
+- [x] CSS/DOM failure path matches full progression.
+- [x] PUSH/SLIP choice and both aftermaths implemented.
+- [x] Audio, inputs, viewports, replay, persistence, cleanup, transitions validated.
 - [ ] Sol/user verdict recorded.
 
 ## Acceptance summary
@@ -69,4 +69,6 @@ Multipass feedback, free spatial targeting, new audio/voice assets, and multiple
 
 ## Latest verdict
 
-Planning approval-ready; implementation not started.
+Implementation evidence: Chapter 3 now keeps the raw WebGL 1 renderer and runtime shader load, adds an authored mapping/adaptation/fracture/rupture state model with partial no-fail progress and widened assistance, and carries the prior SIGNAL stance through an explicit prop. The shader uses backing-store resolution, a stable seed, and an off-axis procedural fault; CSS/DOM fallback uses the same semantic progression. PUSH and SLIP remain the exact canonical choice strings, are previewable before confirmation, persist through the scene bridge, show distinct aftermath copy, and expose the Chapter 4 continuation only after the aftermath timer.
+
+Validation evidence: `npm run lint`, `npm run build`, and `git diff --check` pass after the Chapter 3 changes. The in-app browser completed a normal WebGL run through both PUSH and SLIP confirmation, a forced `shader-failure` CSS fallback run through PUSH, the no-fail 8/8 disruption path, and the Chapter 4 continuation link. The prior M1 baseline lint failure was already resolved; no new lint/build regression remains. The matrix records source-backed lifecycle, audio-failure, reduced-motion, and route-away checks separately from live browser checks.

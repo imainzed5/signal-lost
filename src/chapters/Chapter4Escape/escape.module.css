@@ -1,27 +1,78 @@
 .escapeRoot {
   position: relative;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 32rem;
   overflow: hidden;
+  isolation: isolate;
   background:
-    radial-gradient(circle at 24% 16%, rgba(172, 255, 228, 0.08), transparent 20%),
-    radial-gradient(circle at 82% 14%, rgba(255, 215, 165, 0.08), transparent 18%),
-    linear-gradient(180deg, #071019 0%, #02060d 100%);
-  color: #effbf5;
+    radial-gradient(circle at 50% 48%, rgba(246, 172, 224, 0.12), transparent 18rem),
+    radial-gradient(circle at 20% 82%, rgba(122, 212, 243, 0.08), transparent 22rem),
+    linear-gradient(180deg, #130c1b 0%, #080810 54%, #030509 100%);
+  color: #f8f4fb;
+}
+
+.escapeRoot::before,
+.escapeRoot::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
 }
 
 .escapeRoot::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 58%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 7rem 7rem;
+  mask-image: linear-gradient(180deg, transparent 0%, black 24%, black 76%, transparent 100%);
+  opacity: 0.6;
+}
+
+.escapeRoot::after {
+  background: radial-gradient(ellipse at center, transparent 26%, rgba(0, 0, 0, 0.48) 100%);
+}
+
+.escapeSeam {
+  position: absolute;
+  inset: 10% 14% 12%;
+  z-index: 0;
+  pointer-events: none;
+  transform: rotate(-8deg);
+  opacity: 0.74;
+}
+
+.escapeSeam span {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 1px;
+  height: 84%;
+  transform-origin: center;
+  background: linear-gradient(180deg, transparent, rgba(255, 215, 250, 0.26), transparent);
+  box-shadow: 0 0 20px rgba(244, 173, 223, 0.34);
+}
+
+.escapeSeam span:nth-child(1) { transform: translateX(-2.8rem) rotate(13deg); opacity: 0.32; }
+.escapeSeam span:nth-child(2) { transform: rotate(-3deg); opacity: 0.76; }
+.escapeSeam span:nth-child(3) { transform: translateX(3.4rem) rotate(-17deg); opacity: 0.24; }
+
+.escapeRoot[data-entry-shape="push"] .escapeSeam span:nth-child(2) {
+  width: 3px;
+  background: linear-gradient(180deg, transparent, rgba(255, 222, 243, 0.82), transparent);
+  box-shadow: 0 0 36px rgba(244, 165, 225, 0.72);
+}
+
+.escapeRoot[data-entry-shape="slip"] .escapeSeam {
+  transform: translateX(2.2rem) rotate(-14deg) scaleX(0.72);
+  opacity: 0.48;
 }
 
 .escapeField {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .escapeFragment {
@@ -31,210 +82,602 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid rgba(235, 255, 247, 0.12);
-  padding: 0.95rem 1rem;
+  gap: 0.75rem;
+  border: 1px solid rgba(250, 232, 250, 0.2);
+  padding: 0.85rem 0.9rem;
+  pointer-events: auto;
   text-align: left;
-  backdrop-filter: blur(18px);
-  box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  color: #f9f2fb;
   cursor: pointer;
-  transition:
-    opacity 220ms ease,
-    box-shadow 220ms ease,
-    border-color 220ms ease;
+  transform-origin: center;
+  transition: opacity 360ms ease, border-color 180ms ease, box-shadow 180ms ease, filter 240ms ease;
   will-change: transform;
 }
 
-.escapeFragment:hover {
-  border-color: rgba(235, 255, 247, 0.28);
-  box-shadow:
-    0 22px 52px rgba(0, 0, 0, 0.34),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+.escapeFragment::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 45%);
+  opacity: 0.7;
 }
 
-.escapeFragmentHidden {
-  opacity: 0;
+.escapeFragment:hover,
+.escapeFragment:focus-visible,
+.escapeFragmentActive {
+  border-color: rgba(255, 232, 251, 0.78);
+  box-shadow: 0 0 0 1px rgba(255, 220, 248, 0.14), 0 20px 42px rgba(0, 0, 0, 0.32), 0 0 28px rgba(238, 159, 219, 0.2);
+  outline: none;
+}
+
+.escapeFragmentFuture {
   pointer-events: none;
+  filter: saturate(0.45) brightness(0.54);
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.escapeFragmentReleased {
+  pointer-events: none;
+  opacity: 0 !important;
 }
 
 .escapeFragmentAccent {
-  background: linear-gradient(180deg, rgba(114, 255, 219, 0.14), rgba(5, 16, 21, 0.82));
+  background: linear-gradient(150deg, rgba(151, 219, 247, 0.16), rgba(7, 9, 18, 0.9));
 }
 
 .escapeFragmentWarm {
-  background: linear-gradient(180deg, rgba(255, 210, 160, 0.16), rgba(16, 10, 8, 0.82));
+  background: linear-gradient(150deg, rgba(255, 189, 233, 0.16), rgba(15, 8, 19, 0.9));
 }
 
 .escapeFragmentMuted {
-  background: linear-gradient(180deg, rgba(216, 234, 255, 0.1), rgba(6, 10, 16, 0.82));
+  background: linear-gradient(150deg, rgba(205, 196, 226, 0.12), rgba(7, 8, 15, 0.9));
+}
+
+.escapeFragment:disabled {
+  color: inherit;
+}
+
+.escapeLabel,
+.escapeCaption,
+.fragmentPrompt {
+  position: relative;
+  z-index: 1;
+  display: block;
 }
 
 .escapeLabel {
-  margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.68rem;
   letter-spacing: 0.22em;
+  line-height: 1.35;
   text-transform: uppercase;
-  color: #f2fff8;
 }
 
 .escapeCaption {
-  margin: 0;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
+  color: rgba(244, 230, 247, 0.56);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  line-height: 1.45;
   text-transform: uppercase;
-  color: rgba(224, 242, 235, 0.62);
+}
+
+.fragmentPrompt {
+  color: rgba(255, 215, 244, 0.78);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .escapeHud {
   position: relative;
-  z-index: 2;
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  z-index: 4;
+  height: 100%;
+  pointer-events: none;
 }
 
-.escapeIntro {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 6.5rem 1.5rem 1.5rem;
+.escapeHeader {
+  position: absolute;
+  left: clamp(1rem, 4vw, 4.5rem);
+  top: clamp(1rem, 4vw, 3.8rem);
+  max-width: min(30rem, calc(100vw - 2rem));
 }
 
-.escapeMeta {
-  margin: 0;
-  color: rgba(185, 255, 231, 0.72);
-  font-size: 0.72rem;
-  letter-spacing: 0.38em;
+.returnLink {
+  display: inline-flex;
+  pointer-events: auto;
+  color: rgba(249, 239, 250, 0.62);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-decoration: none;
   text-transform: uppercase;
 }
 
-.escapeTitle {
-  margin: 1rem 0 0;
-  color: #f2fff8;
-  font-size: clamp(3rem, 7vw, 7rem);
+.returnLink:hover,
+.returnLink:focus-visible {
+  color: #fff0fc;
+  outline: none;
+}
+
+.escapeEyebrow {
+  margin: 2rem 0 0;
+  color: rgba(255, 204, 241, 0.76);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.escapeHeader h1 {
+  margin: 0.5rem 0 0;
+  color: #fff5fd;
+  font-size: clamp(2.8rem, 7vw, 6.8rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
-  line-height: 0.92;
+  letter-spacing: 0.24em;
+  line-height: 0.9;
   text-transform: uppercase;
 }
 
 .escapeSummary {
-  max-width: 34rem;
+  max-width: 24rem;
   margin: 1rem 0 0;
-  color: rgba(225, 244, 237, 0.82);
-  font-size: 0.96rem;
-  line-height: 1.9;
-}
-
-.escapePrompt {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(200, 255, 234, 0.14);
-  background: rgba(4, 12, 18, 0.46);
-  color: rgba(225, 244, 237, 0.74);
-  font-size: 0.72rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  backdrop-filter: blur(14px);
-}
-
-.escapeSidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 6.5rem 1.5rem 1.5rem 0;
-}
-
-.escapePanel {
-  border: 1px solid rgba(225, 255, 244, 0.12);
-  background: rgba(4, 12, 18, 0.56);
-  padding: 1.1rem 1rem;
-  backdrop-filter: blur(16px);
-}
-
-.escapePanelTitle {
-  margin: 0;
-  color: rgba(185, 255, 231, 0.72);
-  font-size: 0.68rem;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-}
-
-.escapePanelBody {
-  margin: 0.9rem 0 0;
-  color: rgba(225, 244, 237, 0.76);
-  font-size: 0.84rem;
-  line-height: 1.85;
-}
-
-.escapeMeter {
-  position: relative;
-  height: 0.6rem;
-  margin-top: 1rem;
-  overflow: hidden;
-  border: 1px solid rgba(200, 255, 234, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.escapeMeterFill {
-  position: absolute;
-  inset: 0;
-  transform-origin: left center;
-  background: linear-gradient(90deg, rgba(189, 255, 223, 0.24), rgba(255, 255, 255, 0.9));
-}
-
-.escapeVoid {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(250, 252, 255, 0.98);
-  color: #0e1418;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 480ms ease;
-  z-index: 3;
-}
-
-.escapeVoidVisible {
-  opacity: 1;
-}
-
-.escapeVoidLine {
-  max-width: 34rem;
-  padding: 0 1.5rem;
-  font-size: clamp(1.15rem, 2vw, 1.7rem);
-  letter-spacing: 0.16em;
+  color: rgba(244, 227, 247, 0.68);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   line-height: 1.7;
   text-transform: uppercase;
-  text-align: center;
 }
 
-@media (max-width: 1040px) {
-  .escapeHud {
-    grid-template-columns: minmax(0, 1fr);
+.escapeConsole {
+  position: absolute;
+  right: clamp(1rem, 4vw, 4.5rem);
+  top: clamp(1rem, 7vw, 6.5rem);
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border-left: 1px solid rgba(250, 225, 247, 0.28);
+  background: linear-gradient(90deg, rgba(7, 7, 14, 0.12), rgba(7, 7, 14, 0.68));
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.consoleLabel,
+.choiceEyebrow {
+  margin: 0;
+  color: rgba(255, 199, 239, 0.76);
+  font-size: 0.58rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.escapeConsole h2 {
+  margin: 0.6rem 0 0;
+  color: #fff4fc;
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.consoleDirective,
+.consoleStatus,
+.textureLine {
+  color: rgba(245, 228, 247, 0.62);
+  font-size: 0.65rem;
+  line-height: 1.65;
+}
+
+.consoleDirective {
+  margin: 0.7rem 0 0;
+}
+
+.consoleStatus {
+  margin-top: 1rem;
+  min-height: 4.4rem;
+}
+
+.consoleStatus p {
+  margin: 0;
+}
+
+.consoleMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.75rem;
+  color: rgba(255, 220, 246, 0.72);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.consoleMeter {
+  height: 0.24rem;
+  margin-top: 0.7rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.consoleMeter span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(253, 182, 232, 0.42), #ffe4f7);
+  transition: transform 240ms ease;
+}
+
+.textureLine {
+  margin: 0.75rem 0 0;
+  color: rgba(226, 194, 224, 0.48);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.escapeDirective {
+  position: absolute;
+  left: clamp(1rem, 4vw, 4.5rem);
+  right: clamp(1rem, 4vw, 4.5rem);
+  bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(245, 226, 247, 0.64);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.motionLine {
+  color: rgba(222, 195, 222, 0.42);
+  text-align: right;
+}
+
+.coreLabels {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: min(30rem, calc(100vw - 2rem));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.coreLabels span {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(255, 226, 248, 0.2);
+  color: rgba(255, 235, 251, 0.74);
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.choiceSurface {
+  position: absolute;
+  left: 50%;
+  bottom: 1.4rem;
+  z-index: 8;
+  width: min(55rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid rgba(255, 230, 250, 0.2);
+  background: rgba(8, 6, 14, 0.88);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), 0 0 40px rgba(236, 157, 218, 0.1);
+  transform: translateX(-50%);
+  backdrop-filter: blur(20px);
+}
+
+.choiceSurface h2 {
+  margin: 0.45rem 0 0;
+  color: #fff3fc;
+  font-size: clamp(1rem, 2vw, 1.45rem);
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.choiceIntro {
+  max-width: 48rem;
+  margin: 0.55rem 0 0;
+  color: rgba(244, 226, 246, 0.68);
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.choiceButton,
+.confirmAction,
+.replayLink {
+  border: 1px solid rgba(255, 228, 250, 0.18);
+  color: #fff2fc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.choiceButton {
+  display: grid;
+  gap: 0.4rem;
+  min-height: 4.8rem;
+  padding: 0.7rem;
+  background: rgba(255, 231, 251, 0.04);
+  text-align: left;
+}
+
+.choiceButton span {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.choiceButton small {
+  color: rgba(244, 225, 246, 0.58);
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.choiceButton:hover,
+.choiceButton:focus-visible,
+.choiceButtonActive {
+  border-color: rgba(255, 220, 247, 0.82);
+  background: rgba(253, 180, 229, 0.1);
+  outline: none;
+}
+
+.choiceButtonCommitted {
+  border-color: rgba(255, 220, 247, 0.52);
+  background: rgba(253, 180, 229, 0.08);
+}
+
+.choiceButton:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.confirmAction {
+  display: block;
+  margin-top: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  background: rgba(255, 228, 250, 0.1);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.confirmAction:hover,
+.confirmAction:focus-visible {
+  border-color: rgba(255, 225, 247, 0.9);
+  background: rgba(255, 228, 250, 0.18);
+  outline: none;
+}
+
+.confirmAction:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.continuationRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin-top: 0.8rem;
+  color: rgba(244, 222, 246, 0.65);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.continueLink,
+.replayLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 228, 250, 0.08);
+  color: #fff3fc;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.continueLink:hover,
+.continueLink:focus-visible,
+.replayLink:hover,
+.replayLink:focus-visible {
+  border-color: rgba(255, 225, 247, 0.88);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .escapeFragment,
+  .consoleMeter span {
+    transition-duration: 80ms;
   }
 
-  .escapeSidebar {
-    padding: 0 1.5rem 1.5rem;
+  .escapeRoot::before {
+    opacity: 0.42;
   }
 }
 
-@media (max-width: 720px) {
-  .escapeIntro {
-    padding: 5.3rem 1rem 1rem;
+@media (max-width: 900px) {
+  .escapeSeam {
+    inset: 22% 4% 16%;
   }
 
-  .escapeSidebar {
-    padding: 0 1rem 1rem;
+  .escapeHeader {
+    top: 0.9rem;
+    left: 1rem;
+    max-width: 18rem;
   }
 
-  .escapePrompt {
-    font-size: 0.66rem;
-    letter-spacing: 0.22em;
+  .escapeEyebrow {
+    margin-top: 1.2rem;
+    font-size: 0.55rem;
+  }
+
+  .escapeHeader h1 {
+    font-size: clamp(2.45rem, 14vw, 4.8rem);
+  }
+
+  .escapeSummary {
+    margin-top: 0.55rem;
+    font-size: 0.58rem;
+    line-height: 1.45;
+  }
+
+  .escapeConsole {
+    right: 1rem;
+    top: 0.9rem;
+    width: min(15rem, calc(100vw - 2rem));
+    padding: 0.7rem;
+  }
+
+  .escapeConsole h2 {
+    font-size: 0.78rem;
+  }
+
+  .consoleDirective,
+  .consoleStatus,
+  .textureLine {
+    font-size: 0.56rem;
+  }
+
+  .consoleStatus {
+    min-height: 3.8rem;
+    margin-top: 0.55rem;
+  }
+
+  .escapeFragment {
+    max-width: 13.5rem;
+    padding: 0.65rem;
+  }
+
+  .escapeLabel {
+    font-size: 0.57rem;
+  }
+
+  .escapeCaption,
+  .fragmentPrompt {
+    font-size: 0.5rem;
+  }
+
+  .escapeDirective {
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.85rem;
+    display: block;
+    max-width: 19rem;
+    font-size: 0.54rem;
+  }
+
+  .motionLine {
+    display: block;
+    margin-top: 0.25rem;
+    text-align: left;
+  }
+
+  .choiceSurface {
+    bottom: 0.65rem;
+    max-height: calc(100dvh - 1.3rem);
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+
+  .choiceGrid {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .choiceButton {
+    min-height: 3.7rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .escapeRoot {
+    min-height: 30rem;
+  }
+
+  .escapeHeader {
+    max-width: 11.5rem;
+  }
+
+  .escapeConsole {
+    top: 9.8rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    border-top: 1px solid rgba(250, 225, 247, 0.2);
+    border-left: 0;
+  }
+
+  .consoleDirective {
+    display: none;
+  }
+
+  .consoleStatus {
+    min-height: 3rem;
+    margin-top: 0.4rem;
+  }
+
+  .textureLine {
+    display: inline;
+    margin-right: 0.65rem;
+  }
+
+  .escapeSeam {
+    inset: 31% 0 15%;
+  }
+
+  .escapeFragment {
+    max-width: 10.5rem;
+  }
+
+  .coreLabels {
+    top: 56%;
+  }
+
+  .escapeDirective {
+    bottom: 0.6rem;
+  }
+}
+
+@media (max-height: 680px) {
+  .escapeHeader h1 {
+    font-size: clamp(2.25rem, 9vh, 4rem);
+  }
+
+  .escapeSummary,
+  .textureLine,
+  .motionLine {
+    display: none;
+  }
+
+  .escapeConsole {
+    top: 1rem;
+  }
+
+  .consoleDirective {
+    display: none;
+  }
+
+  .choiceSurface {
+    bottom: 0.45rem;
+    padding: 0.65rem;
+  }
+}
+
+@media (max-width: 520px) and (max-height: 680px) {
+  .escapeConsole {
+    top: 7.8rem;
   }
 }

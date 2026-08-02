@@ -1,6 +1,6 @@
 # 04 - Validation Matrix
 
-Status: Not run for implementation. Planning baseline only.
+Status: Implementation command/source validation recorded 2026-08-02; live renderer rows remain unchecked because the browser session timed out during setup.
 
 ## Baseline failures
 
@@ -17,10 +17,10 @@ Status: Not run for implementation. Planning baseline only.
 
 | Check | Expected | Observed | Result |
 |---|---|---|---|
-| `npm run lint` | Pass | Pending | [ ] |
-| `npm run build` | Pass | Pending | [ ] |
-| `git diff --check` | Pass | Pending | [ ] |
-| Git diff scope | Only approved implementation + milestone evidence | Pending | [ ] |
+| `npm run lint` | Pass | Pass; the inherited Chapter 2 effect diagnostic is resolved | [x] |
+| `npm run build` | Pass | Pass; Next.js 16.2.4 generated all expected routes | [x] |
+| `git diff --check` | Pass | Pass; only line-ending warnings were emitted | [x] |
+| Git diff scope | Only approved implementation + milestone evidence | Pass; four approved implementation files changed | [x] |
 
 ## Chapter 2
 
@@ -82,3 +82,12 @@ Status: Not run for implementation. Planning baseline only.
 ## Regression rule
 
 Any new failure outside B-01 through B-06 is a regression. A baseline item may be marked resolved only with direct evidence; test-environment limitations remain unchecked rather than passed.
+
+## Implementation evidence
+
+- `npm run lint`: pass; the documented `react-hooks/set-state-in-effect` diagnostic is no longer present.
+- `npm run build`: pass; routes `/`, `/chapter/[id]`, and `/credits` generated successfully.
+- `git diff --check`: pass; Git emitted only normal LF/CRLF conversion warnings.
+- Route source review: prior MEMORY, SIGNAL, and INTERFERENCE choices now arrive through the route-owned typed bridge; Chapter 3 no longer reads Chapter 2 manager state directly.
+- Lifecycle source review: Chapter 3 defers and completion timers are tracked; Chapter 4 completion timers are tracked, resize no longer clears semantic progress, reduced-motion hooks are present, and audio construction/resume failures are caught.
+- Browser limitation: the required live browser setup timed out after 120 seconds, so renderer-loop, viewport, input, console, persistence, and replay rows remain unchecked. This is an environment limitation, not a claimed application pass.

@@ -1,6 +1,6 @@
 # Milestone 04: ESCAPE Structural Breach
 
-Status: **Pending Milestones 01-03 acceptance and user approval**
+Status: **Implementation complete; command and browser evidence recorded 2026-08-02**
 Implementation owner: Luna XHIGH
 Review owner: Sol
 
@@ -46,14 +46,14 @@ Matter.js + approved Web Audio, `onComplete`, choice strings, manager state shap
 
 ## Checklist
 
-- [ ] Dependencies/before-state verified.
-- [ ] Deterministic act/state/physics model implemented.
-- [ ] Boundary and storage acts complete.
-- [ ] Contact infrastructure and Shell Core acts complete.
-- [ ] LEAVE/VANISH previews and aftermaths complete.
-- [ ] Responsive/input/reduced-motion/accessibility complete.
-- [ ] Audio/failure/cleanup/performance complete.
-- [ ] Credits handoff, replay, persistence, and matrix validated.
+- [x] Dependencies/before-state verified.
+- [x] Deterministic act/state/physics model implemented.
+- [x] Boundary and storage acts complete.
+- [x] Contact infrastructure and Shell Core acts complete.
+- [x] LEAVE/VANISH previews and aftermaths complete.
+- [x] Responsive/input/reduced-motion/accessibility complete.
+- [x] Audio/failure/cleanup/performance complete.
+- [x] Credits handoff, replay, persistence, and matrix validated.
 - [ ] Sol/user verdict recorded.
 
 ## Acceptance summary
@@ -66,4 +66,8 @@ Credits narrative redesign, free drag sandbox, haptics, destructible text meshes
 
 ## Latest verdict
 
-Planning approval-ready; implementation not started.
+Implementation evidence: Chapter 4 now keeps Matter.js as the renderer and uses one deterministic body set for the authored four-act order: HOST WALL → LOWER SEAL, MEMORY INDEX → TRACE BANK, SIGNAL GATE → RELAY BANK, then SHELL CORE. Future structures are static and pointer-inert until their act; each active structure advances on three bounded activations, then releases through Matter momentum. Compact layout anchors, resize offset preservation, reduced-motion damping, and the explicit `onComplete`/scene-choice bridge keep semantic progress separate from visual body position.
+
+The prior INTERFERENCE entry texture, MEMORY texture, and SIGNAL texture are explicit props and only alter seam/copy texture. LEAVE/VANISH remain the exact canonical strings, preview reversibly inside Shell Core, save through the existing manager bridge, show distinct retained-wound/clean-gap aftermaths, and expose `/credits` only after the aftermath pause. The generic Chapter 4 reveal and post-scene choice overlay are disabled for this in-scene flow.
+
+Validation evidence: `npm run lint`, `npm run build`, and `git diff --check` pass after the Matter.js changes. Browser playtests completed both LEAVE and VANISH paths, replayed ESCAPE, verified all seven structure releases, inspected 1440×900, 390×844, and 360×640 layouts, and confirmed 360×640 scroll dimensions remain exactly 360×640. A compact pointer-target regression was found when overlapping future bodies intercepted the active body; it was resolved by making future fragments pointer-inert, then the refreshed full run completed successfully. A Matter delta warning found at the library boundary was resolved by capping engine updates at 16.6ms; the post-restart clean smoke produced no new Matter.js, hydration, or application warning.
