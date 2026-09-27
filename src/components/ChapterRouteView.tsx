@@ -393,11 +393,11 @@ type SceneChromeProps = {
 function SceneChrome({ chapterId, chapterStatus }: SceneChromeProps) {
   return (
     <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 px-4 py-5 sm:px-6">
-      <Link href="/" className="scene-chrome-link inline-flex min-h-10 items-center gap-3">
+      <Link href="/" className="scene-chrome-link inline-flex min-h-10 items-center gap-3 whitespace-nowrap">
         <span aria-hidden="true">&larr;</span>
         Return to Shell
       </Link>
-      <p className="scene-chrome-link pointer-events-none">
+      <p className="scene-chrome-link pointer-events-none hidden whitespace-nowrap sm:block">
         {`${String(chapterId).padStart(2, "0")} // ${CHAPTERS[chapterId].token}`}
         <span className="text-white/24"> · {chapterStatus}</span>
       </p>

@@ -326,6 +326,15 @@ function Chapter0Terminal({
   const isChoiceStage = phase === "choice" || phase === "consequence";
   const isHandoffVisible = phase === "memory-preview" || phase === "ready";
   const choiceState = phase === "choice" ? "pending" : phase === "consequence" ? "committed" : "none";
+  const hasVoiceSurfaced = visibleLines.some((line) => line.tone === "sable");
+  const voiceCoreState =
+    phase !== "transcript" || isFinalPulseActive
+      ? "bloom"
+      : isDesignationContested
+        ? "claimed"
+        : hasVoiceSurfaced
+          ? "faint"
+          : "dormant";
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -832,6 +841,7 @@ function Chapter0Terminal({
         phase === "uninvited" ? styles.uninvitedStage : "",
         phase === "purging" ? styles.purgingStage : "",
         isHandoffVisible ? styles.bootInteractiveHandoff : "",
+        isDesignationContested ? styles.voiceClaimed : "",
         selectedChoice === "Trace the source" ? styles.stanceTrace : "",
         selectedChoice === "Claim autonomy" ? styles.stanceAutonomy : "",
       ]
@@ -848,6 +858,12 @@ function Chapter0Terminal({
       {memoryHandoffStage ?? (
       <div className={styles.bootShell}>
         <div className={`${styles.bootColumn} ${styles.bootColumnMain}`}>
+          <div
+            className={styles.voiceCore}
+            data-state={voiceCoreState}
+            data-speaking={phase === "transcript" && currentLine.tone === "sable" && !isLineResolved}
+            aria-hidden="true"
+          />
           <header className={styles.bootHeader}>
             <p className={styles.bootMeta}>Chapter 0 // Boot Under Observation</p>
             <div className={styles.titleBlock}>
@@ -887,6 +903,7 @@ function Chapter0Terminal({
                         styles.logItem,
                         isCurrentLine ? styles.logItemCurrent : styles.logItemOlder,
                         isSableLine ? styles.logItemSable : styles.logItemSystem,
+                        line.tone === "sable" ? styles.logItemVoice : "",
                         isAuthoredInterruptionActive && isCurrentLine ? styles.logItemHostInterrupted : "",
                       ]
                         .filter(Boolean)

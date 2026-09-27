@@ -1,17 +1,16 @@
 .bootRoot {
-  --boot-green: #98ffd9;
-  --boot-green-soft: rgba(152, 255, 217, 0.72);
-  --boot-amber: #ffc971;
-  --boot-shadow: rgba(12, 255, 167, 0.1);
+  --boot-green: #a9c6da;
+  --boot-green-soft: rgba(143, 184, 212, 0.72);
+  --boot-amber: #ff7a8a;
+  --boot-shadow: rgba(143, 184, 212, 0.1);
   position: relative;
   height: 100dvh;
   max-height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 20%, rgba(83, 255, 196, 0.045), transparent 25%),
-    radial-gradient(circle at 82% 12%, rgba(255, 201, 113, 0.035), transparent 20%),
-    linear-gradient(180deg, #060c12 0%, #020407 100%);
+    radial-gradient(ellipse at 30% 110%, rgba(143, 184, 212, 0.07), transparent 50%),
+    linear-gradient(180deg, #070a10 0%, #020306 100%);
   color: var(--boot-green);
 }
 
@@ -22,8 +21,8 @@
   pointer-events: none;
   background: repeating-linear-gradient(
     180deg,
-    rgba(152, 255, 217, 0.032) 0,
-    rgba(152, 255, 217, 0.032) 1px,
+    rgba(143, 184, 212, 0.032) 0,
+    rgba(143, 184, 212, 0.032) 1px,
     transparent 1px,
     transparent 5px
   );
@@ -90,20 +89,30 @@
 }
 
 .bootPreludeColumn {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   margin: 0;
   justify-content: space-between;
 }
 
 .bootColumnMain {
+  height: 100dvh;
   min-height: 100dvh;
   position: relative;
   overflow: hidden;
-  border-right: 1px solid rgba(152, 255, 217, 0.1);
+  border-right: 1px solid rgba(143, 184, 212, 0.08);
 }
 
 .bootSidebar {
   min-height: 100dvh;
+}
+
+.bootHeader > p,
+.bootPreludeHeader > p,
+.titleBlock > p {
+  position: relative;
+  z-index: 1;
 }
 
 .bootHeader,
@@ -116,31 +125,39 @@
 
 .bootMeta {
   margin: 0;
-  color: rgba(152, 255, 217, 0.58);
+  color: rgba(143, 184, 212, 0.58);
   font-size: 0.68rem;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
 
 .titleBlock {
-  position: relative;
   display: inline-flex;
   flex-direction: column;
   gap: 0.55rem;
 }
 
 .title {
-  position: relative;
+  position: absolute;
+  z-index: 0;
+  bottom: -0.14em;
+  left: -0.05em;
   width: fit-content;
-  max-width: 100%;
   margin: 0;
-  color: #e6fff5;
-  font-size: clamp(3.2rem, 7.5vw, 7.2rem);
+  color: transparent;
+  font-size: clamp(6rem, 15.5vw, 15.5rem);
   font-weight: 700;
-  letter-spacing: 0.18em;
-  line-height: 0.9;
+  letter-spacing: 0.02em;
+  line-height: 0.8;
   text-transform: uppercase;
-  text-shadow: 0 0 22px rgba(121, 255, 208, 0.2), 0 0 40px rgba(121, 255, 208, 0.08);
+  white-space: nowrap;
+  pointer-events: none;
+  -webkit-text-stroke: 1px rgba(143, 184, 212, 0.17);
+  transition: -webkit-text-stroke-color 1600ms ease;
+}
+
+.voiceClaimed .title {
+  -webkit-text-stroke-color: rgba(255, 155, 94, 0.24);
 }
 
 .title::before,
@@ -154,13 +171,13 @@
 
 .title::before {
   left: 0.04em;
-  color: rgba(255, 113, 113, 0.82);
+  color: rgba(255, 155, 94, 0.82);
   clip-path: polygon(0 8%, 100% 0, 100% 32%, 0 36%);
 }
 
 .title::after {
   left: -0.03em;
-  color: rgba(113, 227, 255, 0.82);
+  color: rgba(143, 184, 212, 0.82);
   clip-path: polygon(0 62%, 100% 56%, 100% 100%, 0 100%);
 }
 
@@ -180,9 +197,26 @@
 .bootPreludeSummary {
   max-width: 34rem;
   margin: 0;
-  color: rgba(214, 239, 230, 0.7);
+  color: rgba(208, 218, 228, 0.7);
   font-size: 0.95rem;
   line-height: 1.85;
+}
+
+.subtitle {
+  width: fit-content;
+  border: 1px solid rgba(143, 184, 212, 0.18);
+  padding: 0.3rem 0.65rem;
+  color: rgba(169, 198, 218, 0.8);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  transition: color 800ms ease, border-color 800ms ease;
+}
+
+.voiceClaimed .subtitle {
+  border-color: rgba(255, 155, 94, 0.45);
+  color: #ffc9a4;
 }
 
 .bootPreludeSummary {
@@ -200,19 +234,19 @@
 .bootPreludeBeat {
   position: relative;
   overflow: hidden;
-  border-left: 2px solid rgba(152, 255, 217, 0.2);
+  border-left: 2px solid rgba(143, 184, 212, 0.2);
   background: rgba(3, 7, 12, 0.48);
   padding: 0.85rem 1rem;
 }
 
 .bootPreludeBeatCurrent {
-  border-left-color: rgba(255, 201, 113, 0.7);
+  border-left-color: rgba(255, 122, 138, 0.7);
   background: rgba(10, 13, 15, 0.66);
 }
 
 .bootPreludeBeatLabel {
   margin: 0;
-  color: rgba(152, 255, 217, 0.62);
+  color: rgba(143, 184, 212, 0.62);
   font-size: 0.66rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -220,7 +254,7 @@
 
 .bootPreludeBeatBody {
   margin: 0.55rem 0 0;
-  color: #e6fff5;
+  color: #edf2f7;
   font-size: clamp(0.98rem, 1.55vw, 1.16rem);
   line-height: 1.55;
 }
@@ -237,7 +271,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem 1.4rem;
-  color: rgba(217, 237, 228, 0.52);
+  color: rgba(208, 218, 228, 0.52);
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   line-height: 1.6;
@@ -247,16 +281,22 @@
 .bootPreludeBottomStrip span + span::before {
   content: "//";
   margin-right: 1.4rem;
-  color: rgba(152, 255, 217, 0.2);
+  color: rgba(143, 184, 212, 0.2);
 }
 
 .logWindow {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-height: 0;
   flex: 1;
   align-items: flex-end;
-  overflow: visible;
+  /* Bounded to the frame: history crops off the top instead of pushing the present below the fold. */
+  overflow: hidden;
   padding-top: 2rem;
+  padding-bottom: clamp(3rem, 15vh, 9rem);
+  /* The transcript dissolves upward; only the present line is fully lit. */
+  mask-image: linear-gradient(180deg, transparent 0%, #000 42%);
 }
 
 .logStack {
@@ -284,12 +324,16 @@
 }
 
 .logItemOlder {
-  opacity: 0.5;
+  padding: 0.22rem 0;
+  opacity: 0.42;
+  font-size: 0.76rem;
+  line-height: 1.5;
 }
 
 .logItemCurrent {
   opacity: 1;
-  font-size: clamp(0.98rem, 1.14vw, 1.1rem);
+  margin-top: 0.8rem;
+  font-size: clamp(1.02rem, 1.3vw, 1.24rem);
 }
 
 .logItemHostInterrupted {
@@ -302,11 +346,11 @@
 }
 
 .logItemSable {
-  color: #e7fff6;
+  color: #edf2f7;
 }
 
 .speaker {
-  color: rgba(152, 255, 217, 0.54);
+  color: rgba(143, 184, 212, 0.54);
   font-size: 0.68rem;
   letter-spacing: 0.25em;
   line-height: 1.45;
@@ -315,16 +359,16 @@
 
 .speakerWarning,
 .lineWarning {
-  color: rgba(255, 201, 113, 0.88);
+  color: rgba(255, 122, 138, 0.88);
 }
 
 .speakerTrace {
-  color: rgba(255, 201, 113, 0.82);
+  color: rgba(255, 122, 138, 0.82);
 }
 
 .speakerSable {
-  color: #e7fff6;
-  text-shadow: 0 0 16px rgba(152, 255, 217, 0.18);
+  color: #edf2f7;
+  text-shadow: 0 0 16px rgba(143, 184, 212, 0.18);
 }
 
 .line {
@@ -338,30 +382,185 @@
 }
 
 .lineSystem {
-  border-left: 2px solid rgba(152, 255, 217, 0.36);
+  border-left: 2px solid rgba(143, 184, 212, 0.36);
   padding-left: 0.9rem;
   color: var(--boot-green);
   letter-spacing: 0.035em;
 }
 
 .lineSable {
-  color: #e7fff6;
+  color: #edf2f7;
   font-size: 1.04em;
   letter-spacing: 0.01em;
 }
 
+.logItemVoice .line {
+  border-left: 0;
+  padding-left: 0;
+  color: rgba(236, 242, 247, 0.88);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.12em;
+  letter-spacing: 0.005em;
+  transition: color 1400ms ease, text-shadow 1400ms ease;
+}
+
+.logItemVoice .speaker {
+  color: rgba(236, 242, 247, 0.6);
+}
+
+.logItemCurrent.logItemVoice {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.7rem;
+  margin-top: 1.6rem;
+}
+
+.logItemCurrent.logItemVoice .line {
+  max-width: 22ch;
+  font-size: clamp(2rem, 4.3vw, 4.2rem);
+  line-height: 1.08;
+  text-shadow: 0 0 36px rgba(143, 184, 212, 0.22);
+  animation: voiceTremor 2.6s steps(1) infinite;
+}
+
+/* Once SABLE contests the designation, every line she has spoken turns warm. */
+.voiceClaimed .logItemVoice .line {
+  color: #ffd2ad;
+}
+
+.voiceClaimed .logItemVoice .speaker {
+  color: rgba(255, 155, 94, 0.85);
+}
+
+.voiceClaimed .logItemCurrent.logItemVoice .line {
+  color: #ffe2cc;
+  text-shadow:
+    0 0 28px rgba(255, 155, 94, 0.45),
+    0 0 90px rgba(255, 155, 94, 0.18);
+  animation: none;
+}
+
+.logItemVoice .lineCursor {
+  color: rgba(255, 155, 94, 0.9);
+  font-family: var(--font-shell), monospace;
+}
+
+/* SABLE's core in this chapter's medium: pure CSS light behind the voice. */
+.voiceCore {
+  position: absolute;
+  z-index: 0;
+  top: 34%;
+  right: 18%;
+  width: clamp(15rem, 38vmin, 28rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0;
+  translate: 50% -50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 244, 234, 0.95) 0 1.1%,
+    rgba(255, 155, 94, 0.6) 2.4%,
+    rgba(255, 155, 94, 0.16) 14%,
+    rgba(255, 155, 94, 0.05) 32%,
+    transparent 62%
+  );
+  filter: saturate(0.12) brightness(1.15);
+  transition:
+    opacity 1400ms ease,
+    filter 1600ms ease,
+    scale 1200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.voiceCore::before {
+  content: "";
+  position: absolute;
+  inset: 41%;
+  border: 1px solid rgba(255, 155, 94, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(255, 155, 94, 0.4);
+}
+
+.voiceCore::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -70%;
+  right: -70%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(143, 184, 212, 0.35) 22%,
+    rgba(255, 214, 180, 0.95) 50%,
+    rgba(143, 184, 212, 0.35) 78%,
+    transparent
+  );
+  box-shadow: 0 0 14px rgba(255, 155, 94, 0.55);
+}
+
+.voiceCore[data-state="faint"] {
+  opacity: 0.5;
+  animation: voiceFlicker 3.4s steps(1) infinite;
+}
+
+.voiceCore[data-state="claimed"] {
+  opacity: 0.92;
+  filter: none;
+  animation: voiceBreathe 4.2s ease-in-out infinite;
+}
+
+.voiceCore[data-state="bloom"] {
+  opacity: 1;
+  filter: brightness(1.35);
+  scale: 1.4;
+}
+
+.voiceCore[data-speaking="true"] {
+  animation: voiceSpeak 190ms steps(2) infinite alternate;
+}
+
+@keyframes voiceFlicker {
+  0%, 100% { opacity: 0.5; }
+  7% { opacity: 0.12; }
+  9% { opacity: 0.6; }
+  41% { opacity: 0.38; }
+  43% { opacity: 0.08; }
+  45% { opacity: 0.55; }
+}
+
+@keyframes voiceBreathe {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.06; }
+}
+
+@keyframes voiceSpeak {
+  from { scale: 1.02; opacity: 0.95; }
+  to { scale: 1.08; opacity: 0.7; }
+}
+
+@keyframes voiceTremor {
+  0%, 100% { translate: 0 0; }
+  31% { translate: 0.02em 0; }
+  32% { translate: 0 0; }
+  67% { translate: -0.015em 0; }
+  68% { translate: 0 0; }
+}
+
 .lineCursor {
   margin-left: 0.08rem;
-  color: rgba(152, 255, 217, 0.72);
+  color: rgba(143, 184, 212, 0.72);
 }
 
 .logItemCurrent .lineCursor {
   animation: cursorBlink 1s steps(1, end) infinite;
 }
 
+.logItemCurrent.logItemSystem .line {
+  color: #cfe0ec;
+}
+
 .advanceAffordance,
 .advancePrompt {
-  color: rgba(152, 255, 217, 0.52);
+  color: rgba(143, 184, 212, 0.52);
   font-size: 0.66rem;
   letter-spacing: 0.28em;
   line-height: 1.4;
@@ -383,13 +582,13 @@
 }
 
 .stanceTrace {
-  --stance-accent: rgba(152, 255, 217, 0.9);
-  --stance-accent-soft: rgba(152, 255, 217, 0.16);
+  --stance-accent: rgba(143, 184, 212, 0.9);
+  --stance-accent-soft: rgba(143, 184, 212, 0.16);
 }
 
 .stanceAutonomy {
-  --stance-accent: rgba(255, 201, 113, 0.94);
-  --stance-accent-soft: rgba(255, 201, 113, 0.16);
+  --stance-accent: rgba(255, 155, 94, 0.95);
+  --stance-accent-soft: rgba(255, 155, 94, 0.18);
 }
 
 .choiceStage .bootSidebar {
@@ -491,8 +690,8 @@
 }
 
 .purgingStage .tracePanel {
-  border-color: rgba(255, 201, 113, 0.72);
-  box-shadow: 0 0 36px rgba(255, 201, 113, 0.13), inset 0 0 22px rgba(255, 201, 113, 0.08);
+  border-color: rgba(255, 122, 138, 0.72);
+  box-shadow: 0 0 36px rgba(255, 122, 138, 0.13), inset 0 0 22px rgba(255, 122, 138, 0.08);
   animation: purgePanel 700ms steps(3, end) both;
 }
 
@@ -505,7 +704,7 @@
   background: repeating-linear-gradient(
     180deg,
     transparent 0 14px,
-    rgba(255, 201, 113, 0.12) 15px,
+    rgba(255, 122, 138, 0.12) 15px,
     transparent 17px
   );
   mix-blend-mode: screen;
@@ -519,7 +718,7 @@
   min-height: min(100%, 38rem);
   flex: 1;
   flex-direction: column;
-  border: 1px solid rgba(152, 255, 217, 0.12);
+  border: 1px solid rgba(143, 184, 212, 0.12);
   background: rgba(4, 8, 13, 0.52);
   backdrop-filter: blur(16px);
 }
@@ -543,7 +742,7 @@
 
 .statusTitle {
   margin: 0;
-  color: rgba(152, 255, 217, 0.62);
+  color: rgba(143, 184, 212, 0.62);
   font-size: 0.66rem;
   letter-spacing: 0.32em;
   text-transform: uppercase;
@@ -561,7 +760,7 @@
   gap: 1rem;
   padding-bottom: 0.62rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(217, 237, 228, 0.68);
+  color: rgba(208, 218, 228, 0.68);
   font-size: 0.78rem;
   line-height: 1.5;
 }
@@ -572,7 +771,7 @@
 }
 
 .statusValue {
-  color: #eefff8;
+  color: #edf2f7;
   text-align: right;
   transition: opacity 150ms ease;
 }
@@ -582,15 +781,15 @@
 }
 
 .statusValueTyping {
-  color: #c9ffec;
+  color: #cfe0ec;
 }
 
 .statusValueAlarm {
-  color: rgba(255, 201, 113, 0.94);
+  color: rgba(255, 122, 138, 0.94);
 }
 
 .hostResponseText {
-  color: rgba(152, 255, 217, 0.72);
+  color: rgba(143, 184, 212, 0.72);
   font-size: 0.79rem;
   line-height: 1.65;
 }
@@ -608,13 +807,13 @@
   margin-bottom: 0.15rem;
   background: repeating-linear-gradient(
     90deg,
-    rgba(152, 255, 217, 0.3) 0 14px,
+    rgba(143, 184, 212, 0.3) 0 14px,
     transparent 14px 22px
   );
 }
 
 .choiceAnnounce {
-  color: rgba(255, 201, 113, 0.84);
+  color: rgba(255, 122, 138, 0.84);
   font-size: 0.66rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -622,7 +821,7 @@
 
 .previousChoice {
   margin: 0;
-  color: rgba(217, 237, 228, 0.42);
+  color: rgba(208, 218, 228, 0.42);
   font-size: 0.72rem;
   line-height: 1.5;
 }
@@ -640,7 +839,7 @@
   border: 0;
   background: transparent;
   padding: 0;
-  color: rgba(231, 255, 246, 0.84);
+  color: rgba(236, 242, 247, 0.84);
   cursor: pointer;
   text-align: left;
   transition: opacity 240ms ease, color 240ms ease, max-height 260ms ease, transform 240ms ease;
@@ -649,11 +848,11 @@
 .panelChoiceButton:hover,
 .panelChoiceButton:focus-visible,
 .choiceEntrySelected {
-  color: #e7fff6;
+  color: #edf2f7;
 }
 
 .panelChoiceButton:focus-visible {
-  outline: 2px solid rgba(152, 255, 217, 0.8);
+  outline: 2px solid rgba(143, 184, 212, 0.8);
   outline-offset: 0.45rem;
 }
 
@@ -675,8 +874,8 @@
 
 .panelChoiceSpeaker {
   flex: 0 0 auto;
-  border-bottom: 1px solid rgba(231, 255, 246, 0.6);
-  color: #e7fff6;
+  border-bottom: 1px solid rgba(236, 242, 247, 0.6);
+  color: #edf2f7;
   font-size: 0.68rem;
   letter-spacing: 0.25em;
   line-height: 1.45;
@@ -698,7 +897,7 @@
 }
 
 .choiceDetail {
-  color: rgba(214, 239, 230, 0.58);
+  color: rgba(208, 218, 228, 0.58);
   font-size: 0.78rem;
   line-height: 1.5;
 }
@@ -706,7 +905,7 @@
 .panelPhaseNote {
   margin-top: auto;
   padding: 1rem;
-  color: rgba(152, 255, 217, 0.42);
+  color: rgba(143, 184, 212, 0.42);
   font-size: 0.64rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -717,7 +916,7 @@
   margin: 1.4rem 0 0;
   border-left: 2px solid rgba(255, 255, 255, 0.38);
   padding: 0.7rem 0.9rem;
-  color: rgba(238, 255, 248, 0.86);
+  color: rgba(236, 242, 247, 0.86);
   font-size: 0.86rem;
   letter-spacing: 0.03em;
   line-height: 1.6;
@@ -745,8 +944,8 @@
   inset: 12% auto 10% clamp(1.5rem, 5vw, 6rem);
   z-index: -1;
   width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(152, 255, 217, 0.5), transparent);
-  box-shadow: 0 0 18px rgba(152, 255, 217, 0.1);
+  background: linear-gradient(180deg, transparent, rgba(143, 184, 212, 0.5), transparent);
+  box-shadow: 0 0 18px rgba(143, 184, 212, 0.1);
   opacity: 0.64;
 }
 
@@ -757,8 +956,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(152, 255, 217, 0.035), transparent 24%, transparent 72%, rgba(255, 201, 113, 0.025)),
-    linear-gradient(180deg, rgba(152, 255, 217, 0.025), transparent 30%, transparent 72%, rgba(255, 201, 113, 0.018));
+    linear-gradient(90deg, rgba(143, 184, 212, 0.035), transparent 24%, transparent 72%, rgba(255, 122, 138, 0.025)),
+    linear-gradient(180deg, rgba(143, 184, 212, 0.025), transparent 30%, transparent 72%, rgba(255, 122, 138, 0.018));
   opacity: 0.52;
 }
 
@@ -788,7 +987,7 @@
 }
 
 .memoryHandoffReady .memoryLabel {
-  text-shadow: 0 0 24px rgba(152, 255, 217, 0.26), 0 0 62px rgba(152, 255, 217, 0.12);
+  text-shadow: 0 0 24px rgba(143, 184, 212, 0.26), 0 0 62px rgba(143, 184, 212, 0.12);
 }
 
 .memoryHandoffRail {
@@ -796,14 +995,14 @@
   align-self: center;
   gap: 1rem;
   min-width: 0;
-  border-left: 1px solid rgba(152, 255, 217, 0.22);
+  border-left: 1px solid rgba(143, 184, 212, 0.22);
   padding: 1.2rem 0 1.2rem 1.4rem;
   animation: handoffContentEntry 560ms 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .handoffRailKicker {
   margin: 0;
-  color: rgba(152, 255, 217, 0.54);
+  color: rgba(143, 184, 212, 0.54);
   font-size: 0.62rem;
   letter-spacing: 0.24em;
   line-height: 1.5;
@@ -823,9 +1022,9 @@
   flex: 0 0 auto;
   width: 0.38rem;
   height: 0.38rem;
-  border: 1px solid rgba(255, 201, 113, 0.72);
+  border: 1px solid rgba(255, 122, 138, 0.72);
   background: rgba(2, 4, 7, 0.92);
-  box-shadow: 0 0 8px rgba(255, 201, 113, 0.14);
+  box-shadow: 0 0 8px rgba(255, 122, 138, 0.14);
   transform: rotate(45deg);
 }
 
@@ -834,7 +1033,7 @@
   flex: 1 1 auto;
   height: 1px;
   overflow: hidden;
-  background: rgba(255, 201, 113, 0.2);
+  background: rgba(255, 122, 138, 0.2);
 }
 
 .handoffConnectorLine::after {
@@ -843,7 +1042,7 @@
   inset: 0 auto 0 0;
   width: 34%;
   background: var(--boot-amber);
-  box-shadow: 0 0 8px rgba(255, 201, 113, 0.22);
+  box-shadow: 0 0 8px rgba(255, 122, 138, 0.22);
   transform-origin: left center;
   animation: handoffConnectorStage 720ms 360ms ease-out both;
 }
@@ -872,7 +1071,7 @@
 }
 
 .handoffRailStatus span {
-  color: rgba(217, 237, 228, 0.42);
+  color: rgba(208, 218, 228, 0.42);
   font-size: 0.62rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -888,7 +1087,7 @@
 
 .handoffRailStatus strong {
   overflow-wrap: anywhere;
-  color: #e7fff6;
+  color: #edf2f7;
   font-size: 0.82rem;
   font-weight: 400;
   letter-spacing: 0.08em;
@@ -949,16 +1148,16 @@
 
 .signalTraceNode {
   fill: rgba(2, 4, 7, 0.94);
-  stroke: rgba(255, 201, 113, 0.78);
+  stroke: rgba(255, 122, 138, 0.78);
   stroke-width: 1.4;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px rgba(255, 201, 113, 0.14));
+  filter: drop-shadow(0 0 3px rgba(255, 122, 138, 0.14));
 }
 
 .memoryKicker,
 .memoryWaiting {
   margin: 0;
-  color: rgba(152, 255, 217, 0.54);
+  color: rgba(143, 184, 212, 0.54);
   font-size: 0.64rem;
   letter-spacing: 0.24em;
   line-height: 1.5;
@@ -967,9 +1166,10 @@
 
 .memoryLabel {
   margin: 1rem 0 0;
-  color: #e7fff6;
-  font-size: clamp(2rem, 5vw, 4.2rem);
-  letter-spacing: 0.16em;
+  color: #edf2f7;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(2.6rem, 6.5vw, 5.6rem);
+  letter-spacing: 0.06em;
   line-height: 1;
 }
 
@@ -977,7 +1177,7 @@
   min-height: 1.8em;
   margin: 0.75rem 0 0;
   max-width: 34rem;
-  color: rgba(231, 255, 246, 0.82);
+  color: rgba(236, 242, 247, 0.82);
   font-size: 0.9rem;
   line-height: 1.6;
 }
@@ -987,7 +1187,7 @@
   align-items: center;
   gap: 0.55rem;
   margin-top: 1.7rem;
-  color: rgba(255, 201, 113, 0.72);
+  color: rgba(255, 122, 138, 0.72);
 }
 
 .memoryWaiting::before {
@@ -1001,7 +1201,7 @@
 }
 
 .memoryHandoffReady .memoryWaiting {
-  color: rgba(152, 255, 217, 0.7);
+  color: rgba(143, 184, 212, 0.7);
 }
 
 .handoffControls {
@@ -1017,7 +1217,7 @@
   min-height: 2.9rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(152, 255, 217, 0.42);
+  border: 1px solid rgba(143, 184, 212, 0.42);
   padding: 0.7rem 1rem;
   font-size: 0.66rem;
   letter-spacing: 0.18em;
@@ -1031,8 +1231,8 @@
 .enterMemoryButton {
   min-width: 13rem;
   border-color: var(--stance-accent);
-  background: linear-gradient(90deg, var(--stance-accent-soft), rgba(152, 255, 217, 0.05));
-  color: #e7fff6;
+  background: linear-gradient(90deg, var(--stance-accent-soft), rgba(143, 184, 212, 0.05));
+  color: #edf2f7;
   box-shadow: 0 0 28px var(--stance-accent-soft);
   font-weight: 500;
 }
@@ -1041,21 +1241,21 @@
   min-width: 13rem;
   border-color: rgba(255, 255, 255, 0.18);
   background: transparent;
-  color: rgba(231, 255, 246, 0.62);
+  color: rgba(236, 242, 247, 0.62);
   cursor: pointer;
 }
 
 .enterMemoryButton:hover,
 .enterMemoryButton:focus-visible {
   border-color: var(--stance-accent);
-  background: linear-gradient(90deg, rgba(152, 255, 217, 0.25), rgba(152, 255, 217, 0.1));
+  background: linear-gradient(90deg, rgba(143, 184, 212, 0.25), rgba(143, 184, 212, 0.1));
   color: #fff;
 }
 
 .replayButton:hover,
 .replayButton:focus-visible {
-  border-color: rgba(231, 255, 246, 0.48);
-  background: rgba(231, 255, 246, 0.06);
+  border-color: rgba(236, 242, 247, 0.48);
+  background: rgba(236, 242, 247, 0.06);
   color: #fff;
 }
 
@@ -1095,8 +1295,8 @@
   z-index: 5;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent 0 16%, rgba(152, 255, 217, 0.18) 16.1%, transparent 16.25%, transparent 74%, rgba(255, 201, 113, 0.14) 74.1%, transparent 74.25%),
-    repeating-linear-gradient(180deg, transparent 0 8px, rgba(152, 255, 217, 0.16) 9px, transparent 11px);
+    linear-gradient(90deg, transparent 0 16%, rgba(143, 184, 212, 0.18) 16.1%, transparent 16.25%, transparent 74%, rgba(255, 122, 138, 0.14) 74.1%, transparent 74.25%),
+    repeating-linear-gradient(180deg, transparent 0 8px, rgba(143, 184, 212, 0.16) 9px, transparent 11px);
   mix-blend-mode: screen;
   opacity: 0;
   animation: terminalRuptureScan 450ms steps(5, end) both;
@@ -1108,12 +1308,12 @@
   left: clamp(1.5rem, 5vw, 6rem);
   bottom: clamp(1.5rem, 5vh, 3.5rem);
   z-index: 6;
-  color: rgba(255, 201, 113, 0.84);
+  color: rgba(255, 122, 138, 0.84);
   font-size: 0.64rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   opacity: 0;
-  text-shadow: 0 0 18px rgba(255, 201, 113, 0.24);
+  text-shadow: 0 0 18px rgba(255, 122, 138, 0.24);
   animation: terminalRuptureMarker 450ms steps(4, end) both;
 }
 
@@ -1251,8 +1451,8 @@
 }
 
 @keyframes titleFinalPulse {
-  0%, 100% { text-shadow: 0 0 22px rgba(121, 255, 208, 0.2), 0 0 40px rgba(121, 255, 208, 0.08); }
-  48% { text-shadow: 0 0 34px rgba(121, 255, 208, 0.5), 0 0 80px rgba(121, 255, 208, 0.16); }
+  0%, 100% { -webkit-text-stroke-color: rgba(255, 155, 94, 0.24); }
+  30% { -webkit-text-stroke-color: rgba(255, 214, 180, 0.9); }
 }
 
 @keyframes cursorBlink {
@@ -1265,10 +1465,21 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .voiceCore {
+    top: 58%;
+    right: 50%;
+    width: clamp(12rem, 60vw, 20rem);
+  }
+
+  .logWindow {
+    mask-image: none;
+  }
+
   .bootColumnMain {
+    height: auto;
     min-height: auto;
     border-right: 0;
-    border-bottom: 1px solid rgba(152, 255, 217, 0.1);
+    border-bottom: 1px solid rgba(143, 184, 212, 0.1);
   }
 
   .bootColumn,
@@ -1326,8 +1537,11 @@
   }
 
   .title {
-    font-size: clamp(2.6rem, 13vw, 4.5rem);
-    letter-spacing: 0.1em;
+    font-size: clamp(4.5rem, 24vw, 7rem);
+  }
+
+  .logItemCurrent.logItemVoice .line {
+    font-size: clamp(1.7rem, 8.4vw, 2.4rem);
   }
 
   .bootPreludeSummary {
@@ -1485,6 +1699,8 @@
   .titleFractureActive::before,
   .titleFractureActive::after,
   .titleFinalPulse,
+  .voiceCore,
+  .logItemCurrent.logItemVoice .line,
   .logItemCurrent .lineCursor,
   .choiceStage .bootSidebar,
   .choiceStage .panelChoiceButton,
