@@ -21,7 +21,11 @@ This mapping is the implementation baseline; see `docs/decisions/0001-canonical-
 Art direction: **cinematic glitch** — deep blacks, SABLE as the single warm ember (`--sable`) against cold host steel (`--host`), light/bloom, kinetic type, film grain. Concept: "one signal, five mediums" — SABLE is one persistent entity that the renderer progression re-embodies chapter by chapter.
 
 - **Phase 1 — shell and connective tissue (implemented):** `src/components/shell/` adds `SableCore` (Canvas 2D presence: ember nucleus, broken host rings, inward signal motes, pointer gaze, glitch tears, boot collapse), `GlitchText` (decode + channel tear), and `RouteTransition` (CRT shutter between routes). Title screen recomposed around the core; global film grain; shell palette tokens; developer-facing copy removed from Chapters 2–4.
-- **Phase 2 — chapter scene rework (not started):** break the shared four-panel HUD grammar, restage Chapter 0 around the voice, bring each chapter's palette onto the SABLE/host tokens, re-embody the core in each renderer.
+- **Phase 1.5 (implemented):** title cold open, core attention/shockwaves/lens streak, synthesized interface sound, whisper lore fragments.
+- **Phase 2 — chapter scene rework (in progress):**
+  - Chapter 0 (restaged): "under observation". One full-bleed frame, no panels. The host trace is a reticle trained on SABLE's CSS core whose brackets close in, and whose frame rulers redden, as the threat index rises (`--pressure`); readouts ride the brackets. Designation lands as a full-frame stamp. SABLE pries a bracket loose when she contests the name. The stance is a full-frame Trace/Autonomy split that collapses into the chosen answer. `[UNROUTED]` becomes a leaked serif line that the host's purge sweep shreds. The handoff is a title card (ember core on a stance-coloured horizon). Prelude restaged as channel acquisition around a small reticle. All authored timings, voice cues, holds, branching and `onComplete` are unchanged; stance buttons arm 650ms after appearing so advance-clicks can't commit a stance.
+  - Chapter 2 (restaged): SABLE as an ember particle swarm, reach filaments, absorbed contacts, subtitles.
+  - Remaining: Chapter 3 (fine shader grain, GLSL core, clickable aperture), Chapter 4, Chapter 1 palette alignment.
 - **Phase 3 — feel and polish (not started):** input juice (hit-stop, shake, chromatic split, bloom), audio-reactive visuals, Credits restaging.
 
 ## Chapter status

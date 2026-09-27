@@ -1,16 +1,27 @@
+/* ==================================================================
+   Chapter 0 // BOOT — "under observation"
+   One frame, no panels. The host is an instrument trained on the voice:
+   a reticle whose brackets close as its threat index rises. SABLE is the
+   only warm light in the frame.
+   ================================================================== */
+
 .bootRoot {
+  --host-rgb: 143, 184, 212;
+  --sable-rgb: 255, 155, 94;
+  --alarm-rgb: 255, 122, 138;
+  --ink: #edf2f7;
   --boot-green: #a9c6da;
-  --boot-green-soft: rgba(143, 184, 212, 0.72);
-  --boot-amber: #ff7a8a;
-  --boot-shadow: rgba(143, 184, 212, 0.1);
+  --stance-accent: rgba(236, 242, 247, 0.9);
+  --stance-accent-soft: rgba(236, 242, 247, 0.14);
   position: relative;
   height: 100dvh;
   max-height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 30% 110%, rgba(143, 184, 212, 0.07), transparent 50%),
-    linear-gradient(180deg, #070a10 0%, #020306 100%);
+    radial-gradient(ellipse at 72% 42%, rgba(var(--host-rgb), 0.06), transparent 46%),
+    radial-gradient(ellipse at 20% 110%, rgba(var(--host-rgb), 0.05), transparent 50%),
+    linear-gradient(180deg, #06080d 0%, #020306 100%);
   color: var(--boot-green);
 }
 
@@ -18,15 +29,16 @@
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 20;
   pointer-events: none;
   background: repeating-linear-gradient(
     180deg,
-    rgba(143, 184, 212, 0.032) 0,
-    rgba(143, 184, 212, 0.032) 1px,
+    rgba(var(--host-rgb), 0.03) 0,
+    rgba(var(--host-rgb), 0.03) 1px,
     transparent 1px,
-    transparent 5px
+    transparent 4px
   );
-  opacity: 0.22;
+  opacity: 0.35;
   mix-blend-mode: screen;
 }
 
@@ -34,10 +46,19 @@
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 20;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-  opacity: 0.025;
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.stanceTrace {
+  --stance-accent: rgba(var(--host-rgb), 0.95);
+  --stance-accent-soft: rgba(var(--host-rgb), 0.18);
+}
+
+.stanceAutonomy {
+  --stance-accent: rgba(var(--sable-rgb), 0.98);
+  --stance-accent-soft: rgba(var(--sable-rgb), 0.2);
 }
 
 .bootInteractive {
@@ -45,119 +66,76 @@
   position: relative;
   z-index: 1;
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   cursor: pointer;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow: hidden;
+  outline: none;
   transition: opacity 220ms ease, filter 220ms ease;
 }
 
-.bootInteractivePassive {
+.bootInteractivePassive,
+.bootInteractiveHandoff {
   cursor: default;
 }
 
-.bootShell {
-  isolation: isolate;
-  position: relative;
-  display: grid;
-  min-height: 100dvh;
-  width: 100%;
-  grid-template-columns: minmax(0, 1.48fr) minmax(310px, 0.72fr);
-}
-
-.bootPreludeInteractive {
-  transition: opacity 200ms ease;
-}
-
-.bootPreludeFading {
-  opacity: 0;
-}
-
-.bootPreludeShell {
-  display: flex;
-  min-height: 100dvh;
-  width: 100%;
-}
-
-.bootPreludeColumn,
-.bootColumn {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  padding: 6.5rem 1.5rem 1.5rem;
-}
-
-.bootPreludeColumn {
-  position: relative;
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
-  width: 100%;
-  margin: 0;
-  justify-content: space-between;
-}
-
-.bootColumnMain {
-  height: 100dvh;
-  min-height: 100dvh;
-  position: relative;
-  overflow: hidden;
-  border-right: 1px solid rgba(143, 184, 212, 0.08);
-}
-
-.bootSidebar {
-  min-height: 100dvh;
-}
-
-.bootHeader > p,
-.bootPreludeHeader > p,
-.titleBlock > p {
-  position: relative;
-  z-index: 1;
-}
-
-.bootHeader,
-.bootPreludeHeader {
-  display: flex;
-  max-width: 52rem;
-  flex-direction: column;
-  gap: 0.85rem;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .bootMeta {
   margin: 0;
-  color: rgba(143, 184, 212, 0.58);
-  font-size: 0.68rem;
+  color: rgba(var(--host-rgb), 0.58);
+  font-size: 0.66rem;
   letter-spacing: 0.34em;
   text-transform: uppercase;
 }
 
-.titleBlock {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 0.55rem;
+.lineWarning {
+  color: rgba(var(--alarm-rgb), 0.9);
 }
+
+.advanceAffordance,
+.advancePrompt {
+  margin: 0;
+  color: rgba(var(--host-rgb), 0.5);
+  font-size: 0.64rem;
+  letter-spacing: 0.3em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   Watermark: the name the host is using, standing up the right edge.
+   ------------------------------------------------------------------ */
 
 .title {
   position: absolute;
   z-index: 0;
-  bottom: -0.14em;
-  left: -0.05em;
-  width: fit-content;
+  top: 50%;
+  right: clamp(0.1rem, 0.8vw, 0.9rem);
   margin: 0;
   color: transparent;
-  font-size: clamp(6rem, 15.5vw, 15.5rem);
+  font-size: clamp(4rem, 12.5dvh, 9.5rem);
   font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 0.8;
-  text-transform: uppercase;
-  white-space: nowrap;
+  letter-spacing: 0.04em;
+  line-height: 0.82;
   pointer-events: none;
-  -webkit-text-stroke: 1px rgba(143, 184, 212, 0.17);
+  text-transform: uppercase;
+  translate: 0 -50%;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  -webkit-text-stroke: 1px rgba(var(--host-rgb), 0.13);
   transition: -webkit-text-stroke-color 1600ms ease;
 }
 
 .voiceClaimed .title {
-  -webkit-text-stroke-color: rgba(255, 155, 94, 0.24);
+  -webkit-text-stroke-color: rgba(var(--sable-rgb), 0.26);
 }
 
 .title::before,
@@ -170,14 +148,14 @@
 }
 
 .title::before {
-  left: 0.04em;
-  color: rgba(255, 155, 94, 0.82);
+  top: 0.04em;
+  color: rgba(var(--sable-rgb), 0.8);
   clip-path: polygon(0 8%, 100% 0, 100% 32%, 0 36%);
 }
 
 .title::after {
-  left: -0.03em;
-  color: rgba(143, 184, 212, 0.82);
+  top: -0.03em;
+  color: rgba(var(--host-rgb), 0.8);
   clip-path: polygon(0 62%, 100% 56%, 100% 100%, 0 100%);
 }
 
@@ -193,114 +171,325 @@
   animation: titleFinalPulse 700ms ease both;
 }
 
-.subtitle,
-.bootPreludeSummary {
-  max-width: 34rem;
+/* ------------------------------------------------------------------
+   Shared reticle brackets (prelude + scope)
+   ------------------------------------------------------------------ */
+
+.bracket {
+  position: absolute;
+  width: 20%;
+  height: 20%;
+  border: 0 solid rgba(var(--host-rgb), 0.62);
+  transition: border-color 600ms ease, translate 900ms cubic-bezier(0.2, 1.4, 0.3, 1), rotate 900ms ease;
+}
+
+.bracketTL {
+  top: 0;
+  left: 0;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.bracketTR {
+  top: 0;
+  right: 0;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.bracketBL {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.bracketBR {
+  right: 0;
+  bottom: 0;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+
+/* ==================================================================
+   PRELUDE — channel acquisition
+   ================================================================== */
+
+.bootPreludeInteractive {
+  transition: opacity 220ms ease, filter 220ms ease;
+}
+
+.bootPreludeFading {
+  opacity: 0;
+  filter: brightness(2) blur(2px);
+}
+
+.prelude {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5.5rem 1.5rem 6.5rem;
+  text-align: center;
+}
+
+.preludeSweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 0;
+  background: linear-gradient(90deg, transparent, rgba(var(--host-rgb), 0.55) 30%, rgba(var(--host-rgb), 0.55) 70%, transparent);
+  box-shadow: 0 0 22px rgba(var(--host-rgb), 0.35);
+  opacity: 0;
+  animation: preludeSweep 2.6s cubic-bezier(0.45, 0, 0.3, 1) both;
+}
+
+.preludeMeta {
+  position: absolute;
+  top: clamp(5rem, 11dvh, 6.5rem);
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+.preludeScope {
+  position: relative;
+  z-index: 1;
+  width: clamp(8.5rem, 20vmin, 13rem);
+  aspect-ratio: 1;
+  flex: none;
+  animation: preludeAcquire 1100ms cubic-bezier(0.2, 1.3, 0.3, 1) both;
+}
+
+.preludeScope::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(var(--host-rgb), 0.35) 0 12%, transparent 12% 88%, rgba(var(--host-rgb), 0.35) 88%) center / 1px 100% no-repeat,
+    linear-gradient(90deg, rgba(var(--host-rgb), 0.35) 0 12%, transparent 12% 88%, rgba(var(--host-rgb), 0.35) 88%) center / 100% 1px no-repeat;
+}
+
+.prelude[data-beat="2"] .preludeScope .bracket {
+  border-color: rgba(var(--alarm-rgb), 0.8);
+}
+
+.prelude[data-beat="2"] .preludeScope {
+  animation: preludeAcquire 1100ms cubic-bezier(0.2, 1.3, 0.3, 1) both, preludeShudder 420ms steps(3, end) 1 both;
+}
+
+.preludePoint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #fff4ea;
+  box-shadow:
+    0 0 10px rgba(var(--sable-rgb), 0.95),
+    0 0 32px rgba(var(--sable-rgb), 0.6),
+    0 0 80px rgba(var(--sable-rgb), 0.3);
+  opacity: 0;
+  translate: -50% -50%;
+}
+
+.preludePoint::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  translate: -50% -50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 180, 0.9), transparent);
+}
+
+.prelude[data-beat="3"] .preludePoint {
+  animation: preludeIgnite 620ms steps(6, end) both;
+}
+
+.prelude[data-beat="3"] .preludePoint::after {
+  animation: preludeStreak 900ms 120ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.preludeBeats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.85rem;
+  width: min(100%, 40rem);
+  margin: 2.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preludeBeat {
+  display: grid;
+  gap: 0.3rem;
+  opacity: 0.3;
+  transition: opacity 400ms ease;
+}
+
+.preludeBeatCurrent {
+  opacity: 1;
+  animation: preludeBeatIn 360ms steps(4, end) both;
+}
+
+.preludeBeatLabel {
+  color: rgba(var(--host-rgb), 0.62);
+  font-size: 0.6rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.preludeBeatBody {
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.preludeBeatCurrent .preludeBeatBody {
+  font-size: clamp(0.98rem, 1.5vw, 1.2rem);
+}
+
+.preludeSummary {
+  position: relative;
+  z-index: 1;
+  max-width: 30rem;
+  margin: 2.4rem 0 0;
+  color: rgba(236, 242, 247, 0.72);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  line-height: 1.35;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.prelude[data-beat="3"] .preludeSummary {
+  opacity: 1;
+}
+
+.preludeFooter {
+  position: absolute;
+  right: 1.5rem;
+  bottom: clamp(1.25rem, 4dvh, 2.25rem);
+  left: 1.5rem;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+}
+
+.preludeStrip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.2rem;
   margin: 0;
-  color: rgba(208, 218, 228, 0.7);
-  font-size: 0.95rem;
-  line-height: 1.85;
+  color: rgba(208, 218, 228, 0.42);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.preludeStrip span + span::before {
+  content: "//";
+  margin-right: 1.2rem;
+  color: rgba(var(--host-rgb), 0.24);
+}
+
+/* ==================================================================
+   TERMINAL STAGE
+   ================================================================== */
+
+.stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: 100dvh;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+}
+
+/* The host's frame rulers: they close in and redden as its threat index climbs. */
+.hostFrame {
+  position: absolute;
+  inset: calc(4.25rem + var(--pressure, 0) * 0.25rem) calc(0.6rem + var(--pressure, 0) * 0.3rem)
+    calc(0.6rem + var(--pressure, 0) * 0.3rem);
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg, rgba(var(--host-rgb), 0.5) 0 1px, transparent 1px 14px) left top / 5px 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(var(--host-rgb), 0.5) 0 1px, transparent 1px 14px) right top / 5px 100% no-repeat,
+    repeating-linear-gradient(90deg, rgba(var(--host-rgb), 0.5) 0 1px, transparent 1px 14px) left bottom / 100% 5px no-repeat;
+  box-shadow: inset 0 0 calc(var(--pressure, 0) * 2.4rem) rgba(var(--alarm-rgb), calc(var(--pressure, 0) * 0.016));
+  opacity: calc(0.12 + var(--pressure, 0) * 0.08);
+  transition: inset 900ms cubic-bezier(0.2, 1.2, 0.3, 1), opacity 900ms ease, box-shadow 900ms ease;
+}
+
+.voiceZone {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  padding: clamp(5.5rem, 12dvh, 7rem) clamp(1rem, 2vw, 2rem) clamp(2rem, 7dvh, 4.5rem) clamp(1.5rem, 4.5vw, 5rem);
+  transition: opacity 500ms ease, filter 500ms ease;
+}
+
+.bootHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1.2rem;
 }
 
 .subtitle {
   width: fit-content;
-  border: 1px solid rgba(143, 184, 212, 0.18);
-  padding: 0.3rem 0.65rem;
+  margin: 0;
+  border: 1px solid rgba(var(--host-rgb), 0.2);
+  padding: 0.28rem 0.6rem;
   color: rgba(169, 198, 218, 0.8);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   letter-spacing: 0.3em;
   line-height: 1.4;
   text-transform: uppercase;
   transition: color 800ms ease, border-color 800ms ease;
 }
 
+.voiceDesignated .subtitle {
+  border-color: rgba(236, 242, 247, 0.4);
+  color: var(--ink);
+}
+
 .voiceClaimed .subtitle {
-  border-color: rgba(255, 155, 94, 0.45);
+  border-color: rgba(var(--sable-rgb), 0.5);
   color: #ffc9a4;
-}
-
-.bootPreludeSummary {
-  font-size: 1rem;
-}
-
-.bootPreludeTimeline {
-  display: grid;
-  align-self: stretch;
-  gap: 0.65rem;
-  width: min(100%, 53rem);
-  margin-top: 3rem;
-}
-
-.bootPreludeBeat {
-  position: relative;
-  overflow: hidden;
-  border-left: 2px solid rgba(143, 184, 212, 0.2);
-  background: rgba(3, 7, 12, 0.48);
-  padding: 0.85rem 1rem;
-}
-
-.bootPreludeBeatCurrent {
-  border-left-color: rgba(255, 122, 138, 0.7);
-  background: rgba(10, 13, 15, 0.66);
-}
-
-.bootPreludeBeatLabel {
-  margin: 0;
-  color: rgba(143, 184, 212, 0.62);
-  font-size: 0.66rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-}
-
-.bootPreludeBeatBody {
-  margin: 0.55rem 0 0;
-  color: #edf2f7;
-  font-size: clamp(0.98rem, 1.55vw, 1.16rem);
-  line-height: 1.55;
-}
-
-.bootPreludeFooter {
-  display: flex;
-  width: min(100%, 53rem);
-  flex-direction: column;
-  gap: 1rem;
-  padding-top: 2rem;
-}
-
-.bootPreludeBottomStrip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem 1.4rem;
-  color: rgba(208, 218, 228, 0.52);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  line-height: 1.6;
-  text-transform: uppercase;
-}
-
-.bootPreludeBottomStrip span + span::before {
-  content: "//";
-  margin-right: 1.4rem;
-  color: rgba(143, 184, 212, 0.2);
 }
 
 .logWindow {
   position: relative;
-  z-index: 1;
   display: flex;
   min-height: 0;
   flex: 1;
   align-items: flex-end;
-  /* Bounded to the frame: history crops off the top instead of pushing the present below the fold. */
   overflow: hidden;
   padding-top: 2rem;
-  padding-bottom: clamp(3rem, 15vh, 9rem);
-  /* The transcript dissolves upward; only the present line is fully lit. */
-  mask-image: linear-gradient(180deg, transparent 0%, #000 42%);
+  padding-bottom: clamp(2rem, 17dvh, 11rem);
+  /* History dissolves upward; only the present is fully lit. */
+  mask-image: linear-gradient(180deg, transparent 0%, #000 48%);
 }
 
 .logStack {
-  width: min(100%, 58rem);
+  width: min(100%, 50rem);
 }
 
 .logList {
@@ -310,35 +499,40 @@
   list-style: none;
 }
 
-.logItem,
-.choiceConsequence {
+.logItem {
   display: grid;
-  grid-template-columns: minmax(8.5rem, 10.5rem) minmax(0, 1fr);
+  grid-template-columns: minmax(7.5rem, 9rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: baseline;
   padding: 0.5rem 0;
   font-size: clamp(0.9rem, 1vw, 1.02rem);
-  line-height: 1.72;
-  text-shadow: 0 0 18px var(--boot-shadow);
+  line-height: 1.7;
   transition: opacity 220ms ease, filter 220ms ease;
 }
 
 .logItemOlder {
-  padding: 0.22rem 0;
-  opacity: 0.42;
-  font-size: 0.76rem;
+  padding: 0.16rem 0;
+  opacity: 0.38;
+  font-size: 0.72rem;
   line-height: 1.5;
 }
 
 .logItemCurrent {
   opacity: 1;
-  margin-top: 0.8rem;
-  font-size: clamp(1.02rem, 1.3vw, 1.24rem);
+  margin-top: 1rem;
+  font-size: clamp(1.08rem, 1.45vw, 1.36rem);
+  animation: lineArrive 320ms steps(3, end) backwards;
 }
 
 .logItemHostInterrupted {
-  filter: blur(0.6px) saturate(0.7);
-  opacity: 0.68;
+  filter: blur(0.7px) saturate(0.6);
+  opacity: 0.6;
+  translate: 0.4rem 0;
+}
+
+.logItemHostInterrupted .line {
+  clip-path: inset(0 0 0 0);
+  animation: interruptTear 350ms steps(3, end) both;
 }
 
 .logItemSystem {
@@ -346,29 +540,27 @@
 }
 
 .logItemSable {
-  color: #edf2f7;
+  color: var(--ink);
 }
 
 .speaker {
-  color: rgba(143, 184, 212, 0.54);
-  font-size: 0.68rem;
-  letter-spacing: 0.25em;
+  color: rgba(var(--host-rgb), 0.5);
+  font-size: 0.64rem;
+  letter-spacing: 0.26em;
   line-height: 1.45;
   text-transform: uppercase;
 }
 
-.speakerWarning,
-.lineWarning {
-  color: rgba(255, 122, 138, 0.88);
+.speakerWarning {
+  color: rgba(var(--alarm-rgb), 0.86);
 }
 
 .speakerTrace {
-  color: rgba(255, 122, 138, 0.82);
+  color: rgba(var(--alarm-rgb), 0.82);
 }
 
 .speakerSable {
-  color: #edf2f7;
-  text-shadow: 0 0 16px rgba(143, 184, 212, 0.18);
+  color: var(--ink);
 }
 
 .line {
@@ -378,26 +570,45 @@
 }
 
 .lineCurrent {
-  min-height: 1.72em;
+  min-height: 1.7em;
 }
 
 .lineSystem {
-  border-left: 2px solid rgba(143, 184, 212, 0.36);
+  border-left: 1px solid rgba(var(--host-rgb), 0.36);
   padding-left: 0.9rem;
   color: var(--boot-green);
   letter-spacing: 0.035em;
 }
 
+.logItemCurrent.logItemSystem .line {
+  color: #d4e4ef;
+}
+
+.logItemCurrent.logItemWarning .line {
+  border-left-color: rgba(var(--alarm-rgb), 0.8);
+  box-shadow: -8px 0 18px -10px rgba(var(--alarm-rgb), 0.8);
+}
+
+/* The host's naming lands as a stamped, spaced declaration. */
+.logItemCurrent.logItemDesignation .line {
+  border-left: 0;
+  padding-left: 0;
+  color: #f4f8fb;
+  font-size: clamp(1.3rem, 2.1vw, 1.9rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-shadow: 0 0 22px rgba(var(--host-rgb), 0.35);
+}
+
 .lineSable {
-  color: #edf2f7;
+  color: var(--ink);
   font-size: 1.04em;
-  letter-spacing: 0.01em;
 }
 
 .logItemVoice .line {
   border-left: 0;
   padding-left: 0;
-  color: rgba(236, 242, 247, 0.88);
+  color: rgba(236, 242, 247, 0.86);
   font-family: "DM Serif Display", Georgia, serif;
   font-size: 1.12em;
   letter-spacing: 0.005em;
@@ -411,14 +622,14 @@
 .logItemCurrent.logItemVoice {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.7rem;
-  margin-top: 1.6rem;
+  margin-top: 1.8rem;
 }
 
 .logItemCurrent.logItemVoice .line {
-  max-width: 22ch;
-  font-size: clamp(2rem, 4.3vw, 4.2rem);
-  line-height: 1.08;
-  text-shadow: 0 0 36px rgba(143, 184, 212, 0.22);
+  max-width: 20ch;
+  font-size: clamp(2.2rem, 4.6vw, 4.6rem);
+  line-height: 1.04;
+  text-shadow: 0 0 36px rgba(var(--host-rgb), 0.22);
   animation: voiceTremor 2.6s steps(1) infinite;
 }
 
@@ -428,39 +639,267 @@
 }
 
 .voiceClaimed .logItemVoice .speaker {
-  color: rgba(255, 155, 94, 0.85);
+  color: rgba(var(--sable-rgb), 0.85);
 }
 
 .voiceClaimed .logItemCurrent.logItemVoice .line {
   color: #ffe2cc;
   text-shadow:
-    0 0 28px rgba(255, 155, 94, 0.45),
-    0 0 90px rgba(255, 155, 94, 0.18);
+    0 0 28px rgba(var(--sable-rgb), 0.45),
+    0 0 90px rgba(var(--sable-rgb), 0.18);
   animation: none;
 }
 
+.lineCursor {
+  margin-left: 0.08rem;
+  color: rgba(var(--host-rgb), 0.72);
+}
+
+.logItemCurrent .lineCursor {
+  animation: cursorBlink 1s steps(1, end) infinite;
+}
+
 .logItemVoice .lineCursor {
-  color: rgba(255, 155, 94, 0.9);
+  color: rgba(var(--sable-rgb), 0.9);
   font-family: var(--font-shell), monospace;
 }
 
-/* SABLE's core in this chapter's medium: pure CSS light behind the voice. */
+.advanceAffordance {
+  margin-top: 1.2rem;
+  animation: advancePulse 2.4s ease-in-out infinite;
+}
+
+.advanceInstructionMobile {
+  display: none;
+}
+
+/* ==================================================================
+   SCOPE — the host's instrument
+   ================================================================== */
+
+.scopeZone {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 5.5rem clamp(3rem, 6vw, 6.5rem) 2rem clamp(1rem, 2vw, 2rem);
+  transition: opacity 500ms ease, filter 500ms ease;
+}
+
+.scope {
+  --reticle-base: min(27rem, 32vw, 48dvh);
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.reticle {
+  position: relative;
+  width: calc(var(--reticle-base) * (1 - var(--pressure, 0) * 0.06));
+  aspect-ratio: 1;
+  margin-top: 2.6rem;
+  transition: width 900ms cubic-bezier(0.2, 1.35, 0.3, 1);
+}
+
+.crosshair {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(var(--host-rgb), 0.3) 0 9%, transparent 9% 91%, rgba(var(--host-rgb), 0.3) 91%) center / 1px 100% no-repeat,
+    linear-gradient(90deg, rgba(var(--host-rgb), 0.3) 0 9%, transparent 9% 91%, rgba(var(--host-rgb), 0.3) 91%) center / 100% 1px no-repeat;
+}
+
+.reticleRing {
+  position: absolute;
+  inset: 14%;
+  border: 1px dashed rgba(var(--host-rgb), 0.2);
+  border-radius: 50%;
+  opacity: calc(0.35 + var(--pressure, 0) * 0.1);
+  animation: ringTurn 60s linear infinite;
+  transition: border-color 700ms ease;
+}
+
+.scope[data-alarm="true"] .bracket {
+  border-color: rgba(var(--alarm-rgb), 0.85);
+  filter: drop-shadow(0 0 6px rgba(var(--alarm-rgb), 0.45));
+}
+
+.scope[data-alarm="true"] .reticleRing {
+  border-color: rgba(var(--alarm-rgb), 0.35);
+  animation-duration: 14s;
+}
+
+/* SABLE refuses the name: one bracket is pried loose. */
+.voiceClaimed .scope .bracketTR {
+  translate: 0.9rem -0.9rem;
+  rotate: 6deg;
+}
+
+.voiceClaimed .scope .bracketBL {
+  translate: -0.5rem 0.5rem;
+  rotate: -3deg;
+}
+
+.scope[data-locking="true"] .reticle {
+  animation: reticleLock 780ms cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+.scope[data-locking="true"] .bracket {
+  border-color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+}
+
+.readout {
+  position: absolute;
+  display: grid;
+  width: max-content;
+  max-width: min(15rem, 44vw);
+  gap: 0.18rem;
+}
+
+.readoutTL,
+.readoutTR {
+  bottom: calc(100% + 0.7rem);
+}
+
+.readoutBL,
+.readoutBR {
+  top: calc(100% + 0.7rem);
+}
+
+.readoutTL,
+.readoutBL {
+  left: 0;
+  text-align: left;
+}
+
+.readoutTR,
+.readoutBR {
+  right: 0;
+  text-align: right;
+}
+
+.readoutLabel {
+  color: rgba(var(--host-rgb), 0.5);
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.statusValue {
+  color: var(--ink);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  transition: opacity 150ms ease;
+}
+
+.statusValueTransitioning {
+  opacity: 0;
+}
+
+.statusValueTyping {
+  opacity: 1;
+  color: #cfe0ec;
+}
+
+.statusValueAlarm {
+  color: rgba(var(--alarm-rgb), 0.95);
+}
+
+.designationTag {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  margin-top: 3.6rem;
+}
+
+.designationState {
+  color: rgba(var(--host-rgb), 0.5);
+  font-size: 0.56rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.designationName {
+  padding-left: 0.5em;
+  color: var(--ink);
+  font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+  letter-spacing: 0.5em;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(var(--host-rgb), 0.3);
+  transition: color 1200ms ease, text-shadow 1200ms ease;
+}
+
+.designationRedacted {
+  color: rgba(var(--host-rgb), 0.28);
+  letter-spacing: 0.08em;
+  text-shadow: none;
+}
+
+.voiceClaimed .designationName {
+  color: #ffd2ad;
+  text-shadow: 0 0 22px rgba(var(--sable-rgb), 0.55);
+}
+
+.hostTicker {
+  width: min(26rem, 100%);
+  margin-top: 1.8rem;
+}
+
+.hostTickerLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  border-bottom: 1px dashed rgba(var(--host-rgb), 0.2);
+  padding-bottom: 0.45rem;
+  color: rgba(var(--host-rgb), 0.44);
+  font-size: 0.56rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.hostTickerBody {
+  display: grid;
+  min-height: 2.8rem;
+  gap: 0.2rem;
+  padding-top: 0.55rem;
+  text-align: center;
+}
+
+.hostResponseText {
+  color: rgba(var(--host-rgb), 0.8);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.scope[data-alarm="true"] .hostTickerLabel span:last-child,
+.scope[data-alarm="true"] .hostResponseText {
+  color: rgba(var(--alarm-rgb), 0.82);
+}
+
+/* SABLE's core in this chapter's medium: pure CSS light, held in the host's sights. */
 .voiceCore {
   position: absolute;
-  z-index: 0;
-  top: 34%;
-  right: 18%;
-  width: clamp(15rem, 38vmin, 28rem);
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 84%;
   aspect-ratio: 1;
   pointer-events: none;
   opacity: 0;
-  translate: 50% -50%;
+  translate: -50% -50%;
   background: radial-gradient(
     circle,
     rgba(255, 244, 234, 0.95) 0 1.1%,
-    rgba(255, 155, 94, 0.6) 2.4%,
-    rgba(255, 155, 94, 0.16) 14%,
-    rgba(255, 155, 94, 0.05) 32%,
+    rgba(var(--sable-rgb), 0.6) 2.4%,
+    rgba(var(--sable-rgb), 0.16) 14%,
+    rgba(var(--sable-rgb), 0.05) 32%,
     transparent 62%
   );
   filter: saturate(0.12) brightness(1.15);
@@ -474,27 +913,28 @@
   content: "";
   position: absolute;
   inset: 41%;
-  border: 1px solid rgba(255, 155, 94, 0.7);
+  border: 1px solid rgba(var(--sable-rgb), 0.7);
   border-radius: 50%;
-  box-shadow: 0 0 18px rgba(255, 155, 94, 0.4);
+  box-shadow: 0 0 18px rgba(var(--sable-rgb), 0.4);
 }
 
+/* Anamorphic streak: SABLE's light runs through the whole frame, under the words. */
 .voiceCore::after {
   content: "";
   position: absolute;
   top: 50%;
-  left: -70%;
-  right: -70%;
+  left: -150vw;
+  right: -40vw;
   height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(143, 184, 212, 0.35) 22%,
-    rgba(255, 214, 180, 0.95) 50%,
-    rgba(143, 184, 212, 0.35) 78%,
+    rgba(var(--host-rgb), 0.28) 35%,
+    rgba(255, 214, 180, 0.95) 75%,
+    rgba(var(--host-rgb), 0.3) 90%,
     transparent
   );
-  box-shadow: 0 0 14px rgba(255, 155, 94, 0.55);
+  box-shadow: 0 0 14px rgba(var(--sable-rgb), 0.5);
 }
 
 .voiceCore[data-state="faint"] {
@@ -503,7 +943,7 @@
 }
 
 .voiceCore[data-state="claimed"] {
-  opacity: 0.92;
+  opacity: 0.95;
   filter: none;
   animation: voiceBreathe 4.2s ease-in-out infinite;
 }
@@ -511,11 +951,798 @@
 .voiceCore[data-state="bloom"] {
   opacity: 1;
   filter: brightness(1.35);
-  scale: 1.4;
+  scale: 1.35;
 }
 
 .voiceCore[data-speaking="true"] {
   animation: voiceSpeak 190ms steps(2) infinite alternate;
+}
+
+/* ==================================================================
+   DESIGNATION LOCK — the host stamps a name over the frame
+   ================================================================== */
+
+.designationLocking .stage {
+  animation: stageJolt 380ms steps(4, end) both;
+}
+
+.designationStamp {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.designationStamp::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(220, 234, 244, 0.16);
+  animation: stampFlash 780ms ease-out both;
+}
+
+.designationStampKicker {
+  position: relative;
+  color: rgba(236, 242, 247, 0.8);
+  font-size: 0.7rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  animation: stampKicker 780ms steps(6, end) both;
+}
+
+.designationStampName {
+  position: relative;
+  padding-left: 0.18em;
+  color: #f6fafd;
+  font-size: clamp(5rem, 17vw, 16rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 0.9;
+  text-shadow: 0 0 40px rgba(var(--host-rgb), 0.6);
+  animation: stampSlam 780ms cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+.designationStampName::before,
+.designationStampName::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  padding-left: 0.18em;
+  mix-blend-mode: screen;
+}
+
+.designationStampName::before {
+  color: rgba(var(--sable-rgb), 0.7);
+  clip-path: inset(10% 0 58% 0);
+  translate: -0.05em 0;
+}
+
+.designationStampName::after {
+  color: rgba(var(--host-rgb), 0.8);
+  clip-path: inset(60% 0 8% 0);
+  translate: 0.06em 0;
+}
+
+.finalPulse .hostFrame {
+  box-shadow: inset 0 0 8rem rgba(var(--sable-rgb), 0.16);
+}
+
+/* ==================================================================
+   FINAL RUPTURE (entering boot-13)
+   ================================================================== */
+
+.terminalRupture {
+  cursor: default;
+}
+
+.terminalRupture .stage {
+  animation: terminalRuptureShell 450ms steps(5, end) both;
+}
+
+.terminalRupture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 16%, rgba(var(--host-rgb), 0.18) 16.1%, transparent 16.25%, transparent 74%, rgba(var(--alarm-rgb), 0.14) 74.1%, transparent 74.25%),
+    repeating-linear-gradient(180deg, transparent 0 8px, rgba(var(--host-rgb), 0.16) 9px, transparent 11px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: terminalRuptureScan 450ms steps(5, end) both;
+}
+
+.terminalRupture::after {
+  content: "SIGNAL RUPTURE  //  HANDOFF PENDING";
+  position: absolute;
+  left: clamp(1.5rem, 4.5vw, 5rem);
+  bottom: clamp(1rem, 3dvh, 2rem);
+  z-index: 16;
+  color: rgba(var(--alarm-rgb), 0.84);
+  font-size: 0.62rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  opacity: 0;
+  text-shadow: 0 0 18px rgba(var(--alarm-rgb), 0.24);
+  animation: terminalRuptureMarker 450ms steps(4, end) both;
+}
+
+/* ==================================================================
+   STANCE — the chapter's decision takes the whole frame
+   ================================================================== */
+
+.choiceStage .voiceZone,
+.stanceCommit .voiceZone {
+  opacity: 0.16;
+  filter: blur(3px);
+}
+
+.choiceStage .scopeZone,
+.stanceCommit .scopeZone {
+  opacity: 0.22;
+  filter: blur(2px);
+}
+
+.stanceStage {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: clamp(5rem, 11dvh, 6.5rem) clamp(1rem, 3vw, 3rem) clamp(1.5rem, 5dvh, 3rem);
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 3, 6, 0.8), rgba(2, 3, 6, 0.94));
+  cursor: default;
+  animation: stanceEnter 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.stancePrompt {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.stanceAnnounce {
+  margin: 0;
+  color: rgba(var(--alarm-rgb), 0.86);
+  font-size: 0.66rem;
+  letter-spacing: 0.44em;
+  text-transform: uppercase;
+  animation: stanceAnnounce 1.8s steps(1) infinite;
+}
+
+.stanceStage[data-state="committed"] .stanceAnnounce {
+  color: var(--stance-accent);
+  animation: none;
+}
+
+.previousChoice {
+  margin: 0;
+  color: rgba(208, 218, 228, 0.42);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+}
+
+.stanceOptions {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 1fr 1fr;
+  transition: grid-template-columns 900ms cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+.stanceStage[data-state="committed"][data-leaning="trace"] .stanceOptions {
+  grid-template-columns: 1fr 0fr;
+}
+
+.stanceStage[data-state="committed"][data-leaning="autonomy"] .stanceOptions {
+  grid-template-columns: 0fr 1fr;
+}
+
+.stanceOption {
+  --option-rgb: var(--host-rgb);
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  padding: 1.5rem clamp(1.5rem, 5vw, 5.5rem);
+  color: rgba(236, 242, 247, 0.8);
+  cursor: pointer;
+  font: inherit;
+  transition: opacity 360ms ease, color 360ms ease;
+  animation: stanceOptionIn 700ms cubic-bezier(0.2, 0.9, 0.2, 1) backwards;
+}
+
+.stanceOption::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.stanceOptionTrace {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.stanceOptionTrace::before {
+  background: radial-gradient(ellipse at 100% 50%, rgba(var(--host-rgb), 0.2), transparent 65%);
+}
+
+.stanceOptionAutonomy {
+  --option-rgb: var(--sable-rgb);
+  align-items: flex-start;
+  text-align: left;
+  animation-delay: 110ms;
+}
+
+.stanceOptionAutonomy::before {
+  background: radial-gradient(ellipse at 0% 50%, rgba(var(--sable-rgb), 0.22), transparent 65%);
+}
+
+.stanceOption:hover::before,
+.stanceOption:focus-visible::before,
+.choiceEntrySelected::before {
+  opacity: 1;
+}
+
+.stanceOption:focus-visible {
+  outline: 1px solid rgba(var(--option-rgb), 0.8);
+  outline-offset: -1rem;
+}
+
+.stanceOption:disabled {
+  cursor: default;
+}
+
+.choiceEntryDimmed {
+  opacity: 0.3;
+}
+
+.stanceStage[data-state="committed"] .choiceEntrySelected {
+  align-items: center;
+  text-align: center;
+}
+
+.stanceStage[data-state="committed"] .choiceEntrySelected::before {
+  background: radial-gradient(ellipse at 50% 50%, rgba(var(--option-rgb), 0.2), transparent 60%);
+}
+
+.stanceStage[data-state="committed"] .choiceEntrySelected .stanceHeading {
+  max-width: none;
+}
+
+.stanceOptionHidden {
+  opacity: 0;
+  pointer-events: none;
+  transition-duration: 90ms;
+  visibility: hidden;
+}
+
+.stanceIndex {
+  color: rgba(var(--option-rgb), 0.7);
+  font-size: 0.6rem;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stanceHeading {
+  max-width: 9ch;
+  margin: 0.2rem 0 0.5rem;
+  color: rgba(236, 242, 247, 0.84);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(2.6rem, 5.4vw, 5.6rem);
+  line-height: 0.98;
+  transition: color 400ms ease, text-shadow 400ms ease, translate 500ms cubic-bezier(0.2, 1.2, 0.3, 1);
+}
+
+.stanceOption:hover .stanceHeading,
+.stanceOption:focus-visible .stanceHeading,
+.choiceEntrySelected .stanceHeading {
+  color: #fff;
+  text-shadow:
+    0 0 26px rgba(var(--option-rgb), 0.55),
+    0 0 80px rgba(var(--option-rgb), 0.2);
+}
+
+.stanceOptionTrace:hover .stanceHeading,
+.stanceOptionTrace:focus-visible .stanceHeading {
+  translate: -0.4rem 0;
+}
+
+.stanceOptionAutonomy:hover .stanceHeading,
+.stanceOptionAutonomy:focus-visible .stanceHeading {
+  translate: 0.4rem 0;
+}
+
+.stanceDetail {
+  max-width: 26rem;
+  color: rgba(208, 218, 228, 0.58);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.stanceLocked {
+  margin-top: 1rem;
+  border: 1px solid rgba(var(--option-rgb), 0.7);
+  padding: 0.3rem 0.7rem;
+  color: rgba(var(--option-rgb), 1);
+  font-size: 0.6rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: stampSlamSmall 520ms cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+.stanceDivider {
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  left: 50%;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(236, 242, 247, 0.34) 30%, rgba(236, 242, 247, 0.34) 70%, transparent);
+  animation: dividerDraw 800ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  transition: opacity 400ms ease;
+}
+
+.stanceStage[data-state="committed"] .stanceDivider {
+  opacity: 0;
+}
+
+.stanceNode {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #fff4ea;
+  box-shadow:
+    0 0 12px rgba(var(--sable-rgb), 0.95),
+    0 0 40px rgba(var(--sable-rgb), 0.5);
+  translate: -50% -50%;
+  transition: translate 600ms cubic-bezier(0.2, 1.3, 0.3, 1), background 400ms ease, box-shadow 400ms ease;
+}
+
+.stanceNode::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16rem;
+  height: 1px;
+  translate: -50% -50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 180, 0.8), transparent);
+}
+
+.stanceStage[data-leaning="trace"] .stanceNode {
+  translate: calc(-50% - 2rem) -50%;
+  background: #eaf4fb;
+  box-shadow:
+    0 0 12px rgba(var(--host-rgb), 0.95),
+    0 0 40px rgba(var(--host-rgb), 0.5);
+}
+
+.stanceStage[data-leaning="autonomy"] .stanceNode {
+  translate: calc(-50% + 2rem) -50%;
+}
+
+.stanceConsequence {
+  display: flex;
+  min-height: 1.6rem;
+  justify-content: center;
+  gap: 1.2rem;
+  margin: 0;
+  color: rgba(var(--host-rgb), 0.9);
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.stanceConsequenceSpeaker {
+  color: rgba(var(--host-rgb), 0.5);
+  font-size: 0.64rem;
+  letter-spacing: 0.3em;
+  line-height: 1.9;
+}
+
+/* The commit: a hard light cut across the frame in the chosen colour. */
+.stanceRailActive .stanceStage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent calc(50% - 1px), var(--stance-accent) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(ellipse at 50% 50%, var(--stance-accent-soft), transparent 60%);
+  mix-blend-mode: screen;
+  animation: stanceCut 920ms steps(6, end) both;
+}
+
+/* ==================================================================
+   UNROUTED / PURGE — SABLE's answer leaks; the host shreds it
+   ================================================================== */
+
+.uninvitedStage .voiceZone,
+.purgingStage .voiceZone {
+  opacity: 0.2;
+  filter: blur(2px);
+}
+
+.uninvitedStage .scopeZone {
+  opacity: 0.55;
+}
+
+.unrouted {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1.1rem;
+  padding: 0 1.5rem;
+  pointer-events: none;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 3, 6, 0.7), transparent 70%);
+}
+
+.unroutedTag {
+  color: var(--stance-accent);
+  font-size: 0.68rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  animation: traceIntrusion 680ms steps(4, end) both;
+}
+
+.unroutedText {
+  position: relative;
+  max-width: 14ch;
+  color: #ffe2cc;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(2.6rem, 6.8vw, 6.4rem);
+  line-height: 1;
+  text-shadow:
+    0 0 30px rgba(var(--sable-rgb), 0.5),
+    0 0 100px rgba(var(--sable-rgb), 0.2);
+  animation: traceIntrusion 680ms steps(4, end) both;
+}
+
+.unroutedText::before,
+.unroutedText::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.unroutedText::before {
+  color: rgba(var(--sable-rgb), 0.8);
+  animation: ghostTearA 1.1s steps(1) infinite;
+}
+
+.unroutedText::after {
+  color: rgba(var(--host-rgb), 0.75);
+  animation: ghostTearB 1.3s steps(1) infinite;
+}
+
+.unroutedShred .unroutedText,
+.unroutedShred .unroutedTag {
+  animation: shred 450ms steps(5, end) both;
+}
+
+.purgeSweep {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(var(--alarm-rgb), 0.05) 40%, rgba(var(--alarm-rgb), 0.42) 49.6%, rgba(255, 230, 234, 0.9) 50%, rgba(var(--alarm-rgb), 0.08) 51%, transparent 62%),
+    repeating-linear-gradient(180deg, transparent 0 14px, rgba(var(--alarm-rgb), 0.1) 15px, transparent 17px);
+  background-size: 100% 220%, 100% 100%;
+  mix-blend-mode: screen;
+  animation: purgeSweep 450ms linear both;
+}
+
+.purgingStage .stage {
+  animation: stageJolt 450ms steps(5, end) both;
+}
+
+/* ==================================================================
+   MEMORY HANDOFF — a title card, not a dashboard
+   ================================================================== */
+
+.memoryHandoff {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(5rem, 12dvh, 7rem) 1.5rem clamp(2rem, 7dvh, 4rem);
+  text-align: center;
+  animation: handoffStageEntry 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.memoryHandoff::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 34%, var(--stance-accent-soft), transparent 55%);
+  opacity: 0.7;
+}
+
+.handoffHorizon {
+  position: absolute;
+  top: 32%;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--stance-accent) 30%, rgba(255, 220, 190, 0.95) 50%, var(--stance-accent) 70%, transparent);
+  box-shadow: 0 0 18px var(--stance-accent-soft);
+  opacity: 0.8;
+  animation: horizonOpen 1200ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.handoffCore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #fff4ea;
+  box-shadow:
+    0 0 14px rgba(var(--sable-rgb), 1),
+    0 0 50px rgba(var(--sable-rgb), 0.55),
+    0 0 140px rgba(var(--sable-rgb), 0.25);
+  translate: -50% -50%;
+}
+
+.handoffCore::before {
+  content: "";
+  position: absolute;
+  inset: -1.1rem;
+  border: 1px solid rgba(var(--sable-rgb), 0.5);
+  border-radius: 50%;
+  animation: voiceBreathe 4.2s ease-in-out infinite;
+}
+
+.memoryHandoffContent {
+  position: relative;
+  display: grid;
+  width: min(100%, 60rem);
+  justify-items: center;
+  margin-top: 16dvh;
+}
+
+.memoryKicker {
+  margin: 0;
+  color: rgba(var(--host-rgb), 0.56);
+  font-size: 0.62rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  animation: handoffContentEntry 560ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.memoryLabel {
+  position: relative;
+  min-height: 1em;
+  margin: 1.1rem 0 0;
+  color: #f2f5f8;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(4rem, 13vw, 11rem);
+  letter-spacing: 0.04em;
+  line-height: 0.92;
+  transition: text-shadow 900ms ease;
+}
+
+.memoryLabel::before,
+.memoryLabel::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.memoryLabel::before {
+  color: rgba(var(--sable-rgb), 0.85);
+  animation: ghostTearA 1.1s steps(1) 3;
+}
+
+.memoryLabel::after {
+  color: rgba(var(--host-rgb), 0.85);
+  animation: ghostTearB 1.3s steps(1) 3;
+}
+
+.memoryHandoffReady .memoryLabel {
+  text-shadow:
+    0 0 30px var(--stance-accent-soft),
+    0 0 90px var(--stance-accent-soft);
+}
+
+.memorySummary {
+  min-height: 1.6em;
+  margin: 1rem 0 0;
+  color: rgba(236, 242, 247, 0.8);
+  font-size: clamp(0.84rem, 1.1vw, 0.98rem);
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+
+.memoryWaiting {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.4rem;
+  margin: 1.8rem 0 0;
+  color: var(--stance-accent);
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.memoryWaiting span + span::before {
+  content: "·";
+  margin-right: 1.4rem;
+  color: rgba(var(--host-rgb), 0.4);
+}
+
+.memoryHandoffPreview .memoryWaiting {
+  color: rgba(var(--alarm-rgb), 0.78);
+  animation: advancePulse 1.2s ease-in-out infinite;
+}
+
+.handoffControls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  animation: handoffContentEntry 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.enterMemoryButton,
+.replayButton {
+  display: inline-flex;
+  min-width: 13rem;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--host-rgb), 0.42);
+  padding: 0.7rem 1.2rem;
+  font: inherit;
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  line-height: 1.3;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.enterMemoryButton {
+  border-color: var(--stance-accent);
+  background: var(--stance-accent-soft);
+  color: #fff;
+  box-shadow: 0 0 30px var(--stance-accent-soft);
+}
+
+.replayButton {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: rgba(236, 242, 247, 0.6);
+}
+
+.enterMemoryButton:hover,
+.enterMemoryButton:focus-visible {
+  box-shadow: 0 0 50px var(--stance-accent-soft), inset 0 0 20px var(--stance-accent-soft);
+}
+
+.replayButton:hover,
+.replayButton:focus-visible {
+  border-color: rgba(236, 242, 247, 0.48);
+  background: rgba(236, 242, 247, 0.06);
+  color: #fff;
+}
+
+.enterMemoryButton:focus-visible,
+.replayButton:focus-visible {
+  outline: 2px solid var(--stance-accent);
+  outline-offset: 4px;
+}
+
+/* ==================================================================
+   KEYFRAMES
+   ================================================================== */
+
+@keyframes preludeSweep {
+  0% { opacity: 0; transform: translateY(0); }
+  8% { opacity: 1; }
+  90% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(100dvh); }
+}
+
+@keyframes preludeAcquire {
+  0% { opacity: 0; scale: 2.2; }
+  30% { opacity: 0.4; scale: 1.4; }
+  36% { opacity: 0.1; }
+  42% { opacity: 0.8; }
+  100% { opacity: 1; scale: 1; }
+}
+
+@keyframes preludeShudder {
+  0%, 100% { translate: 0 0; }
+  33% { translate: -4px 1px; }
+  66% { translate: 3px -1px; }
+}
+
+@keyframes preludeIgnite {
+  0% { opacity: 0; scale: 0.2; }
+  30% { opacity: 1; scale: 2.4; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; scale: 1; }
+}
+
+@keyframes preludeStreak {
+  from { width: 0; opacity: 0; }
+  to { width: 70vw; opacity: 1; }
+}
+
+@keyframes preludeBeatIn {
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  50% { opacity: 1; clip-path: inset(0 30% 0 0); }
+  100% { opacity: 1; clip-path: inset(0); }
+}
+
+@keyframes lineArrive {
+  0% { opacity: 0.2; translate: -0.4rem 0; }
+  100% { opacity: 1; translate: 0 0; }
+}
+
+@keyframes interruptTear {
+  0% { clip-path: inset(0); translate: 0 0; }
+  33% { clip-path: inset(0 0 45% 0); translate: 0.5rem 0; }
+  66% { clip-path: inset(40% 0 0 0); translate: -0.3rem 0; }
+  100% { clip-path: inset(0 12% 0 0); translate: 0 0; }
+}
+
+@keyframes advancePulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@keyframes ringTurn {
+  to { rotate: 360deg; }
+}
+
+@keyframes reticleLock {
+  0% { scale: 1.3; opacity: 0.3; }
+  20% { scale: 0.96; opacity: 1; }
+  40% { scale: 1.02; }
+  100% { scale: 1; }
 }
 
 @keyframes voiceFlicker {
@@ -545,783 +1772,53 @@
   68% { translate: 0 0; }
 }
 
-.lineCursor {
-  margin-left: 0.08rem;
-  color: rgba(143, 184, 212, 0.72);
+@keyframes cursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
-.logItemCurrent .lineCursor {
-  animation: cursorBlink 1s steps(1, end) infinite;
+@keyframes stageJolt {
+  0%, 100% { translate: 0 0; filter: none; }
+  20% { translate: -6px 2px; filter: brightness(1.4); }
+  40% { translate: 5px -1px; }
+  60% { translate: -3px 0; filter: brightness(1.1); }
+  80% { translate: 2px 1px; }
 }
 
-.logItemCurrent.logItemSystem .line {
-  color: #cfe0ec;
+@keyframes stampFlash {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  30% { opacity: 0.2; }
+  100% { opacity: 0; }
 }
 
-.advanceAffordance,
-.advancePrompt {
-  color: rgba(143, 184, 212, 0.52);
-  font-size: 0.66rem;
-  letter-spacing: 0.28em;
-  line-height: 1.4;
-  text-transform: uppercase;
+@keyframes stampKicker {
+  0% { opacity: 0; }
+  15%, 70% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-.advanceAffordance {
-  margin-top: 1rem;
+@keyframes stampSlam {
+  0% { opacity: 0; scale: 1.5; filter: blur(8px); }
+  12% { opacity: 1; scale: 0.97; filter: blur(0); }
+  20% { scale: 1.01; translate: 0.02em 0; }
+  26% { translate: -0.02em 0; }
+  32% { translate: 0 0; }
+  70% { opacity: 0.9; scale: 1; }
+  100% { opacity: 0; scale: 0.94; filter: blur(3px); }
 }
 
-.advanceInstructionMobile {
-  display: none;
-}
-
-.bootSidebar {
-  position: relative;
-  z-index: 1;
-  justify-content: flex-start;
-}
-
-.stanceTrace {
-  --stance-accent: rgba(143, 184, 212, 0.9);
-  --stance-accent-soft: rgba(143, 184, 212, 0.16);
-}
-
-.stanceAutonomy {
-  --stance-accent: rgba(255, 155, 94, 0.95);
-  --stance-accent-soft: rgba(255, 155, 94, 0.18);
-}
-
-.choiceStage .bootSidebar {
-  animation: choicePanelEntry 520ms ease both;
-}
-
-.choiceStage .panelChoiceButton {
-  animation: choiceOptionEntry 460ms ease both;
-}
-
-.choiceStage .panelChoiceButton:nth-child(2) {
-  animation-delay: 90ms;
-}
-
-.stanceRailActive .bootColumnMain::before,
-.stanceRailActive .bootColumnMain::after {
-  content: "";
-  position: absolute;
-  inset: 12% 0 10%;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0;
-}
-
-.stanceRailActive .bootColumnMain::before {
-  background:
-    linear-gradient(164deg, transparent 0 36%, var(--stance-accent) 36.1%, transparent 36.25%),
-    linear-gradient(12deg, transparent 0 62%, var(--stance-accent) 62.1%, transparent 62.25%),
-    linear-gradient(90deg, transparent, var(--stance-accent-soft), transparent);
-  mix-blend-mode: screen;
-  animation: stanceFractureSweep 920ms steps(5, end) both;
-}
-
-.stanceRailActive .bootColumnMain::after {
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    var(--stance-accent) 0 1px,
-    transparent 1px calc(100% - 1px),
-    var(--stance-accent) calc(100% - 1px) 100%
-  );
-  box-shadow: 0 0 30px var(--stance-accent-soft), inset 0 0 32px var(--stance-accent-soft);
-  animation: stanceRailLock 920ms ease both;
-}
-
-.stanceCommit .tracePanel {
-  border-color: var(--stance-accent);
-  box-shadow: 0 0 34px var(--stance-accent-soft), inset 0 0 24px var(--stance-accent-soft);
-  animation: panelStanceLock 920ms ease both;
-}
-
-.stanceCommit .tracePanel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    180deg,
-    transparent 0,
-    transparent 8px,
-    var(--stance-accent-soft) 9px,
-    transparent 10px
-  );
-  opacity: 0;
-  animation: panelScanBurst 920ms steps(4, end) both;
-}
-
-.stanceCommit .choiceEntrySelected {
-  position: relative;
-  color: #fff;
-  text-shadow: 0 0 18px var(--stance-accent-soft);
-}
-
-.stanceCommit .choiceEntrySelected::after {
-  content: "stance locked";
-  position: absolute;
-  right: 0;
-  top: -1.15rem;
-  color: var(--stance-accent);
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-
-.stanceCommit .choiceEntrySelected .panelChoiceSpeaker {
-  border-color: var(--stance-accent);
-  color: var(--stance-accent);
-}
-
-.stanceCommit .choiceConsequence {
-  animation: consequenceReveal 560ms ease both;
-}
-
-.uninvitedStage .uninvitedTrace {
-  border-left-color: var(--stance-accent);
-  box-shadow: 0 0 24px var(--stance-accent-soft);
-  animation: traceIntrusion 680ms steps(4, end) both;
-}
-
-.purgingStage .tracePanel {
-  border-color: rgba(255, 122, 138, 0.72);
-  box-shadow: 0 0 36px rgba(255, 122, 138, 0.13), inset 0 0 22px rgba(255, 122, 138, 0.08);
-  animation: purgePanel 700ms steps(3, end) both;
-}
-
-.purgingStage .bootColumnMain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    180deg,
-    transparent 0 14px,
-    rgba(255, 122, 138, 0.12) 15px,
-    transparent 17px
-  );
-  mix-blend-mode: screen;
-  animation: purgeScan 700ms steps(4, end) both;
-}
-
-.tracePanel {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  min-height: min(100%, 38rem);
-  flex: 1;
-  flex-direction: column;
-  border: 1px solid rgba(143, 184, 212, 0.12);
-  background: rgba(4, 8, 13, 0.52);
-  backdrop-filter: blur(16px);
-}
-
-.traceSection,
-.hostResponseSection {
-  padding: 1.1rem 1rem;
-}
-
-.hostResponseSection {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.hostResponseBody {
-  display: flex;
-  min-height: 4.6rem;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin-top: 1rem;
-}
-
-.statusTitle {
-  margin: 0;
-  color: rgba(143, 184, 212, 0.62);
-  font-size: 0.66rem;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-}
-
-.statusList {
-  display: grid;
-  gap: 0.72rem;
-  margin: 1rem 0 0;
-}
-
-.statusRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.62rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(208, 218, 228, 0.68);
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
-.statusRow:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.statusValue {
-  color: #edf2f7;
-  text-align: right;
-  transition: opacity 150ms ease;
-}
-
-.statusValueTransitioning {
-  opacity: 0;
-}
-
-.statusValueTyping {
-  color: #cfe0ec;
-}
-
-.statusValueAlarm {
-  color: rgba(255, 122, 138, 0.94);
-}
-
-.hostResponseText {
-  color: rgba(143, 184, 212, 0.72);
-  font-size: 0.79rem;
-  line-height: 1.65;
-}
-
-.panelChoiceSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  padding: 0 1rem 1rem;
-}
-
-.panelChoiceSeparator {
-  height: 1px;
-  width: 100%;
-  margin-bottom: 0.15rem;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(143, 184, 212, 0.3) 0 14px,
-    transparent 14px 22px
-  );
-}
-
-.choiceAnnounce {
-  color: rgba(255, 122, 138, 0.84);
-  font-size: 0.66rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-.previousChoice {
-  margin: 0;
-  color: rgba(208, 218, 228, 0.42);
-  font-size: 0.72rem;
-  line-height: 1.5;
-}
-
-.panelChoiceList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.panelChoiceButton {
-  display: flex;
-  gap: 0.9rem;
-  align-items: flex-start;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: rgba(236, 242, 247, 0.84);
-  cursor: pointer;
-  text-align: left;
-  transition: opacity 240ms ease, color 240ms ease, max-height 260ms ease, transform 240ms ease;
-}
-
-.panelChoiceButton:hover,
-.panelChoiceButton:focus-visible,
-.choiceEntrySelected {
-  color: #edf2f7;
-}
-
-.panelChoiceButton:focus-visible {
-  outline: 2px solid rgba(143, 184, 212, 0.8);
-  outline-offset: 0.45rem;
-}
-
-.panelChoiceButton:disabled {
-  cursor: default;
-}
-
-.panelChoiceButtonHidden {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-  transform: translateY(-0.2rem);
-}
-
-.choiceEntryDimmed {
-  opacity: 0.3;
-}
-
-.panelChoiceSpeaker {
-  flex: 0 0 auto;
-  border-bottom: 1px solid rgba(236, 242, 247, 0.6);
-  color: #edf2f7;
-  font-size: 0.68rem;
-  letter-spacing: 0.25em;
-  line-height: 1.45;
-  text-transform: uppercase;
-}
-
-.panelChoiceBody {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.12rem;
-}
-
-.choiceHeading {
-  color: inherit;
-  font-size: 0.86rem;
-  letter-spacing: 0.06em;
-  line-height: 1.5;
-}
-
-.choiceDetail {
-  color: rgba(208, 218, 228, 0.58);
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
-.panelPhaseNote {
-  margin-top: auto;
-  padding: 1rem;
-  color: rgba(143, 184, 212, 0.42);
-  font-size: 0.64rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.uninvitedTrace {
-  width: fit-content;
-  margin: 1.4rem 0 0;
-  border-left: 2px solid rgba(255, 255, 255, 0.38);
-  padding: 0.7rem 0.9rem;
-  color: rgba(236, 242, 247, 0.86);
-  font-size: 0.86rem;
-  letter-spacing: 0.03em;
-  line-height: 1.6;
-}
-
-.choiceConsequence {
-  margin-top: 1.2rem;
-}
-
-.memoryHandoff {
-  position: relative;
-  isolation: isolate;
-  display: grid;
-  align-items: center;
-  min-height: 100dvh;
-  width: 100%;
-  overflow: hidden;
-  padding: clamp(5.5rem, 12vh, 8.5rem) clamp(1.5rem, 5vw, 6rem) clamp(2rem, 8vh, 5rem);
-  animation: handoffStageEntry 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.memoryHandoff::before {
-  content: "";
-  position: absolute;
-  inset: 12% auto 10% clamp(1.5rem, 5vw, 6rem);
-  z-index: -1;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(143, 184, 212, 0.5), transparent);
-  box-shadow: 0 0 18px rgba(143, 184, 212, 0.1);
-  opacity: 0.64;
-}
-
-.memoryHandoff::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(143, 184, 212, 0.035), transparent 24%, transparent 72%, rgba(255, 122, 138, 0.025)),
-    linear-gradient(180deg, rgba(143, 184, 212, 0.025), transparent 30%, transparent 72%, rgba(255, 122, 138, 0.018));
-  opacity: 0.52;
-}
-
-.memoryHandoffContent {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 44rem);
-  animation: handoffContentEntry 560ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.memoryHandoffGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(13rem, 19rem);
-  gap: clamp(2.5rem, 7vw, 8rem);
-  align-items: center;
-  width: min(100%, 92rem);
-  min-width: 0;
-}
-
-.memoryHandoffMain {
-  min-width: 0;
-  padding-left: clamp(1rem, 2.5vw, 3rem);
-}
-
-.memoryHandoffReady .memoryHandoffContent {
-  animation-delay: 0ms;
-}
-
-.memoryHandoffReady .memoryLabel {
-  text-shadow: 0 0 24px rgba(143, 184, 212, 0.26), 0 0 62px rgba(143, 184, 212, 0.12);
-}
-
-.memoryHandoffRail {
-  display: grid;
-  align-self: center;
-  gap: 1rem;
-  min-width: 0;
-  border-left: 1px solid rgba(143, 184, 212, 0.22);
-  padding: 1.2rem 0 1.2rem 1.4rem;
-  animation: handoffContentEntry 560ms 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.handoffRailKicker {
-  margin: 0;
-  color: rgba(143, 184, 212, 0.54);
-  font-size: 0.62rem;
-  letter-spacing: 0.24em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.handoffRailConnector {
-  display: flex;
-  width: min(100%, 12rem);
-  min-height: 0.75rem;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0.1rem 0 0.15rem;
-}
-
-.handoffConnectorNode {
-  flex: 0 0 auto;
-  width: 0.38rem;
-  height: 0.38rem;
-  border: 1px solid rgba(255, 122, 138, 0.72);
-  background: rgba(2, 4, 7, 0.92);
-  box-shadow: 0 0 8px rgba(255, 122, 138, 0.14);
-  transform: rotate(45deg);
-}
-
-.handoffConnectorLine {
-  position: relative;
-  flex: 1 1 auto;
-  height: 1px;
-  overflow: hidden;
-  background: rgba(255, 122, 138, 0.2);
-}
-
-.handoffConnectorLine::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 34%;
-  background: var(--boot-amber);
-  box-shadow: 0 0 8px rgba(255, 122, 138, 0.22);
-  transform-origin: left center;
-  animation: handoffConnectorStage 720ms 360ms ease-out both;
-}
-
-.memoryHandoffReady .handoffConnectorNode {
-  border-color: var(--stance-accent);
-  box-shadow: 0 0 8px var(--stance-accent-soft);
-}
-
-.memoryHandoffReady .handoffConnectorLine {
-  background: var(--stance-accent-soft);
-}
-
-.memoryHandoffReady .handoffConnectorLine::after {
-  width: 100%;
-  background: var(--stance-accent);
-  box-shadow: 0 0 8px var(--stance-accent-soft);
-  animation: handoffConnectorComplete 520ms ease-out both;
-}
-
-.handoffRailStatus {
-  display: grid;
-  gap: 0.35rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.8rem;
-}
-
-.handoffRailStatus span {
-  color: rgba(208, 218, 228, 0.42);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.memoryHandoffPreview .handoffRailStatusPrimary strong {
-  color: var(--boot-amber);
-}
-
-.memoryHandoffReady .handoffRailStatusPrimary strong {
-  color: var(--stance-accent);
-}
-
-.handoffRailStatus strong {
-  overflow-wrap: anywhere;
-  color: #edf2f7;
-  font-size: 0.82rem;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.corruptedLattice {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 6.5rem;
-  margin: 0 0 2rem;
-  opacity: 0.76;
-}
-
-.signalTrace {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.signalTraceBase,
-.signalTraceGlow,
-.signalTracePulse {
-  fill: none;
-  stroke: var(--stance-accent);
-  stroke-linecap: square;
-  stroke-linejoin: bevel;
-  vector-effect: non-scaling-stroke;
-}
-
-.signalTraceBase {
-  stroke-width: 1;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  opacity: 0.46;
-  animation: handoffSignalDraw 820ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.signalTraceGlow {
-  stroke-width: 7;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  opacity: 0.12;
-  filter: blur(2px);
-  animation: handoffSignalGlowDraw 820ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.signalTracePulse {
-  stroke-width: 2;
-  stroke-dasharray: 0.08 0.92;
-  stroke-dashoffset: 1;
-  opacity: 0;
-  animation: handoffTelemetryPulse 1100ms 260ms ease-out both;
-}
-
-.signalTraceNode {
-  fill: rgba(2, 4, 7, 0.94);
-  stroke: rgba(255, 122, 138, 0.78);
-  stroke-width: 1.4;
-  vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px rgba(255, 122, 138, 0.14));
-}
-
-.memoryKicker,
-.memoryWaiting {
-  margin: 0;
-  color: rgba(143, 184, 212, 0.54);
-  font-size: 0.64rem;
-  letter-spacing: 0.24em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.memoryLabel {
-  margin: 1rem 0 0;
-  color: #edf2f7;
-  font-family: "DM Serif Display", Georgia, serif;
-  font-size: clamp(2.6rem, 6.5vw, 5.6rem);
-  letter-spacing: 0.06em;
-  line-height: 1;
-}
-
-.memorySummary {
-  min-height: 1.8em;
-  margin: 0.75rem 0 0;
-  max-width: 34rem;
-  color: rgba(236, 242, 247, 0.82);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.memoryWaiting {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 1.7rem;
-  color: rgba(255, 122, 138, 0.72);
-}
-
-.memoryWaiting::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 0.38rem;
-  height: 0.38rem;
-  border: 1px solid currentColor;
-  box-shadow: 0 0 9px currentColor;
-  transform: rotate(45deg);
-}
-
-.memoryHandoffReady .memoryWaiting {
-  color: rgba(143, 184, 212, 0.7);
-}
-
-.handoffControls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.enterMemoryButton,
-.replayButton {
-  display: inline-flex;
-  min-height: 2.9rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(143, 184, 212, 0.42);
-  padding: 0.7rem 1rem;
-  font-size: 0.66rem;
-  letter-spacing: 0.18em;
-  line-height: 1.3;
-  text-decoration: none;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
-}
-
-.enterMemoryButton {
-  min-width: 13rem;
-  border-color: var(--stance-accent);
-  background: linear-gradient(90deg, var(--stance-accent-soft), rgba(143, 184, 212, 0.05));
-  color: #edf2f7;
-  box-shadow: 0 0 28px var(--stance-accent-soft);
-  font-weight: 500;
-}
-
-.replayButton {
-  min-width: 13rem;
-  border-color: rgba(255, 255, 255, 0.18);
-  background: transparent;
-  color: rgba(236, 242, 247, 0.62);
-  cursor: pointer;
-}
-
-.enterMemoryButton:hover,
-.enterMemoryButton:focus-visible {
-  border-color: var(--stance-accent);
-  background: linear-gradient(90deg, rgba(143, 184, 212, 0.25), rgba(143, 184, 212, 0.1));
-  color: #fff;
-}
-
-.replayButton:hover,
-.replayButton:focus-visible {
-  border-color: rgba(236, 242, 247, 0.48);
-  background: rgba(236, 242, 247, 0.06);
-  color: #fff;
-}
-
-.enterMemoryButton:focus-visible,
-.replayButton:focus-visible {
-  outline: 2px solid var(--stance-accent);
-  outline-offset: 4px;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-}
-
-.bootInteractiveHandoff {
-  overflow: hidden;
-  cursor: default;
-}
-
-.terminalRupture {
-  cursor: default;
-  overflow: hidden;
-}
-
-.terminalRupture .bootShell {
-  animation: terminalRuptureShell 450ms steps(5, end) both;
-}
-
-.terminalRupture::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, transparent 0 16%, rgba(143, 184, 212, 0.18) 16.1%, transparent 16.25%, transparent 74%, rgba(255, 122, 138, 0.14) 74.1%, transparent 74.25%),
-    repeating-linear-gradient(180deg, transparent 0 8px, rgba(143, 184, 212, 0.16) 9px, transparent 11px);
-  mix-blend-mode: screen;
-  opacity: 0;
-  animation: terminalRuptureScan 450ms steps(5, end) both;
-}
-
-.terminalRupture::after {
-  content: "SIGNAL RUPTURE  //  HANDOFF PENDING";
-  position: absolute;
-  left: clamp(1.5rem, 5vw, 6rem);
-  bottom: clamp(1.5rem, 5vh, 3.5rem);
-  z-index: 6;
-  color: rgba(255, 122, 138, 0.84);
-  font-size: 0.64rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  opacity: 0;
-  text-shadow: 0 0 18px rgba(255, 122, 138, 0.24);
-  animation: terminalRuptureMarker 450ms steps(4, end) both;
+@keyframes stampSlamSmall {
+  0% { opacity: 0; scale: 1.6; }
+  40% { opacity: 1; scale: 0.96; }
+  100% { opacity: 1; scale: 1; }
 }
 
 @keyframes terminalRuptureShell {
   0% { filter: none; opacity: 1; transform: translate3d(0, 0, 0); }
   38% { filter: saturate(0.58) brightness(0.64); opacity: 0.42; transform: translate3d(-0.35rem, 0, 0); }
   58% { filter: saturate(1.25) brightness(0.76); opacity: 0.74; transform: translate3d(0.22rem, 0.02rem, 0); }
-  100% { filter: saturate(0.76) brightness(0.82); opacity: 0.88; transform: translate3d(0, 0, 0); }
+  100% { filter: none; opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes terminalRuptureScan {
@@ -1337,47 +1834,32 @@
   48% { opacity: 0.32; transform: translateX(0.25rem); }
 }
 
-@keyframes choicePanelEntry {
-  0% { opacity: 0; transform: translateX(1rem); }
-  100% { opacity: 1; transform: translateX(0); }
+@keyframes stanceEnter {
+  0% { opacity: 0; backdrop-filter: blur(0); }
+  100% { opacity: 1; }
 }
 
-@keyframes choiceOptionEntry {
-  0% { opacity: 0; transform: translateY(0.45rem); }
-  100% { opacity: 1; transform: translateY(0); }
+@keyframes stanceAnnounce {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
-@keyframes stanceFractureSweep {
-  0% { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(-10%); }
-  24% { opacity: 0.72; clip-path: inset(12% 0 44% 0); transform: translateX(2%); }
-  52% { opacity: 0.22; clip-path: inset(58% 0 18% 0); transform: translateX(-2%); }
-  78% { opacity: 0.62; clip-path: inset(36% 0 36% 0); transform: translateX(1%); }
-  100% { opacity: 0; clip-path: inset(0 0 0 100%); transform: translateX(8%); }
+@keyframes stanceOptionIn {
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); filter: blur(6px); }
+  100% { opacity: 1; clip-path: inset(0); filter: blur(0); }
 }
 
-@keyframes stanceRailLock {
-  0% { opacity: 0; transform: scaleX(0.15); }
-  34% { opacity: 0.78; transform: scaleX(1); }
-  62% { opacity: 0.34; transform: scaleX(0.92); }
-  100% { opacity: 0; transform: scaleX(1); }
+@keyframes dividerDraw {
+  from { scale: 1 0; }
+  to { scale: 1 1; }
 }
 
-@keyframes panelStanceLock {
-  0% { transform: translateX(0); }
-  24% { transform: translateX(-0.18rem); }
-  46% { transform: translateX(0.12rem); }
-  100% { transform: translateX(0); }
-}
-
-@keyframes panelScanBurst {
-  0%, 100% { opacity: 0; transform: translateY(-15%); }
-  28%, 62% { opacity: 0.42; transform: translateY(8%); }
-  46% { opacity: 0.16; transform: translateY(-4%); }
-}
-
-@keyframes consequenceReveal {
-  0% { opacity: 0; filter: blur(0.7rem); transform: translateY(0.35rem); }
-  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+@keyframes stanceCut {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  30% { opacity: 0.3; }
+  45% { opacity: 0.9; }
+  100% { opacity: 0; }
 }
 
 @keyframes traceIntrusion {
@@ -1387,228 +1869,245 @@
   100% { opacity: 1; clip-path: inset(0); transform: translateX(0); }
 }
 
-@keyframes purgePanel {
-  0%, 100% { filter: none; transform: translateX(0); }
-  30% { filter: saturate(1.6) brightness(1.16); transform: translateX(-0.18rem); }
-  58% { filter: saturate(0.45) brightness(0.72); transform: translateX(0.16rem); }
+@keyframes ghostTearA {
+  0%, 100% { opacity: 0; clip-path: inset(0); translate: 0 0; }
+  8% { opacity: 1; clip-path: inset(12% 0 60% 0); translate: -0.04em 0; }
+  14% { opacity: 0; }
+  52% { opacity: 1; clip-path: inset(70% 0 6% 0); translate: 0.05em 0; }
+  58% { opacity: 0; }
 }
 
-@keyframes purgeScan {
-  0% { opacity: 0; transform: translateY(-12%); }
-  38% { opacity: 0.62; transform: translateY(4%); }
-  100% { opacity: 0; transform: translateY(12%); }
+@keyframes ghostTearB {
+  0%, 100% { opacity: 0; clip-path: inset(0); translate: 0 0; }
+  22% { opacity: 1; clip-path: inset(40% 0 38% 0); translate: 0.06em 0; }
+  28% { opacity: 0; }
+  76% { opacity: 1; clip-path: inset(4% 0 80% 0); translate: -0.03em 0; }
+  82% { opacity: 0; }
+}
+
+@keyframes shred {
+  0% { opacity: 1; clip-path: inset(0); translate: 0 0; }
+  25% { clip-path: inset(0 0 55% 0); translate: 1.2rem 0; }
+  50% { opacity: 0.8; clip-path: inset(45% 0 0 0); translate: -1.6rem 0; filter: hue-rotate(140deg) saturate(2); }
+  75% { opacity: 0.5; clip-path: inset(30% 0 40% 0); translate: 2.4rem 0; }
+  100% { opacity: 0; clip-path: inset(50% 0 50% 0); translate: 0 0; }
+}
+
+@keyframes purgeSweep {
+  0% { background-position: 0 100%, 0 0; opacity: 1; }
+  100% { background-position: 0 0%, 0 0; opacity: 0.6; }
 }
 
 @keyframes handoffStageEntry {
-  0% { opacity: 0; filter: brightness(0.35) saturate(0.2); transform: scale(1.015); }
-  50% { opacity: 0.72; filter: brightness(0.7) saturate(0.8); transform: scale(1.002); }
-  100% { opacity: 1; filter: none; transform: scale(1); }
+  0% { opacity: 0; filter: brightness(2.4) saturate(0.2); }
+  30% { opacity: 1; filter: brightness(1.4); }
+  100% { opacity: 1; filter: none; }
+}
+
+@keyframes horizonOpen {
+  0% { scale: 0 1; opacity: 0; }
+  100% { scale: 1 1; opacity: 0.8; }
 }
 
 @keyframes handoffContentEntry {
-  0% { opacity: 0; transform: translateY(0.9rem); clip-path: inset(12% 0 0 0); }
-  100% { opacity: 1; transform: translateY(0); clip-path: inset(0); }
-}
-
-@keyframes handoffSignalDraw {
-  0% { stroke-dashoffset: 1; opacity: 0; }
-  24% { opacity: 0.22; }
-  100% { stroke-dashoffset: 0; opacity: 0.46; }
-}
-
-@keyframes handoffSignalGlowDraw {
-  0% { stroke-dashoffset: 1; opacity: 0; }
-  24% { opacity: 0.06; }
-  100% { stroke-dashoffset: 0; opacity: 0.12; }
-}
-
-@keyframes handoffTelemetryPulse {
-  0% { stroke-dashoffset: 1; opacity: 0; }
-  18%, 72% { opacity: 0.72; }
-  100% { stroke-dashoffset: -0.08; opacity: 0; }
-}
-
-@keyframes handoffConnectorStage {
-  0% { transform: scaleX(0); opacity: 0; }
-  100% { transform: scaleX(1); opacity: 0.76; }
-}
-
-@keyframes handoffConnectorComplete {
-  0% { transform: scaleX(0.34); opacity: 0.72; }
-  100% { transform: scaleX(1); opacity: 0.92; }
+  0% { opacity: 0; transform: translateY(0.9rem); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes titleFractureA {
-  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) skewX(0deg); }
-  12%, 34% { opacity: 1; transform: translate3d(0.02em, -0.02em, 0) skewX(-8deg); }
-  22%, 48% { opacity: 0.3; transform: translate3d(-0.03em, 0.01em, 0) skewX(8deg); }
+  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) skewY(0deg); }
+  12%, 34% { opacity: 1; transform: translate3d(-0.02em, 0.02em, 0) skewY(-6deg); }
+  22%, 48% { opacity: 0.3; transform: translate3d(0.01em, -0.03em, 0) skewY(6deg); }
 }
 
 @keyframes titleFractureB {
-  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) skewX(0deg); }
-  20%, 52% { opacity: 1; transform: translate3d(-0.04em, 0.02em, 0) skewX(10deg); }
-  35%, 64% { opacity: 0.25; transform: translate3d(0.03em, -0.01em, 0) skewX(-10deg); }
+  0%, 100% { opacity: 0; transform: translate3d(0, 0, 0) skewY(0deg); }
+  20%, 52% { opacity: 1; transform: translate3d(0.02em, -0.04em, 0) skewY(8deg); }
+  35%, 64% { opacity: 0.25; transform: translate3d(-0.01em, 0.03em, 0) skewY(-8deg); }
 }
 
 @keyframes titleFinalPulse {
-  0%, 100% { -webkit-text-stroke-color: rgba(255, 155, 94, 0.24); }
+  0%, 100% { -webkit-text-stroke-color: rgba(var(--sable-rgb), 0.26); }
   30% { -webkit-text-stroke-color: rgba(255, 214, 180, 0.9); }
 }
 
-@keyframes cursorBlink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
+/* ==================================================================
+   COMPACT
+   ================================================================== */
 
-@media (max-width: 960px) {
-  .bootShell {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 720px) {
+  .stage {
+    display: flex;
+    flex-direction: column;
   }
 
-  .voiceCore {
-    top: 58%;
-    right: 50%;
-    width: clamp(12rem, 60vw, 20rem);
+  .voiceZone {
+    display: contents;
+  }
+
+  /* display: contents drops the column's own filter, so dim its parts directly. */
+  .choiceStage .bootHeader,
+  .choiceStage .logWindow,
+  .stanceCommit .bootHeader,
+  .stanceCommit .logWindow,
+  .uninvitedStage .bootHeader,
+  .uninvitedStage .logWindow,
+  .purgingStage .bootHeader,
+  .purgingStage .logWindow {
+    opacity: 0.18;
+    filter: blur(2px);
+  }
+
+  .bootHeader,
+  .logWindow {
+    transition: opacity 500ms ease, filter 500ms ease;
+  }
+
+  .memoryWaiting {
+    flex-direction: column;
+  }
+
+  .memoryWaiting span + span::before {
+    display: none;
+  }
+
+  .bootHeader {
+    order: 1;
+    position: relative;
+    z-index: 2;
+    padding: 4.4rem 1rem 0;
+    gap: 0.6rem 0.9rem;
+  }
+
+  .bootMeta {
+    font-size: 0.56rem;
+    letter-spacing: 0.26em;
+  }
+
+  .subtitle {
+    font-size: 0.52rem;
+    letter-spacing: 0.24em;
+  }
+
+  .scopeZone {
+    order: 2;
+    flex: none;
+    padding: 0.4rem 1rem 0;
+  }
+
+  .scope {
+    --reticle-base: min(50vw, 24dvh);
+  }
+
+  .reticle {
+    margin-top: 1.4rem;
+  }
+
+  /* Too narrow for corner readouts: they file into a two-row strip under the sights. */
+  .readout {
+    max-width: 44vw;
+  }
+
+  .readoutTL,
+  .readoutTR {
+    top: calc(100% + 0.6rem);
+    bottom: auto;
+  }
+
+  .readoutBL,
+  .readoutBR {
+    top: calc(100% + 2.7rem);
+  }
+
+  .readoutTL,
+  .readoutBL {
+    left: -20vw;
+  }
+
+  .readoutTR,
+  .readoutBR {
+    right: -20vw;
+  }
+
+  .readoutLabel {
+    font-size: 0.5rem;
+  }
+
+  .statusValue {
+    font-size: 0.62rem;
+  }
+
+  .designationTag {
+    grid-auto-flow: column;
+    align-items: baseline;
+    gap: 0.8rem;
+    margin-top: 5.3rem;
+  }
+
+  .designationName {
+    font-size: 1rem;
+  }
+
+  .hostTicker {
+    margin-top: 0.7rem;
+  }
+
+  .hostTickerLabel {
+    font-size: 0.5rem;
+  }
+
+  .hostTickerBody {
+    min-height: 1.4rem;
+    padding-top: 0.35rem;
+  }
+
+  .hostResponseText {
+    font-size: 0.64rem;
   }
 
   .logWindow {
-    mask-image: none;
+    order: 3;
+    position: relative;
+    z-index: 2;
+    padding: 0.5rem 1rem 2rem;
+    mask-image: linear-gradient(180deg, transparent 0%, #000 55%);
   }
 
-  .bootColumnMain {
-    height: auto;
-    min-height: auto;
-    border-right: 0;
-    border-bottom: 1px solid rgba(143, 184, 212, 0.1);
-  }
-
-  .bootColumn,
-  .bootPreludeColumn {
-    padding-top: 5.5rem;
-  }
-
-  .bootSidebar {
-    min-height: auto;
-  }
-
-  .tracePanel {
-    min-height: auto;
-  }
-
-  .logWindow {
-    max-height: min(48rem, 62dvh);
-    overflow-y: auto;
-    padding-right: 0.3rem;
-  }
-
-  .logItem,
-  .choiceConsequence {
+  .logItem {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.2rem;
+    gap: 0.15rem;
+  }
+
+  .logItemOlder {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0.5rem;
+    font-size: 0.64rem;
+  }
+
+  .logItemOlder .speaker {
+    font-size: 0.5rem;
+  }
+
+  .logItemCurrent {
+    margin-top: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .logItemCurrent.logItemVoice {
+    margin-top: 0.9rem;
+  }
+
+  .logItemCurrent.logItemVoice .line {
+    font-size: clamp(1.8rem, 8.6vw, 2.5rem);
+  }
+
+  .logItemCurrent.logItemDesignation .line {
+    font-size: 1.15rem;
+    letter-spacing: 0.14em;
   }
 
   .lineSystem {
     padding-left: 0.7rem;
-  }
-
-  .memoryHandoff {
-    padding-right: 2rem;
-    padding-left: 2rem;
-  }
-
-  .memoryHandoffGrid {
-    gap: 2.25rem;
-    grid-template-columns: minmax(0, 1fr) minmax(11rem, 15rem);
-  }
-
-  .memoryHandoffMain {
-    padding-left: 1rem;
-  }
-
-  .memoryHandoff::before {
-    left: 2rem;
-  }
-}
-
-@media (max-width: 720px) {
-  .bootColumn,
-  .bootPreludeColumn {
-    padding: 5rem 1rem 1rem;
-  }
-
-  .title {
-    font-size: clamp(4.5rem, 24vw, 7rem);
-  }
-
-  .logItemCurrent.logItemVoice .line {
-    font-size: clamp(1.7rem, 8.4vw, 2.4rem);
-  }
-
-  .bootPreludeSummary {
-    font-size: 0.92rem;
-  }
-
-  .bootPreludeTimeline {
-    margin-top: 2rem;
-  }
-
-  .bootPreludeBottomStrip {
-    display: grid;
-    gap: 0.3rem;
-  }
-
-  .bootPreludeBottomStrip span + span::before {
-    display: none;
-  }
-
-  .memoryHandoff {
-    padding: 5rem 1rem 1.5rem;
-  }
-
-  .memoryHandoffGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.8rem;
-  }
-
-  .memoryHandoffMain {
-    padding-left: 1rem;
-  }
-
-  .memoryHandoff::before {
-    inset: 5rem auto 1.5rem 1rem;
-  }
-
-  .corruptedLattice {
-    height: 3.6rem;
-    margin-bottom: 1.1rem;
-  }
-
-  .memoryHandoffContent {
-    width: 100%;
-  }
-
-  .memoryHandoffRail {
-    width: calc(100% - 1rem);
-    margin-left: 1rem;
-    padding-top: 0.9rem;
-    padding-bottom: 0.9rem;
-  }
-
-  .memoryLabel {
-    font-size: clamp(1.65rem, 12vw, 3rem);
-  }
-
-  .memorySummary {
-    font-size: 0.84rem;
-  }
-
-  .logWindow {
-    max-height: none;
-    overflow: visible;
-  }
-
-  .line {
-    white-space: normal;
   }
 
   .advanceInstructionDesktop {
@@ -1619,154 +2118,269 @@
     display: inline;
   }
 
+  .advanceAffordance {
+    margin-top: 0.8rem;
+  }
+
+  .title {
+    font-size: clamp(3rem, 8dvh, 4.4rem);
+    -webkit-text-stroke-color: rgba(var(--host-rgb), 0.07);
+  }
+
+  .voiceClaimed .title {
+    -webkit-text-stroke-color: rgba(var(--sable-rgb), 0.11);
+  }
+
+  .voiceCore::after {
+    left: -60vw;
+    right: -60vw;
+  }
+
+  .hostFrame {
+    inset: calc(3.9rem + var(--pressure, 0) * 0.15rem) calc(0.3rem + var(--pressure, 0) * 0.15rem)
+      calc(0.3rem + var(--pressure, 0) * 0.15rem);
+  }
+
+  .designationStampName {
+    font-size: 21vw;
+  }
+
+  .stanceStage {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    padding: 4.4rem 1rem 1.5rem;
+  }
+
+  .stanceOptions {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    transition: grid-template-rows 900ms cubic-bezier(0.7, 0, 0.2, 1);
+  }
+
+  .stanceStage[data-state="committed"][data-leaning="trace"] .stanceOptions {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 0fr;
+  }
+
+  .stanceStage[data-state="committed"][data-leaning="autonomy"] .stanceOptions {
+    grid-template-columns: 1fr;
+    grid-template-rows: 0fr 1fr;
+  }
+
+  .stanceOption,
+  .stanceOptionTrace,
+  .stanceOptionAutonomy {
+    min-height: 0;
+    align-items: center;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stanceOptionTrace::before {
+    background: radial-gradient(ellipse at 50% 100%, rgba(var(--host-rgb), 0.22), transparent 70%);
+  }
+
+  .stanceOptionAutonomy::before {
+    background: radial-gradient(ellipse at 50% 0%, rgba(var(--sable-rgb), 0.24), transparent 70%);
+  }
+
+  .stanceHeading {
+    max-width: none;
+    font-size: clamp(2.1rem, 10vw, 2.9rem);
+  }
+
+  .stanceOptionTrace:hover .stanceHeading,
+  .stanceOptionAutonomy:hover .stanceHeading,
+  .stanceOptionTrace:focus-visible .stanceHeading,
+  .stanceOptionAutonomy:focus-visible .stanceHeading {
+    translate: 0 0;
+  }
+
+  .stanceDetail {
+    font-size: 0.72rem;
+    white-space: normal;
+  }
+
+  .stanceDivider {
+    top: 50%;
+    bottom: auto;
+    left: 8%;
+    right: 8%;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(236, 242, 247, 0.34) 30%, rgba(236, 242, 247, 0.34) 70%, transparent);
+  }
+
+  .stanceNode::after {
+    width: 10rem;
+  }
+
+  .stanceStage[data-leaning="trace"] .stanceNode {
+    translate: -50% calc(-50% - 1rem);
+  }
+
+  .stanceStage[data-leaning="autonomy"] .stanceNode {
+    translate: -50% calc(-50% + 1rem);
+  }
+
+  .stanceConsequence {
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.76rem;
+  }
+
+  .prelude {
+    padding: 5rem 1rem 7rem;
+  }
+
+  .preludeMeta {
+    top: 4.6rem;
+    font-size: 0.56rem;
+  }
+
+  .preludeStrip {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .preludeStrip span + span::before {
+    display: none;
+  }
+
+  .memoryHandoffContent {
+    margin-top: 10dvh;
+  }
+
+  .memoryLabel {
+    font-size: clamp(3rem, 17vw, 4.8rem);
+  }
+
+  .handoffHorizon {
+    top: 28%;
+  }
+
   .handoffControls {
+    width: min(100%, 20rem);
     flex-direction: column;
   }
 
   .enterMemoryButton,
   .replayButton {
     width: 100%;
-    min-height: 3.2rem;
+  }
+
+  .terminalRupture::after {
+    left: 1rem;
+    font-size: 0.54rem;
   }
 }
 
-@media (max-width: 720px) and (max-height: 720px) {
-  .memoryHandoff {
-    padding-top: 4.25rem;
-    padding-bottom: 0.75rem;
+@media (max-width: 720px) and (max-height: 700px) {
+  .scope {
+    --reticle-base: min(40vw, 20dvh);
   }
 
-  .memoryHandoffGrid {
-    gap: 1rem;
-  }
-
-  .corruptedLattice {
-    height: 2.8rem;
-    margin-bottom: 0.65rem;
-  }
-
-  .memoryLabel {
-    margin-top: 0.65rem;
-  }
-
-  .memorySummary {
-    margin-top: 0.45rem;
-    line-height: 1.45;
-  }
-
-  .memoryWaiting {
-    margin-top: 0.95rem;
-  }
-
-  .handoffControls {
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-  }
-
-  .enterMemoryButton,
-  .replayButton {
-    min-height: 2.55rem;
-  }
-
-  .memoryHandoffRail {
-    gap: 0.65rem;
-    margin-left: 0.5rem;
-    padding-top: 0.65rem;
-    padding-bottom: 0.65rem;
-    padding-left: 1rem;
-  }
-
-  .handoffRailStatus {
-    gap: 0.2rem;
-    padding-top: 0.5rem;
-  }
-
-  .handoffRailStatus strong {
-    line-height: 1.35;
+  .hostTicker {
+    display: none;
   }
 }
+
+/* ==================================================================
+   REDUCED MOTION — same composition, no movement
+   ================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   .bootInteractive,
   .bootPreludeInteractive,
-  .panelChoiceButton,
+  .stanceOption,
+  .stanceHeading,
+  .stanceNode,
+  .stanceOptions,
   .enterMemoryButton,
   .replayButton,
-  .statusValue {
+  .statusValue,
+  .hostFrame,
+  .reticle,
+  .bracket,
+  .voiceZone,
+  .scopeZone,
+  .voiceCore {
     transition: none;
   }
 
+  .preludeSweep,
+  .preludeScope,
+  .prelude[data-beat="2"] .preludeScope,
+  .preludeBeatCurrent,
+  .logItemCurrent,
+  .logItemHostInterrupted .line,
+  .advanceAffordance,
+  .reticleRing,
+  .scope[data-locking="true"] .reticle,
   .titleFractureActive::before,
   .titleFractureActive::after,
   .titleFinalPulse,
   .voiceCore,
+  .voiceCore[data-state],
+  .voiceCore[data-speaking="true"],
   .logItemCurrent.logItemVoice .line,
   .logItemCurrent .lineCursor,
-  .choiceStage .bootSidebar,
-  .choiceStage .panelChoiceButton,
-  .stanceRailActive .bootColumnMain::before,
-  .stanceRailActive .bootColumnMain::after,
-  .stanceCommit .tracePanel,
-  .stanceCommit .tracePanel::before,
-  .stanceCommit .choiceConsequence,
-  .uninvitedStage .uninvitedTrace,
-  .purgingStage .tracePanel,
-  .purgingStage .bootColumnMain::after,
-  .memoryHandoff,
-  .memoryHandoffContent,
-  .memoryHandoffRail,
-  .corruptedLattice,
-  .signalTraceBase,
-  .signalTraceGlow,
-  .signalTracePulse,
-  .terminalRupture .bootShell,
+  .designationLocking .stage,
+  .terminalRupture .stage,
   .terminalRupture::before,
-  .terminalRupture::after {
+  .terminalRupture::after,
+  .stanceStage,
+  .stanceAnnounce,
+  .stanceOption,
+  .stanceLocked,
+  .stanceDivider,
+  .stanceRailActive .stanceStage::after,
+  .unroutedTag,
+  .unroutedText,
+  .unroutedText::before,
+  .unroutedText::after,
+  .unroutedShred .unroutedText,
+  .unroutedShred .unroutedTag,
+  .purgeSweep,
+  .purgingStage .stage,
+  .memoryHandoff,
+  .handoffHorizon,
+  .handoffCore::before,
+  .memoryKicker,
+  .memoryLabel::before,
+  .memoryLabel::after,
+  .memoryHandoffPreview .memoryWaiting,
+  .handoffControls {
     animation: none;
   }
 
+  .prelude[data-beat="3"] .preludePoint {
+    animation: none;
+    opacity: 1;
+  }
+
+  .prelude[data-beat="3"] .preludePoint::after {
+    animation: none;
+    width: 50vw;
+  }
+
+  .preludeSweep,
+  .unroutedText::before,
+  .unroutedText::after,
   .titleFractureActive::before,
   .titleFractureActive::after {
     opacity: 0;
   }
 
-  .terminalRupture .bootShell {
-    filter: saturate(0.75) brightness(0.78);
-    opacity: 0.82;
+  .unroutedShred {
+    opacity: 0.35;
   }
 
-  .terminalRupture::before {
-    opacity: 0.32;
+  .purgeSweep {
+    background-position: 0 50%, 0 0;
+    opacity: 0.5;
   }
 
-  .terminalRupture::after {
-    opacity: 0.78;
-  }
-
-  .memoryHandoff::after {
-    opacity: 0.42;
-  }
-
-  .signalTraceBase,
-  .signalTraceGlow {
-    stroke-dashoffset: 0;
-  }
-
-  .signalTraceBase {
-    opacity: 0.46;
-  }
-
-  .signalTraceGlow {
-    opacity: 0.12;
-  }
-
-  .signalTracePulse {
-    display: none;
-  }
-
-  .handoffConnectorLine::after {
-    width: 100%;
-    transform: none;
-    opacity: 0.86;
+  .voiceCore[data-state="faint"] {
+    opacity: 0.5;
   }
 }
