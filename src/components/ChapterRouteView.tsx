@@ -392,21 +392,15 @@ type SceneChromeProps = {
 
 function SceneChrome({ chapterId, chapterStatus }: SceneChromeProps) {
   return (
-    <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 border-b border-[rgba(74,158,187,0.08)] px-4 py-4 sm:px-6">
-      <Link
-        href="/"
-        className="inline-flex items-center rounded-full border border-white/15 bg-black/30 px-4 py-2 text-[0.68rem] uppercase tracking-[0.3em] text-white opacity-60 backdrop-blur-md transition duration-200 hover:border-white/30 hover:opacity-100"
-      >
+    <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-4 px-4 py-5 sm:px-6">
+      <Link href="/" className="scene-chrome-link inline-flex min-h-10 items-center gap-3">
+        <span aria-hidden="true">&larr;</span>
         Return to Shell
       </Link>
-      <div className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.28em] text-white opacity-60 transition duration-200 hover:opacity-100">
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-2">
-          {CHAPTERS[chapterId].token}
-        </span>
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-2">
-          {chapterStatus}
-        </span>
-      </div>
+      <p className="scene-chrome-link pointer-events-none">
+        {`${String(chapterId).padStart(2, "0")} // ${CHAPTERS[chapterId].token}`}
+        <span className="text-white/24"> · {chapterStatus}</span>
+      </p>
     </div>
   );
 }

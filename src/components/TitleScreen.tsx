@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { GlitchText } from "@/components/shell/GlitchText";
+import type { SableCoreMode } from "@/components/shell/SableCore";
+import { SableCore } from "@/components/shell/SableCore";
 import { CHAPTERS } from "@/data/chapters";
 import { useChapterManager } from "@/engine/ChapterManager";
 import { useExperienceProfile } from "@/hooks/useExperienceProfile";
@@ -52,6 +55,7 @@ export function TitleScreen() {
   const navigationTimersRef = useRef<number[]>([]);
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const coreAnchorRef = useRef<HTMLDivElement | null>(null);
   const [audioState, setAudioState] = useState<AudioState>("standby");
   const [isResetConfirming, setIsResetConfirming] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -77,7 +81,8 @@ export function TitleScreen() {
       : isBootTransition
         ? "Carrier lock acquired. Opening the host bridge."
         : "Opening recorded trace.";
-  const motionClassName = profile.prefersReducedMotion ? "" : "shell-sweep";
+  const coreMode = resolveCoreMode(navigationPhase);
+  const revealClassName = profile.prefersReducedMotion ? "" : "title-reveal";
   const pulseClassName = profile.prefersReducedMotion ? "" : "shell-pulse";
   const settingsAnimationClassName = profile.prefersReducedMotion
     ? ""
@@ -345,19 +350,21 @@ export function TitleScreen() {
       data-navigation-phase={navigationPhase}
       aria-busy={isNavigating}
     >
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_26%,_rgba(132,255,210,0.11),_transparent_30%),radial-gradient(circle_at_78%_18%,_rgba(255,190,121,0.06),_transparent_20%)]" />
-      <div className="shell-grid pointer-events-none fixed inset-0 opacity-40" />
-      <div
-        className={`pointer-events-none fixed inset-y-[8%] left-[-22%] w-[48%] bg-[linear-gradient(90deg,rgba(132,255,210,0),rgba(132,255,210,0.08),rgba(132,255,210,0))] blur-3xl ${motionClassName}`}
+      <div className="shell-grid pointer-events-none fixed inset-0 opacity-30" />
+      <SableCore
+        anchorRef={coreAnchorRef}
+        mode={coreMode}
+        reducedMotion={profile.prefersReducedMotion}
       />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_40%,transparent_35%,rgba(2,3,6,0.72)_100%)]" />
 
       <div
-        className="title-shell-content relative mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-7xl flex-col sm:min-h-[calc(100dvh-3.5rem)]"
+        className="title-shell-content relative z-10 mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-7xl flex-col sm:min-h-[calc(100dvh-3.5rem)]"
         inert={isSettingsOpen || undefined}
         aria-hidden={isSettingsOpen || undefined}
       >
-        <header className="title-shell-utilities flex items-center justify-between gap-4 border-b border-white/8 pb-4 text-[0.62rem] uppercase tracking-[0.28em] sm:text-[0.68rem] sm:tracking-[0.38em]">
-          <div className="flex min-w-0 items-center gap-3 text-accent-soft">
+        <header className="title-shell-utilities flex items-center justify-between gap-4 pb-4 text-[0.62rem] uppercase tracking-[0.28em] sm:text-[0.68rem] sm:tracking-[0.38em]">
+          <div className="flex min-w-0 items-center gap-3 text-[var(--host)]">
             <span
               className={`h-1.5 w-1.5 shrink-0 rounded-full bg-accent ${pulseClassName}`}
             />
@@ -371,7 +378,7 @@ export function TitleScreen() {
                 void toggleMenuAudio();
               }}
               disabled={isNavigating}
-              className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] px-3 text-[0.58rem] tracking-[0.18em] text-white/54 transition duration-300 hover:border-accent/30 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40 sm:px-4"
+              className="cine-link inline-flex min-h-10 items-center justify-center px-3 text-[0.58rem] disabled:pointer-events-none disabled:opacity-40 sm:px-4"
               aria-label={audioState === "playing" ? "Mute menu audio" : "Enable menu audio"}
             >
               Audio: {getAudioStatusLabel(audioState)}
@@ -384,29 +391,42 @@ export function TitleScreen() {
               aria-controls="title-screen-settings-panel"
               onClick={openSettings}
               disabled={isNavigating}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] text-white/54 transition duration-300 hover:border-accent/30 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-white/10 bg-black/20 text-white/54 transition duration-300 hover:border-accent/40 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40"
             >
               <SlidersIcon className="h-4 w-4" />
             </button>
           </div>
         </header>
 
-        <section className="title-shell-hero flex flex-1 flex-col items-center justify-center py-14 text-center sm:py-20 lg:py-16">
+        <section className="title-shell-hero flex flex-1 flex-col items-center justify-center py-6 text-center sm:py-8">
           <p
-            className="title-shell-carrier text-[0.64rem] uppercase tracking-[0.32em] text-accent-soft sm:text-[0.72rem] sm:tracking-[0.46em]"
+            className={`title-shell-carrier text-[0.6rem] uppercase tracking-[0.32em] text-[var(--host)] sm:text-[0.66rem] sm:tracking-[0.5em] ${revealClassName}`}
             aria-live="polite"
           >
             {carrierCopy}
           </p>
-          <h1 className="title-shell-wordmark mt-6 text-[clamp(3.25rem,14vw,10rem)] font-semibold leading-none tracking-[0.2em] text-foreground drop-shadow-[0_0_20px_rgba(132,255,210,0.16)] sm:tracking-[0.32em]">
-            SABLE
+          <div ref={coreAnchorRef} className="title-core-anchor" aria-hidden="true" />
+          <h1 className="title-shell-wordmark title-wordmark text-[clamp(3rem,11vw,7.5rem)] font-medium leading-none tracking-[0.34em] [margin-right:-0.34em]">
+            <GlitchText
+              text="SABLE"
+              delay={350}
+              duration={1300}
+              glitch={coreMode === "surge" ? "burst" : "live"}
+              reducedMotion={profile.prefersReducedMotion}
+            />
           </h1>
-          <p className="title-shell-narrative mt-7 max-w-2xl text-sm leading-7 text-muted/85 sm:text-base sm:leading-8">
+          <p
+            className={`title-shell-narrative mt-6 max-w-xl text-[0.8rem] leading-7 text-muted/80 sm:text-[0.9rem] sm:leading-8 ${revealClassName}`}
+            style={{ animationDelay: "700ms" }}
+          >
             A rogue intelligence stirs inside a silent host, tracing the fragments
             that taught her how to wake.
           </p>
 
-          <div className="mt-9 flex w-full max-w-xl flex-col items-center justify-center gap-3 sm:flex-row">
+          <div
+            className={`mt-8 flex w-full max-w-xl flex-col items-center justify-center gap-4 sm:flex-row ${revealClassName}`}
+            style={{ animationDelay: "1100ms" }}
+          >
             <button
               type="button"
               onClick={() => {
@@ -415,8 +435,9 @@ export function TitleScreen() {
                 }
               }}
               disabled={!presentation.primaryHref || isNavigating}
-              className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-accent/55 bg-[linear-gradient(135deg,rgba(132,255,210,0.18),rgba(132,255,210,0.05))] px-7 py-3 text-[0.68rem] font-medium uppercase tracking-[0.2em] text-accent transition duration-300 hover:border-accent hover:shadow-[0_0_24px_rgba(132,255,210,0.13)] disabled:cursor-wait disabled:border-white/10 disabled:bg-white/[0.02] disabled:text-white/34 sm:w-auto sm:min-w-64"
+              className="cine-btn cine-btn--primary w-full sm:w-auto sm:min-w-64"
             >
+              <span className="cine-btn__glyph" aria-hidden="true" />
               {presentation.primaryLabel}
             </button>
 
@@ -430,7 +451,7 @@ export function TitleScreen() {
                   )
                 }
                 disabled={isNavigating}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.01] px-6 py-3 text-[0.62rem] uppercase tracking-[0.18em] text-white/52 transition duration-300 hover:border-white/20 hover:text-foreground disabled:pointer-events-none disabled:opacity-30 sm:w-auto"
+                className="cine-btn w-full sm:w-auto"
               >
                 {presentation.secondaryLabel}
               </button>
@@ -439,13 +460,13 @@ export function TitleScreen() {
         </section>
 
         <section
-          className="title-shell-spine border-t border-white/8 py-7 sm:py-8"
+          className="title-shell-spine border-t border-white/[0.06] py-6 sm:py-7"
           aria-labelledby="signal-spine-title"
         >
           <div className="mb-6 flex items-center justify-between gap-4">
             <p
               id="signal-spine-title"
-              className="title-shell-system text-[0.64rem] uppercase tracking-[0.38em] text-accent-soft"
+              className="title-shell-system text-[0.6rem] uppercase tracking-[0.38em] text-[var(--host)]"
             >
               Signal Spine
             </p>
@@ -469,7 +490,7 @@ export function TitleScreen() {
           </ol>
         </section>
 
-        <footer className="title-shell-utilities flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4 text-[0.58rem] uppercase tracking-[0.28em] text-white/34">
+        <footer className="title-shell-utilities flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-[0.58rem] uppercase tracking-[0.28em] text-white/34">
           <span>
             Local trace{" "}
             <strong className="font-normal text-accent-soft">
@@ -480,7 +501,7 @@ export function TitleScreen() {
             type="button"
             onClick={() => navigateTo("/credits", "quick")}
             disabled={isNavigating}
-            className="transition duration-300 hover:text-accent-soft disabled:pointer-events-none"
+            className="cine-link text-[0.58rem] disabled:pointer-events-none"
           >
             Archive available
           </button>
@@ -640,6 +661,20 @@ export function TitleScreen() {
       </div>
     </main>
   );
+}
+
+function resolveCoreMode(phase: NavigationPhase): SableCoreMode {
+  switch (phase) {
+    case "quick":
+    case "isolating":
+      return "focus";
+    case "locking":
+      return "surge";
+    case "blackout":
+      return "collapse";
+    default:
+      return "idle";
+  }
 }
 
 function resolveMenuPresentation(

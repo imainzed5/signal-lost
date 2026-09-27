@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { RouteTransition } from "@/components/shell/RouteTransition";
 import { ChapterManagerProvider } from "@/engine/ChapterManager";
 import "@/styles/globals.css";
 
@@ -16,7 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-screen bg-background text-foreground font-mono">
-        <ChapterManagerProvider>{children}</ChapterManagerProvider>
+        <ChapterManagerProvider>
+          {children}
+          <RouteTransition />
+        </ChapterManagerProvider>
+        <div className="film-grain" aria-hidden="true" />
       </body>
     </html>
   );

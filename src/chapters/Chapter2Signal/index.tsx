@@ -553,7 +553,7 @@ export function Chapter2Signal({ memoryChoice, onComplete, sceneChoice }: Chapte
               {activeContact === "echo" ? "Tune the repeating rings" : activeContact === "relay" ? "Carry the relay packet" : "Follow the resistance"}
             </button>
           ) : null}
-          <p className={styles.actionHint}>Canvas focus, pointer, touch, Enter, Space, and arrow keys use the same locate / tune / carry action.</p>
+          <p className={styles.actionHint}>Reach with pointer, touch, Enter, or Space.</p>
         </div>
       </div>
 

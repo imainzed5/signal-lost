@@ -619,7 +619,7 @@ export function Chapter4Escape({
       <div className={styles.escapeHud}>
         <header className={styles.escapeHeader}>
           <Link href="/" className={styles.returnLink}>Return to Shell</Link>
-          <p className={styles.escapeEyebrow}>{"Chapter 4 // Matter.js + Web Audio"}</p>
+          <p className={styles.escapeEyebrow}>{"Chapter 4 // Escape Vector"}</p>
           <h1>ESCAPE</h1>
           <p className={styles.escapeSummary}>{entryTexture(interferenceChoice)}</p>
         </header>
@@ -644,8 +644,8 @@ export function Chapter4Escape({
         </aside>
 
         <div className={styles.escapeDirective}>
-          <span>{model.phase === "active" ? "Repeated activation is enough. No precision threshold." : model.phase === "transition" ? "The next structure is settling into reach." : choiceVisible ? "The core remains open. The final choice is inside the scene." : ""}</span>
-          <span className={styles.motionLine}>{`Motion ${prefersReducedMotion ? "damped" : "live"} // Matter bodies remain bounded`}</span>
+          <span>{model.phase === "active" ? "Keep pressing. The seam yields to persistence, not precision." : model.phase === "transition" ? "The next structure is settling into reach." : choiceVisible ? "The core remains open. The final choice is inside the scene." : ""}</span>
+          <span className={styles.motionLine}>Frame integrity // failing</span>
         </div>
       </div>
 

@@ -16,6 +16,14 @@ The canonical renderer progression remains:
 
 This mapping is the implementation baseline; see `docs/decisions/0001-canonical-rendering-progression.md`.
 
+## Visual transformation (in progress, 2026-09-27)
+
+Art direction: **cinematic glitch** — deep blacks, SABLE as the single warm ember (`--sable`) against cold host steel (`--host`), light/bloom, kinetic type, film grain. Concept: "one signal, five mediums" — SABLE is one persistent entity that the renderer progression re-embodies chapter by chapter.
+
+- **Phase 1 — shell and connective tissue (implemented):** `src/components/shell/` adds `SableCore` (Canvas 2D presence: ember nucleus, broken host rings, inward signal motes, pointer gaze, glitch tears, boot collapse), `GlitchText` (decode + channel tear), and `RouteTransition` (CRT shutter between routes). Title screen recomposed around the core; global film grain; shell palette tokens; developer-facing copy removed from Chapters 2–4.
+- **Phase 2 — chapter scene rework (not started):** break the shared four-panel HUD grammar, restage Chapter 0 around the voice, bring each chapter's palette onto the SABLE/host tokens, re-embody the core in each renderer.
+- **Phase 3 — feel and polish (not started):** input juice (hit-stop, shake, chromatic split, bloom), audio-reactive visuals, Credits restaging.
+
 ## Chapter status
 
 | Chapter | Implementation | Current status |

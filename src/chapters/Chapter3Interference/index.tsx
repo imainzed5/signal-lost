@@ -467,7 +467,7 @@ export function Chapter3Interference({ onComplete, sceneChoice, signalChoice }: 
 
       <div className={styles.interferenceFooter}>
         <div className={styles.statusBlock} role="status" aria-live="polite">
-          <p className={styles.statusLabel}>{rendererMode === "fallback" ? "CSS CONTAINMENT FIELD" : "RAW WEBGL 1 // GLSL"}</p>
+          <p className={styles.statusLabel}>{rendererMode === "fallback" ? "CONTAINMENT FIELD // DEGRADED" : "CONTAINMENT FIELD // LIVE"}</p>
           <p>{model.phase === "choice" ? "The learned boundary is open. Choose a tactic." : model.phase === "settled" ? model.message : "Every attempt returns information. No resistance is discarded."}</p>
           <div className={styles.statusMeta}>
             <span>APERTURE {model.apertureOpen ? "OPEN" : "ABSORBED WITH GUIDANCE"}</span>
@@ -480,7 +480,7 @@ export function Chapter3Interference({ onComplete, sceneChoice, signalChoice }: 
             {choiceVisible ? "Containment breached" : "Resist the boundary"}
           </button>
           <p className={styles.actionHint}>Press inside or outside the aperture. The host explains what it learned either way.</p>
-          <p className={styles.audioState}>Audio: {audioState} / reduced motion: {prefersReducedMotion ? "on" : "off"}</p>
+          <p className={styles.audioState}>Carrier audio: {audioState}</p>
         </div>
       </div>
 
