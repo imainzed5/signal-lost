@@ -179,6 +179,7 @@ export function ChapterRouteView({ chapterId }: ChapterRouteViewProps) {
           renderScene={(sceneVersion, handleComplete, sceneChoice, priorChoices) => (
             <Chapter3Interference
               key={sceneVersion}
+              memoryChoice={priorChoices.memoryChoice}
               onComplete={handleComplete}
               sceneChoice={sceneChoice}
               signalChoice={priorChoices.signalChoice}
