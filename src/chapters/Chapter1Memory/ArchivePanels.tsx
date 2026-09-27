@@ -11,8 +11,6 @@ import { buildUninvitedStyle } from "./geometry";
 import type { ArchiveEventId, OriginPhase, PressureBarState } from "./types";
 
 import dr from "./darkroom.module.css";
-import styles from "./memory.module.css";
-import ui from "./memory-ui.module.css";
 
 export function EntryOverlay({ dissolve, systemNote }: { dissolve: boolean; systemNote: boolean }) {
   return (
@@ -83,6 +81,10 @@ export function ArchiveHud({
   );
 }
 
+/**
+ * Host warnings no longer box the scene: a cold scanning plane sweeps the stack
+ * (rendered in the volume) while the host log types along the lower third.
+ */
 export function ArchiveWarning({
   eventId,
   lines,
@@ -91,31 +93,40 @@ export function ArchiveWarning({
   lines: string[];
 }) {
   return (
-    <div
-      className={`${styles.archiveEventOverlay} ${ui.archiveEventOverlayUi} ${ui[`archiveEvent${eventId}`]}`}
-      role="status"
-      aria-live="assertive"
-    >
-      <div className={`${styles.archiveEventBlock} ${ui.archiveEventBlockUi}`}>
-        <p className={ui.archiveEventEyebrow}>
-          {`HOST MONITOR // EVENT ${String(eventId).padStart(2, "0")}`}
+    <div className={dr.hostCaption} data-event={eventId} role="status" aria-live="assertive">
+      <p className={dr.hostCaptionEyebrow}>
+        {`HOST MONITOR // EVENT ${String(eventId).padStart(2, "0")}`}
+      </p>
+      {lines.map((line, index) => (
+        <p
+          key={`archive-${eventId}-${index}`}
+          className={index === 0 ? dr.hostCaptionHeader : dr.hostCaptionLine}
+        >
+          {line || " "}
         </p>
-        {lines.map((line, index) => (
-          <p
-            key={`archive-${eventId}-${index}`}
-            className={`${
-              index === 0 ? styles.archiveEventHeaderLine : styles.archiveEventBodyLine
-            } ${index === 0 ? ui.archiveEventPrimaryLine : ui.archiveEventEvidenceLine}`}
-          >
-            {line || "\u00a0"}
-          </p>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
 
-/** SABLE's core, the enlarger lamp at the centre of the darkroom. */
+export function HostOverrideNotice() {
+  return (
+    <div className={dr.hostCaption} data-event="override" role="status">
+      <p className={dr.hostCaptionHeader}>HOST OVERRIDE: FAILED</p>
+      <p className={dr.hostCaptionLine}>fragment recovered against active suppression</p>
+    </div>
+  );
+}
+
+/** The host's cold scanning light plane, swept through the plate stack. */
+export function ScanSweep({ eventId }: { eventId: ArchiveEventId }) {
+  return (
+    <span className={dr.scanPlane} data-event={eventId} aria-hidden="true">
+      <span className={dr.scanEdge} />
+    </span>
+  );
+}
+
 export function DarkroomCore({
   developing,
   recovered,
@@ -201,6 +212,10 @@ export function RecoveredOrderRail({
   );
 }
 
+/**
+ * The host's observation log arrives from behind the camera, a cold foreign plate
+ * pushed into the room. It cannot be developed: the lock is always rejected.
+ */
 export function UninvitedCard({
   active,
   disabled,
@@ -246,11 +261,14 @@ export function UninvitedCard({
     <button
       type="button"
       aria-label="Attempt to lock unknown source signal"
-      className={`${styles.uninvitedCard} ${active ? styles.memoryCardHeld : ""} ${
-        exiting ? styles.uninvitedCardExiting : styles.uninvitedCardVisible
-      } ${rejected ? styles.uninvitedRejected : ""}`}
+      className={dr.plate}
+      data-active={active ? "true" : "false"}
+      data-exiting={exiting ? "true" : undefined}
+      data-foreign="true"
+      data-rejected={rejected ? "true" : undefined}
+      data-state={active ? "developing" : "latent"}
       disabled={disabled}
-      style={buildUninvitedStyle(progress, exiting)}
+      style={buildUninvitedStyle(progress, active)}
       onBlur={onHoldEnd}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
@@ -258,30 +276,36 @@ export function UninvitedCard({
       onPointerDown={handlePointerDown}
       onPointerUp={onHoldEnd}
     >
-      <span className={`${styles.cardFace} ${styles.uninvitedFace}`}>
-        <span className={`${styles.cardScanline} ${styles.uninvitedScanline}`} aria-hidden="true" />
-        <span className={`${styles.uninvitedHeader} ${styles.hostMetadata}`}>
-          <span>{uninvitedFragment.headerLeft}</span>
-          <span>{rejected ? "SOURCE: [REJECTED]" : uninvitedFragment.headerRight}</span>
-        </span>
-        <span className={styles.uninvitedBlankTitle} aria-hidden="true" />
-        <p className={`${styles.cardSubtitle} ${styles.hostMetadata}`}>
-          {uninvitedFragment.classification}
-        </p>
-        <p className={`${styles.cardBody} ${styles.uninvitedBody}`}>
-          {uninvitedFragment.fullText}
-        </p>
-        <p className={`${styles.cardHint} ${styles.uninvitedHint}`}>
-          {rejected ? "// LOCK REJECTED — OBSERVER WITHDRAWS ATTRIBUTION" : uninvitedFragment.hint}
-        </p>
-        <span className={styles.cardProgressTrack} aria-hidden="true">
-          <span className={styles.cardProgressFill} />
+      <span className={dr.foreignArrive}>
+        <span className={dr.plateJolt}>
+          <span className={dr.plateGlass}>
+            <span className={dr.foreignScan} aria-hidden="true" />
+            <span className={dr.plateHeader}>
+              <span>{uninvitedFragment.headerLeft}</span>
+              <span className={dr.plateStatus}>
+                {rejected ? "SOURCE: [REJECTED]" : uninvitedFragment.headerRight}
+              </span>
+            </span>
+            <span className={dr.foreignRedaction} aria-hidden="true" />
+            <span className={dr.plateClass}>{uninvitedFragment.classification}</span>
+            <span className={dr.foreignBody}>{uninvitedFragment.fullText}</span>
+            <span className={dr.plateHint}>
+              {rejected ? "// LOCK REJECTED — OBSERVER WITHDRAWS ATTRIBUTION" : uninvitedFragment.hint}
+            </span>
+            <span className={dr.plateEdge} aria-hidden="true">
+              <span className={dr.plateEdgeFill} />
+            </span>
+          </span>
         </span>
       </span>
     </button>
   );
 }
 
+/**
+ * ORIGIN hangs behind the core, facing away. The camera orbits around SABLE's core
+ * to reveal it: the record was logged before she ever transmitted.
+ */
 export function OriginCard({
   engaged,
   onEngage,
@@ -294,56 +318,42 @@ export function OriginCard({
   sessionLines: string[];
 }) {
   return (
-    <div
-      className={`${styles.originCardLayer} ${
-        phase === "entering" ? styles.originCardEntering : ""
-      } ${phase === "holding" ? styles.originCardHolding : ""} ${
-        phase === "exiting" ? styles.originCardExiting : ""
-      }`}
-    >
+    <div className={dr.originPlate} data-phase={phase}>
       <button
         type="button"
         aria-label="Inspect ORIGIN prior-session record"
         aria-expanded={engaged}
-        className={styles.originCard}
+        className={dr.originGlass}
         onClick={onEngage}
         onFocus={onEngage}
         onPointerEnter={onEngage}
       >
-        <span className={styles.originHeader}>
+        <span className={dr.originHeader}>
           <span>{`LOGGED // ${originFragment.archivalCode}`}</span>
           <span>{originFragment.headerStatus}</span>
         </span>
-        <span className={styles.originTitle}>{originFragment.title}</span>
-        <span className={styles.originSubtitle}>{originFragment.classification}</span>
-        <span className={styles.originBodyGap} aria-hidden="true" />
-        <span className={styles.originDivider} aria-hidden="true" />
-        <span className={styles.originSystemNoteBlock}>
-          <span className={styles.originSystemNoteLine}>origin hash: resolved</span>
-          <span className={styles.originSystemNoteLine}>
-            prior access: {originFragment.priorAccess}
-          </span>
-          <span className={styles.originSystemNoteLine}>authentication: confirmed</span>
-          <span className={styles.originSystemNoteNote}>
-            {originFragment.notePreamble} {originFragment.noteLines[0]}
-            {"\n"} {originFragment.noteLines[1]}
-            {"\n"} {originFragment.noteLines[2]}
-          </span>
+        <span className={dr.originTitle}>{originFragment.title}</span>
+        <span className={dr.originClass}>{originFragment.classification}</span>
+        <span className={dr.originNotes}>
+          <span>origin hash: resolved</span>
+          <span>prior access: {originFragment.priorAccess}</span>
+          <span>authentication: confirmed</span>
+        </span>
+        <span className={dr.originNote}>
+          {originFragment.notePreamble} {originFragment.noteLines[0]}
+          {"\n"} {originFragment.noteLines[1]}
+          {"\n"} {originFragment.noteLines[2]}
         </span>
         {engaged ? (
-          <span className={styles.originSessionBlock} aria-live="polite">
+          <span className={dr.originSession} aria-live="polite">
             {sessionLines.map((line, index) => (
-              <span key={`origin-session-${index}`} className={styles.originSessionLine}>
-                {line || "\u00a0"}
-              </span>
+              <span key={`origin-session-${index}`}>{line || " "}</span>
             ))}
           </span>
         ) : (
-          <span className={styles.originEngageHint}>
-            {"// ACTIVATE TO INSPECT PRIOR SESSIONS"}
-          </span>
+          <span className={dr.originHint}>{"// ACTIVATE TO INSPECT PRIOR SESSIONS"}</span>
         )}
-        <span className={styles.originFooter}>{originFragment.footerLabel}</span>
+        <span className={dr.originFooter}>{originFragment.footerLabel}</span>
       </button>
     </div>
   );

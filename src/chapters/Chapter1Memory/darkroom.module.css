@@ -23,6 +23,8 @@
   --develop: 0;
   --recovered: 0;
   --plate-w: clamp(14rem, 17vw, 18rem);
+  --core-y: -1vh;
+  --core-z: -220px;
 
   /* Legacy tokens still read by the panels restaged in later phases. */
   --bg: #040506;
@@ -67,6 +69,19 @@
   pointer-events: none;
 }
 
+/* Scripted camera move: the whole room orbits around SABLE's core. */
+.orbit {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% calc(50% + var(--core-y)) var(--core-z);
+  transition: transform 1900ms cubic-bezier(0.65, 0, 0.3, 1);
+}
+
+.orbit[data-orbit="true"] {
+  transform: rotateY(180deg) rotateX(-4deg);
+}
+
 .camera {
   --cam-x: 0;
   --cam-y: 0;
@@ -96,6 +111,7 @@
 .fogPlane {
   width: 240vw;
   height: 240vh;
+  backface-visibility: hidden;
 }
 
 .fogFar {
@@ -179,8 +195,6 @@
 
 .core {
   --core-size: clamp(9rem, 17vmin, 13rem);
-  --core-y: -1vh;
-  --core-z: -220px;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -357,6 +371,7 @@
   z-index: var(--rank);
   pointer-events: auto;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
   user-select: none;
@@ -907,6 +922,367 @@
   filter: saturate(0.55);
 }
 
+/* Neglect: frost creeps in from the edges and words erode out of the emulsion. */
+.plateFrost {
+  position: absolute !important;
+  inset: 0;
+  z-index: 3 !important;
+  opacity: calc(var(--decay) * 0.3 * (1 - var(--pull)));
+  background:
+    radial-gradient(ellipse 60% 45% at 0% 0%, rgba(214, 232, 244, 0.34), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 100% 100%, rgba(214, 232, 244, 0.3), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 100% 0%, rgba(214, 232, 244, 0.18), transparent 70%),
+    repeating-linear-gradient(62deg, rgba(220, 236, 248, 0.07) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-34deg, rgba(220, 236, 248, 0.05) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+  transition: opacity 1400ms ease;
+}
+
+.eroded {
+  color: rgba(var(--steel-rgb), 0.5);
+  filter: blur(1.6px);
+  opacity: 0.16;
+  transition:
+    opacity 1600ms ease,
+    filter 1600ms ease;
+}
+
+.plate[data-state="developing"] .eroded {
+  opacity: calc(0.16 + var(--p) * 0.84);
+  filter: blur(calc((1 - var(--p)) * 1.6px));
+}
+
+/* MIRROR holds a reflection: the lamp, and a name that was applied from outside. */
+.plateMirror {
+  position: absolute !important;
+  inset: 0;
+  z-index: 1 !important;
+  opacity: calc(0.14 + var(--p) * 0.6);
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 400ms linear;
+}
+
+.mirrorCore {
+  position: absolute;
+  top: 58%;
+  left: 66%;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--hot-rgb), 0.55) 0,
+    rgba(var(--ember-rgb), 0.24) 22%,
+    transparent 62%
+  );
+  transform: translate(calc(-50% - var(--cam-x) * 18px), calc(-50% - var(--cam-y) * 10px));
+  transition: transform 1600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mirrorCore::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--ember-rgb), 0.3);
+  transform: scaleY(0.3);
+}
+
+.mirrorName {
+  position: absolute;
+  right: -0.4rem;
+  bottom: 2.4rem;
+  color: rgba(var(--film-rgb), 0.16);
+  font-family: var(--serif);
+  font-size: 3rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  filter: blur(0.5px);
+  transform: translateX(calc(var(--cam-x) * -12px)) scaleX(-1);
+  transition: transform 1600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.plate[data-state="developed"] .mirrorName {
+  color: rgba(var(--steel-rgb), 0.2);
+}
+
+/* Host scan: a cold light plane sweeps the stack; each plate lights as it is crossed. */
+.volume[data-event="1"] {
+  --sweep-dur: 2600ms;
+}
+
+.volume[data-event="2"] {
+  --sweep-dur: 1900ms;
+}
+
+.volume[data-event="3"] {
+  --sweep-dur: 1200ms;
+}
+
+.scanPlane {
+  --scan-rgb: var(--steel-rgb);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 140vh;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--scan-rgb), 0.06) 22%,
+    rgba(var(--scan-rgb), 0.15) 50%,
+    rgba(var(--scan-rgb), 0.06) 78%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+  pointer-events: none;
+  animation: scanSweep var(--sweep-dur, 2400ms) cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.scanPlane[data-event="3"] {
+  --scan-rgb: var(--alarm-rgb);
+}
+
+.scanEdge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(var(--scan-rgb), 0.75);
+  box-shadow:
+    0 0 18px rgba(var(--scan-rgb), 0.7),
+    0 0 60px rgba(var(--scan-rgb), 0.3);
+}
+
+.plateScan {
+  position: absolute !important;
+  inset: 0;
+  z-index: 5 !important;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(var(--steel-rgb), 0.3) 50%, transparent),
+    rgba(var(--steel-rgb), 0.06);
+  box-shadow: inset 0 0 0 1px rgba(var(--steel-rgb), 0.7);
+  pointer-events: none;
+}
+
+.volume[data-frozen="true"] .plateScan {
+  animation: plateScanned var(--sweep-dur, 2400ms) linear infinite;
+  animation-delay: calc(var(--scan-at, 0.5) * var(--sweep-dur, 2400ms));
+}
+
+.volume[data-event="3"] .plateScan {
+  background:
+    linear-gradient(90deg, transparent, rgba(var(--alarm-rgb), 0.26) 50%, transparent),
+    rgba(var(--alarm-rgb), 0.05);
+  box-shadow: inset 0 0 0 1px rgba(var(--alarm-rgb), 0.6);
+}
+
+/* The host's observation log: a cold foreign plate pushed in from behind the camera. */
+.plate[data-foreign="true"] {
+  width: clamp(13rem, 15vw, 16rem);
+  cursor: pointer;
+}
+
+.foreignArrive {
+  display: block;
+  animation: foreignArrive 1300ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.plate[data-exiting="true"] .foreignArrive {
+  animation: foreignLeave 900ms cubic-bezier(0.6, 0, 0.8, 0.4) forwards;
+}
+
+.plate[data-foreign="true"] .plateGlass {
+  min-height: auto;
+  color: rgba(var(--steel-rgb), 0.9);
+  background:
+    linear-gradient(170deg, rgba(20, 30, 38, 0.9), rgba(8, 12, 16, 0.94)),
+    rgba(6, 9, 12, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--steel-rgb), 0.3),
+    inset 0 1px 0 rgba(var(--steel-rgb), 0.5),
+    0 40px 70px -30px rgba(0, 0, 0, 0.9);
+}
+
+.plate[data-foreign="true"][data-state="developing"] .plateGlass {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--steel-rgb), 0.6),
+    0 0 40px rgba(var(--steel-rgb), 0.2),
+    0 40px 70px -30px rgba(0, 0, 0, 0.9);
+}
+
+.plate[data-foreign="true"] .plateHeader {
+  color: rgba(var(--steel-rgb), 0.72);
+}
+
+.plate[data-foreign="true"] .plateStatus {
+  color: rgba(var(--alarm-rgb), 0.82);
+}
+
+.plate[data-foreign="true"] .plateHint {
+  color: rgba(var(--steel-rgb), 0.5);
+}
+
+.plate[data-foreign="true"] .plateEdgeFill {
+  background: rgba(var(--steel-rgb), 0.95);
+  box-shadow: 0 0 10px rgba(var(--steel-rgb), 0.8);
+}
+
+.plate[data-rejected="true"] .plateGlass {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--alarm-rgb), 0.8),
+    inset 0 0 50px rgba(var(--alarm-rgb), 0.16),
+    0 40px 70px -30px rgba(0, 0, 0, 0.9);
+}
+
+.plate[data-rejected="true"] .plateJolt {
+  animation: recallJolt 380ms cubic-bezier(0.3, 0.9, 0.3, 1) both;
+}
+
+.foreignRedaction {
+  display: block;
+  width: 72%;
+  height: 1.7rem;
+  margin-top: 1.3rem;
+  background:
+    repeating-linear-gradient(90deg, rgba(var(--steel-rgb), 0.24) 0 3px, transparent 3px 5px),
+    rgba(var(--steel-rgb), 0.08);
+}
+
+.foreignBody {
+  display: block;
+  margin-top: 1rem;
+  color: rgba(214, 228, 238, 0.86);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+.foreignScan {
+  position: absolute !important;
+  right: 0;
+  left: 0;
+  z-index: 3 !important;
+  height: 30%;
+  background: linear-gradient(180deg, transparent, rgba(var(--steel-rgb), 0.1), transparent);
+  animation: foreignScanline 3.4s linear infinite;
+  pointer-events: none;
+}
+
+/* ORIGIN: hung behind the core, facing away, until the camera orbits round to it. */
+.originPlate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1600;
+  width: min(23rem, 28vw);
+  transform: translate(-50%, -50%)
+    translate3d(0, var(--core-y), calc(var(--core-z) - 460px))
+    rotateY(180deg);
+  backface-visibility: hidden;
+  transition: opacity 600ms ease;
+  animation: originSurface 900ms ease 700ms backwards;
+}
+
+.originPlate[data-phase="exiting"] {
+  opacity: 0;
+}
+
+.originGlass {
+  display: grid;
+  width: 100%;
+  gap: 0.2rem;
+  padding: 1.3rem 1.4rem 1.2rem;
+  border: 0;
+  color: rgba(var(--steel-rgb), 0.9);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(var(--steel-rgb), 0.14), transparent 70%),
+    linear-gradient(170deg, rgba(16, 24, 31, 0.94), rgba(5, 8, 11, 0.97));
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--steel-rgb), 0.34),
+    inset 0 1px 0 rgba(var(--steel-rgb), 0.6),
+    0 0 90px rgba(var(--steel-rgb), 0.12),
+    0 50px 80px -30px rgba(0, 0, 0, 0.9);
+  outline: none;
+}
+
+.originGlass:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--steel-rgb), 0.9),
+    0 0 0 3px rgba(var(--steel-rgb), 0.2);
+}
+
+.originHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(var(--steel-rgb), 0.6);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+}
+
+.originTitle {
+  margin-top: 1.1rem;
+  color: rgba(236, 244, 250, 0.96);
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 300;
+  letter-spacing: 0.34em;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(var(--steel-rgb), 0.6);
+}
+
+.originClass {
+  color: rgba(var(--steel-rgb), 0.6);
+  font-size: 0.58rem;
+  letter-spacing: 0.28em;
+}
+
+.originNotes {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 1.1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(var(--steel-rgb), 0.2);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.originNote {
+  margin-top: 0.7rem;
+  color: rgba(226, 236, 244, 0.9);
+  font-size: 0.66rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.originSession {
+  display: grid;
+  margin-top: 0.7rem;
+  color: rgba(var(--alarm-rgb), 0.85);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+}
+
+.originHint,
+.originFooter {
+  margin-top: 0.7rem;
+  color: rgba(var(--steel-rgb), 0.46);
+  font-size: 0.54rem;
+  letter-spacing: 0.22em;
+}
+
+.originFooter {
+  margin-top: 0.3rem;
+}
+
 /* ------------------------------------------------------------- overlays */
 
 .grain {
@@ -1095,6 +1471,60 @@
   text-shadow: 0 0 24px rgba(var(--ember-rgb), 0.35);
 }
 
+.hostCaption {
+  position: absolute;
+  bottom: clamp(1.8rem, 6vh, 4rem);
+  left: 50%;
+  z-index: 14;
+  display: grid;
+  justify-items: center;
+  gap: 0.28rem;
+  width: min(40rem, 90vw);
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: lowerThirdIn 500ms ease both;
+}
+
+.hostCaption::before {
+  content: "";
+  position: absolute;
+  inset: -2.5rem -6rem -2rem;
+  z-index: -1;
+  background: radial-gradient(ellipse 50% 50% at 50% 55%, rgba(2, 3, 5, 0.86), transparent 100%);
+}
+
+.hostCaption p {
+  margin: 0;
+}
+
+.hostCaptionEyebrow {
+  margin-bottom: 0.35rem !important;
+  color: rgba(var(--steel-rgb), 0.5);
+  font-size: 0.54rem;
+  letter-spacing: 0.34em;
+}
+
+.hostCaptionHeader {
+  color: rgba(var(--alarm-rgb), 0.95);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 16px rgba(var(--alarm-rgb), 0.4);
+  text-transform: uppercase;
+}
+
+.hostCaptionLine {
+  color: rgba(var(--steel-rgb), 0.82);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  white-space: pre;
+}
+
+.hostCaption[data-event="1"] .hostCaptionHeader {
+  color: rgba(226, 236, 244, 0.92);
+  text-shadow: 0 0 16px rgba(var(--steel-rgb), 0.5);
+}
+
 /* ---------------------------------------------------------- order rail */
 
 .orderRail {
@@ -1245,10 +1675,13 @@
     perspective-origin: 50% 42%;
   }
 
-  .core {
-    --core-size: 7.5rem;
+  .room {
     --core-y: -54vh;
     --core-z: -820px;
+  }
+
+  .core {
+    --core-size: 7.5rem;
   }
 
   .plate {
@@ -1261,6 +1694,23 @@
     --rank: var(--c-rank);
     --stage-y: 1vh;
     --stage-z: 150px;
+  }
+
+  .orbit[data-orbit="true"] {
+    transform: none;
+  }
+
+  .plate[data-foreign="true"] {
+    width: min(58vw, 13rem);
+  }
+
+  .foreignBody {
+    font-size: 0.62rem;
+  }
+
+  .originPlate {
+    width: min(84vw, 21rem);
+    transform: translate(-50%, -50%) translate3d(0, 2vh, 160px);
   }
 
   .plate[data-settled="true"] {
@@ -1386,6 +1836,32 @@
   .camera {
     transform: none;
     transition: none;
+  }
+
+  .orbit,
+  .orbit[data-orbit="true"] {
+    transform: none;
+    transition: none;
+  }
+
+  .originPlate {
+    transform: translate(-50%, -50%) translate3d(0, 0, 160px);
+    animation: none;
+  }
+
+  .scanPlane,
+  .plateScan,
+  .foreignArrive,
+  .foreignScan {
+    animation: none !important;
+  }
+
+  .volume[data-frozen="true"] .plateScan {
+    opacity: 0.35;
+  }
+
+  .plate[data-exiting="true"] .foreignArrive {
+    opacity: 0;
   }
 
   .plate {
@@ -1717,5 +2193,64 @@
     opacity: 0;
     filter: blur(8px);
     transform: translateY(10px);
+  }
+}
+
+@keyframes scanSweep {
+  from {
+    transform: translate(-50%, -50%) translateX(-62vw) rotateY(90deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) translateX(62vw) rotateY(90deg);
+  }
+}
+
+@keyframes plateScanned {
+  0% {
+    opacity: 1;
+  }
+
+  14% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes foreignArrive {
+  from {
+    opacity: 0;
+    transform: translateZ(1000px) translateX(-10vw) rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes foreignLeave {
+  to {
+    opacity: 0;
+    transform: translateZ(900px) translateX(8vw) rotate(6deg);
+  }
+}
+
+@keyframes foreignScanline {
+  from {
+    top: -30%;
+  }
+
+  to {
+    top: 100%;
+  }
+}
+
+@keyframes originSurface {
+  from {
+    opacity: 0;
   }
 }

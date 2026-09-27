@@ -58,7 +58,11 @@ export function buildMemoryCardStyle({
   };
   const compact = compactAnchors[fragment.id] ?? { ...desktop, ry: 0, x: 0 };
   const settledIndex = recoveryIndex >= 0 ? recoveryIndex : fragmentIndex;
-  const arc = settledIndex - 2;
+  // Constellation: recovered plates hang on an arc over the core, in recovered order,
+  // from first (left) over the top to last (right).
+  const theta = ((180 - settledIndex * 45) * Math.PI) / 180;
+  const ringX = Math.cos(theta);
+  const ringY = Math.sin(theta);
 
   return {
     "--c-ry": `${compact.ry}deg`,
@@ -70,15 +74,16 @@ export function buildMemoryCardStyle({
     "--c-rank": `${resolveDepthRank(compact.z)}`,
     "--decay": `${decay}`,
     "--entry-delay": `${fragmentIndex * 150}ms`,
-    "--f-ry": `${-arc * 9}deg`,
-    "--f-rz": `${arc * 0.6}deg`,
-    "--f-x": `${arc * 18}vw`,
-    "--f-y": `${-19 + Math.abs(arc) * 3}vh`,
-    "--f-z": `${-420 - Math.abs(arc) * 60}px`,
-    "--f-rank": `${resolveDepthRank(-420 - Math.abs(arc) * 60)}`,
-    "--fc-x": `${arc * 17}vw`,
-    "--fc-y": `${-27 + Math.abs(arc) * 2}vh`,
-    "--fc-z": `${-520}px`,
+    "--f-ry": `${(-ringX * 16).toFixed(2)}deg`,
+    "--f-rz": `${(-ringX * 4).toFixed(2)}deg`,
+    "--f-x": `${(ringX * 31).toFixed(2)}vw`,
+    "--f-y": `${(-1 - ringY * 25).toFixed(2)}vh`,
+    "--f-z": `${Math.round(-250 - ringY * 90)}px`,
+    "--f-rank": `${resolveDepthRank(-250 - ringY * 90)}`,
+    "--fc-x": `${(ringX * 27).toFixed(2)}vw`,
+    "--fc-y": `${(-14 - ringY * 17).toFixed(2)}vh`,
+    "--fc-z": `${Math.round(-320 - ringY * 60)}px`,
+    "--fold-delay": `${settledIndex * 130}ms`,
     "--h-ry": `${desktop.ry}deg`,
     "--h-rz": `${desktop.rz}deg`,
     "--h-x": `${desktop.x}vw`,
@@ -86,6 +91,8 @@ export function buildMemoryCardStyle({
     "--h-z": `${desktop.z}px`,
     "--h-fog": `${resolveDepthFog(desktop.z, 560)}`,
     "--h-rank": `${resolveDepthRank(desktop.z)}`,
+    // Where the host's scanning plane crosses this plate, as a fraction of the sweep.
+    "--scan-at": `${clampNumber((desktop.x + 50) / 100, 0, 1).toFixed(3)}`,
     "--pull": `${clampNumber(pull, 0, 1).toFixed(3)}`,
     // Depth leads the slide so a drawn plate clears its neighbours early.
     "--pull-z": `${(1 - Math.pow(1 - clampNumber(pull, 0, 1), 2)).toFixed(3)}`,
@@ -129,10 +136,30 @@ export function resolvePlatePull({
   return 0.2 + eased * 0.8;
 }
 
-export function buildUninvitedStyle(progress: number, exiting: boolean): CSSProperties {
+/** The foreign plate hangs close to the camera, as if pushed in from behind the viewer. */
+export function buildUninvitedStyle(progress: number, held: boolean): CSSProperties {
+  const pull = held ? 0.08 + clampNumber(progress, 0, 1) * 0.5 : 0;
+
   return {
+    "--c-fog": "0",
+    "--c-rank": `${resolveDepthRank(-40)}`,
+    "--c-ry": "0deg",
+    "--c-rz": "3deg",
+    "--c-x": "24vw",
+    "--c-y": "33vh",
+    "--c-z": "-40px",
+    "--decay": "0",
+    "--h-fog": "0",
+    "--h-rank": `${resolveDepthRank(0)}`,
+    "--h-ry": "-20deg",
+    "--h-rz": "3deg",
+    "--h-x": "37vw",
+    "--h-y": "9vh",
+    "--h-z": "0px",
+    "--pull": pull.toFixed(3),
+    "--pull-z": (1 - Math.pow(1 - pull, 2)).toFixed(3),
+    "--scan-at": "0.9",
     "--stabilize-progress": `${clampNumber(progress, 0, 1)}`,
-    "--uninvited-transition": exiting ? "900ms" : "1100ms",
   } as CSSProperties;
 }
 

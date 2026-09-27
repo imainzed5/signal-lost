@@ -17,9 +17,11 @@ import {
   ArchiveWarning,
   DarkroomCore,
   EntryOverlay,
+  HostOverrideNotice,
   OriginCard,
   RecoveredOrderRail,
   RecoveryResponse,
+  ScanSweep,
   UninvitedCard,
 } from "./ArchivePanels";
 import {
@@ -726,6 +728,10 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
         data-settled={fieldSettled ? "true" : "false"}
         data-visible={cardsVisible ? "true" : "false"}
       >
+        <div
+          className={dr.orbit}
+          data-orbit={originPhase === "entering" || originPhase === "holding" ? "true" : "false"}
+        >
         <div ref={cameraRef} className={dr.camera}>
           <span className={`${dr.fogPlane} ${dr.fogFar}`} aria-hidden="true" />
           <span className={`${dr.fogPlane} ${dr.fogMid}`} aria-hidden="true" />
@@ -795,7 +801,31 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
           );
         })}
 
+          {uninvitedVisible ? (
+            <UninvitedCard
+              active={activeCardId === uninvitedFragment.id}
+              disabled={!canInteract}
+              exiting={uninvitedExiting}
+              progress={progressById[uninvitedFragment.id] ?? 0}
+              rejected={uninvitedRejected}
+              onHoldEnd={() => release(uninvitedFragment.id)}
+              onHoldStart={() => start(uninvitedFragment.id)}
+            />
+          ) : null}
+
+          {originPhase !== "hidden" ? (
+            <OriginCard
+              engaged={originEngaged}
+              onEngage={handleOriginEngage}
+              phase={originPhase}
+              sessionLines={originSessionLines}
+            />
+          ) : null}
+
+          {archiveEventId !== null ? <ScanSweep eventId={archiveEventId} /> : null}
+
           <span className={`${dr.dust} ${dr.dustNear}`} aria-hidden="true" />
+        </div>
         </div>
       </div>
 
@@ -812,37 +842,11 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
 
       <RecoveredOrderRail order={recoveredOrder} />
 
-      {uninvitedVisible ? (
-        <UninvitedCard
-          active={activeCardId === uninvitedFragment.id}
-          disabled={!canInteract}
-          exiting={uninvitedExiting}
-          progress={progressById[uninvitedFragment.id] ?? 0}
-          rejected={uninvitedRejected}
-          onHoldEnd={() => release(uninvitedFragment.id)}
-          onHoldStart={() => start(uninvitedFragment.id)}
-        />
-      ) : null}
-
       {archiveEventId !== null ? (
         <ArchiveWarning eventId={archiveEventId} lines={archiveEventLines} />
       ) : null}
 
-      {blockedOverrideVisible ? (
-        <div className={styles.blockedOverrideNotice} role="status">
-          <p>HOST OVERRIDE: FAILED</p>
-          <p>fragment recovered against active suppression</p>
-        </div>
-      ) : null}
-
-      {originPhase !== "hidden" ? (
-        <OriginCard
-          engaged={originEngaged}
-          onEngage={handleOriginEngage}
-          phase={originPhase}
-          sessionLines={originSessionLines}
-        />
-      ) : null}
+      {blockedOverrideVisible ? <HostOverrideNotice /> : null}
 
       {completionPhase === "monologue" ? (
         <div className={`${styles.monologueBlock} ${ui.monologueBlockUi}`} aria-live="polite">

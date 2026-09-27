@@ -7,7 +7,7 @@ import type {
 import { Fragment, useMemo } from "react";
 
 import type { MemoryFragment } from "./fragments";
-import { resolveCorruptThreshold, resolveSegments } from "./helpers";
+import { isWordEroded, resolveCorruptThreshold, resolveSegments } from "./helpers";
 import type { DegradationStage, MemoryCardStyle } from "./types";
 
 import dr from "./darkroom.module.css";
@@ -186,7 +186,15 @@ export function MemoryCard({
               <span className={dr.plateEmulsion} aria-hidden="true" />
               <span className={dr.plateGrain} aria-hidden="true" />
               <span className={dr.plateSheen} aria-hidden="true" />
+              {fragment.id === "mirror" ? (
+                <span className={dr.plateMirror} aria-hidden="true">
+                  <span className={dr.mirrorCore} />
+                  <span className={dr.mirrorName}>SABLE</span>
+                </span>
+              ) : null}
+              <span className={dr.plateFrost} aria-hidden="true" />
               <span className={dr.plateFog} aria-hidden="true" />
+              <span className={dr.plateScan} aria-hidden="true" />
 
               <span className={dr.plateHeader}>
                 <span>
@@ -201,7 +209,24 @@ export function MemoryCard({
               <span className={dr.plateBody}>
                 {segments.map((segment, segmentIndex) => {
                   if (!segment.corrupt) {
-                    return <Fragment key={`${fragment.id}-${segmentIndex}`}>{segment.text}</Fragment>;
+                    if (developed || degradationStage === 0) {
+                      return <Fragment key={`${fragment.id}-${segmentIndex}`}>{segment.text}</Fragment>;
+                    }
+
+                    return (
+                      <Fragment key={`${fragment.id}-${segmentIndex}`}>
+                        {segment.text.split(/(\s+)/).map((token, tokenIndex) =>
+                          /\S/.test(token) &&
+                          isWordEroded(`${fragment.id}-${segmentIndex}-${tokenIndex}`, degradationStage) ? (
+                            <span key={tokenIndex} className={dr.eroded}>
+                              {token}
+                            </span>
+                          ) : (
+                            token
+                          ),
+                        )}
+                      </Fragment>
+                    );
                   }
 
                   const threshold = resolveCorruptThreshold(fragment.id, segment.priority ?? "mid");

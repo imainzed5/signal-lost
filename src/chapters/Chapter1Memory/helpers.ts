@@ -136,6 +136,13 @@ export function resolveBlockedTarget(stabilizedIds: readonly string[]) {
   return memoryFragments.find((fragment) => !stabilizedIds.includes(fragment.id))?.id ?? null;
 }
 
+const EROSION_BY_STAGE = [0, 0.16, 0.34, 0.54] as const;
+
+/** Neglected plates lose words to frost, deterministically, deeper with each stage. */
+export function isWordEroded(seed: string, stage: DegradationStage) {
+  return (hashString(seed) % 1000) / 1000 < EROSION_BY_STAGE[stage];
+}
+
 function hashString(value: string) {
   let hash = 0;
 
