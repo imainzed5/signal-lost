@@ -842,3 +842,224 @@ textarea {
     display: none;
   }
 }
+
+/* Title depth: layers drift against the pointer at different distances.
+   `translate` composes with the navigation-phase `transform`s above. */
+.title-parallax-deep {
+  translate: calc(var(--px, 0) * -22px) calc(var(--py, 0) * -14px);
+}
+
+.title-parallax-near {
+  translate: calc(var(--px, 0) * 12px) calc(var(--py, 0) * 7px);
+}
+
+/* Whispers: lore residue surfacing at the frame edges. */
+.whisper-field {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.whisper {
+  position: absolute;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  white-space: nowrap;
+  font-family: var(--font-shell), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(var(--host-rgb), 0.62);
+  animation: whisperLife 5200ms ease forwards;
+}
+
+.whisper::before {
+  content: "";
+  width: 1.2rem;
+  height: 1px;
+  background: rgba(var(--sable-rgb), 0.7);
+  box-shadow: 0 0 8px rgba(var(--sable-rgb), 0.8);
+}
+
+.whisper[data-align="right"] {
+  translate: -100% 0;
+  flex-direction: row-reverse;
+}
+
+@keyframes whisperLife {
+  0% {
+    opacity: 0;
+    filter: blur(4px);
+  }
+
+  10% {
+    opacity: 0.85;
+    filter: blur(0);
+  }
+
+  72% {
+    opacity: 0.55;
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    filter: blur(6px);
+    letter-spacing: 0.42em;
+  }
+}
+
+/* Settings switch */
+.settings-switch {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--muted);
+}
+
+.settings-switch__track {
+  position: relative;
+  width: 2.6rem;
+  height: 1.1rem;
+  border: 1px solid rgba(var(--host-rgb), 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  transition: border-color 240ms ease, background 240ms ease;
+}
+
+.settings-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.1rem - 6px);
+  height: calc(1.1rem - 6px);
+  background: rgba(var(--host-rgb), 0.6);
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), background 240ms ease, box-shadow 240ms ease;
+}
+
+.settings-switch[aria-checked="true"] {
+  color: var(--sable-hot);
+}
+
+.settings-switch[aria-checked="true"] .settings-switch__track {
+  border-color: rgba(var(--sable-rgb), 0.6);
+  background: rgba(var(--sable-rgb), 0.08);
+}
+
+.settings-switch[aria-checked="true"] .settings-switch__thumb {
+  transform: translateX(1.5rem);
+  background: var(--sable);
+  box-shadow: 0 0 12px rgba(var(--sable-rgb), 0.7);
+}
+
+.settings-switch:focus-visible {
+  outline: 1px solid rgba(var(--sable-rgb), 0.6);
+  outline-offset: 4px;
+}
+
+/* Spine: chapter names surface on approach. */
+.signal-spine-node__title {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  transition:
+    max-height 360ms ease,
+    opacity 300ms ease,
+    transform 360ms ease;
+}
+
+.signal-spine-node--active .signal-spine-node__title,
+a.signal-spine-node__content:hover .signal-spine-node__title,
+a.signal-spine-node__content:focus-visible .signal-spine-node__title {
+  max-height: 3rem;
+  opacity: 1;
+  transform: none;
+}
+
+a.signal-spine-node__content:hover .signal-spine-node__dot {
+  border-color: rgba(var(--sable-rgb), 0.8);
+  box-shadow:
+    0 0 0 4px rgba(4, 5, 9, 0.92),
+    0 0 16px rgba(var(--sable-rgb), 0.45);
+  transform: scale(1.25);
+}
+
+/* Shutter channel ghosts: host and SABLE copies of the seam arrive out of register. */
+.route-shutter__seam--host,
+.route-shutter__seam--sable {
+  box-shadow: none;
+  mix-blend-mode: screen;
+}
+
+.route-shutter__seam--host {
+  background: linear-gradient(90deg, transparent, rgba(var(--host-rgb), 0.95) 40%, rgba(var(--host-rgb), 0.95) 60%, transparent);
+  translate: 0 -4px;
+}
+
+.route-shutter__seam--sable {
+  background: linear-gradient(90deg, transparent, rgba(var(--sable-rgb), 0.95) 35%, rgba(var(--sable-rgb), 0.95) 65%, transparent);
+  translate: 0 4px;
+}
+
+.route-shutter[data-phase="opening"] .route-shutter__seam--host {
+  animation:
+    seamOpen 1160ms ease-out forwards,
+    ghostDriftHost 1160ms steps(1) forwards;
+}
+
+.route-shutter[data-phase="opening"] .route-shutter__seam--sable {
+  animation:
+    seamOpen 1160ms ease-out forwards,
+    ghostDriftSable 1160ms steps(1) forwards;
+}
+
+@keyframes ghostDriftHost {
+  0% { translate: 0 -7px; }
+  12% { translate: 18px -3px; }
+  24% { translate: -10px -5px; }
+  40% { translate: 4px -2px; }
+  60%, 100% { translate: 0 0; }
+}
+
+@keyframes ghostDriftSable {
+  0% { translate: 0 7px; }
+  12% { translate: -16px 4px; }
+  24% { translate: 12px 2px; }
+  40% { translate: -4px 1px; }
+  60%, 100% { translate: 0 0; }
+}
+
+/* Cold open: the chrome waits in the dark until SABLE has ignited. */
+.title-shell[data-intro="playing"] .title-shell-utilities,
+.title-shell[data-intro="playing"] .title-shell-spine {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-parallax-deep,
+  .title-parallax-near,
+  .whisper {
+    translate: none;
+    animation: none;
+  }
+
+  .signal-spine-node__title {
+    transition: none;
+  }
+}
+
+/* Glitch text stays dark until its decode begins, so server HTML never flashes the answer. */
+.glitch-text[data-pending] {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch-text[data-pending] {
+    visibility: visible;
+  }
+}

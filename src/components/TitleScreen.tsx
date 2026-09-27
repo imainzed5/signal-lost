@@ -5,8 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { GlitchText } from "@/components/shell/GlitchText";
+import {
+  isInterfaceSoundEnabled,
+  playHover,
+  playIgnite,
+  playPress,
+  setInterfaceSoundEnabled,
+} from "@/components/shell/interfaceSound";
 import type { SableCoreMode } from "@/components/shell/SableCore";
 import { SableCore } from "@/components/shell/SableCore";
+import type { WhisperFieldHandle } from "@/components/shell/WhisperField";
+import { WhisperField } from "@/components/shell/WhisperField";
 import { CHAPTERS } from "@/data/chapters";
 import { useChapterManager } from "@/engine/ChapterManager";
 import { useExperienceProfile } from "@/hooks/useExperienceProfile";
@@ -22,11 +31,19 @@ const MENU_THEME_VOLUME = 0.24;
 const MENU_THEME_VOLUME_STORAGE_KEY = "signal-lost:menu-theme-volume";
 const QUICK_TRANSITION_DURATION = 200;
 const BOOT_TRANSITION_DURATION = 2000;
+const INTRO_SEEN_STORAGE_KEY = "signal-lost:title-intro-seen";
+const INTRO_DURATION = 2600;
+// Where each layer of the title lands, in ms, during the cold open vs. a return visit.
+const REVEAL_AT = {
+  playing: { carrier: 2000, wordmark: 1750, narrative: 2500, actions: 2800, chrome: 3100 },
+  settled: { carrier: 0, wordmark: 250, narrative: 500, actions: 750, chrome: 0 },
+} as const;
 
 type AudioState = "unsupported" | "standby" | "playing" | "muted";
 type MenuMode = "hydrating" | "fresh" | "returning" | "completed";
 type NavigationPhase = "idle" | "quick" | "isolating" | "locking" | "blackout";
 type NavigationStyle = "quick" | "boot";
+type IntroState = "playing" | "skipped" | "done";
 
 type MenuPresentation = {
   activeChapterId: ChapterId;
@@ -56,6 +73,10 @@ export function TitleScreen() {
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
   const coreAnchorRef = useRef<HTMLDivElement | null>(null);
+  const shellRef = useRef<HTMLElement | null>(null);
+  const whisperRef = useRef<WhisperFieldHandle | null>(null);
+  const [introState, setIntroState] = useState<IntroState>("playing");
+  const [interfaceSound, setInterfaceSound] = useState(true);
   const [audioState, setAudioState] = useState<AudioState>("standby");
   const [isResetConfirming, setIsResetConfirming] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -83,6 +104,15 @@ export function TitleScreen() {
         : "Opening recorded trace.";
   const coreMode = resolveCoreMode(navigationPhase);
   const revealClassName = profile.prefersReducedMotion ? "" : "title-reveal";
+  const reveal = REVEAL_AT[introState === "skipped" ? "settled" : "playing"];
+  const revealStyle = (key: keyof typeof reveal) =>
+    profile.prefersReducedMotion ? undefined : { animationDelay: `${reveal[key]}ms` };
+  const whispersActive =
+    introState !== "playing" &&
+    !isNavigating &&
+    !isSettingsOpen &&
+    !profile.prefersReducedMotion &&
+    !profile.isCompactViewport;
   const pulseClassName = profile.prefersReducedMotion ? "" : "shell-pulse";
   const settingsAnimationClassName = profile.prefersReducedMotion
     ? ""
@@ -93,6 +123,117 @@ export function TitleScreen() {
   const settingsPanelDrawerClassName = isSettingsOpen
     ? "translate-x-0 opacity-100"
     : "translate-x-full opacity-0";
+
+  useEffect(() => {
+    let seen = false;
+
+    try {
+      seen = window.sessionStorage.getItem(INTRO_SEEN_STORAGE_KEY) === "1";
+      window.sessionStorage.setItem(INTRO_SEEN_STORAGE_KEY, "1");
+    } catch {
+      seen = false;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: number[] = [];
+
+    if (seen || reducedMotion) {
+      timers.push(window.setTimeout(() => setIntroState("skipped"), 0));
+      return () => timers.forEach((timer) => window.clearTimeout(timer));
+    }
+
+    // The cold open plays once per session; any input cuts straight to the settled frame.
+    function skip() {
+      setIntroState((current) => (current === "playing" ? "skipped" : current));
+    }
+
+    timers.push(window.setTimeout(() => setIntroState((current) => (current === "playing" ? "done" : current)), INTRO_DURATION));
+    window.addEventListener("keydown", skip, { once: true });
+    window.addEventListener("pointerdown", skip, { once: true });
+    playIgnite();
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("keydown", skip);
+      window.removeEventListener("pointerdown", skip);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncTimer = window.setTimeout(() => setInterfaceSound(isInterfaceSoundEnabled()), 0);
+    let hovered: Element | null = null;
+
+    // One delegated listener gives every attendable control the same hover voice.
+    function handlePointerOver(event: PointerEvent) {
+      const target = (event.target as Element | null)?.closest?.("[data-core-attend]") ?? null;
+
+      if (target && target !== hovered && !(target as HTMLButtonElement).disabled) {
+        playHover();
+      }
+
+      hovered = target;
+    }
+
+    function handleFocusIn(event: FocusEvent) {
+      if ((event.target as Element | null)?.matches?.("[data-core-attend]:focus-visible")) {
+        playHover();
+      }
+    }
+
+    window.addEventListener("pointerover", handlePointerOver, { passive: true });
+    window.addEventListener("focusin", handleFocusIn);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+      window.removeEventListener("pointerover", handlePointerOver);
+      window.removeEventListener("focusin", handleFocusIn);
+    };
+  }, []);
+
+  useEffect(() => {
+    const shell = shellRef.current;
+
+    if (!shell || profile.prefersReducedMotion || !profile.supportsHover) {
+      return;
+    }
+
+    const activeShell = shell;
+    let frame = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    // Layers drift at different depths; values are written straight to CSS, never to React state.
+    function tick() {
+      currentX += (targetX - currentX) * 0.08;
+      currentY += (targetY - currentY) * 0.08;
+      activeShell.style.setProperty("--px", currentX.toFixed(4));
+      activeShell.style.setProperty("--py", currentY.toFixed(4));
+
+      if (Math.abs(targetX - currentX) > 0.0005 || Math.abs(targetY - currentY) > 0.0005) {
+        frame = window.requestAnimationFrame(tick);
+      } else {
+        frame = 0;
+      }
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      targetX = event.clientX / window.innerWidth - 0.5;
+      targetY = event.clientY / window.innerHeight - 0.5;
+
+      if (!frame) {
+        frame = window.requestAnimationFrame(tick);
+      }
+    }
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", handlePointerMove);
+    };
+  }, [profile.prefersReducedMotion, profile.supportsHover]);
 
   useEffect(() => {
     const savedVolume = window.localStorage.getItem(MENU_THEME_VOLUME_STORAGE_KEY);
@@ -315,10 +456,22 @@ export function TitleScreen() {
     audioFadeFrameRef.current = window.requestAnimationFrame(fadeFrame);
   }
 
+  function toggleInterfaceSound() {
+    const next = !interfaceSound;
+    setInterfaceSoundEnabled(next);
+    setInterfaceSound(next);
+
+    if (next) {
+      playPress();
+    }
+  }
+
   function navigateTo(href: string, style: NavigationStyle) {
     if (isNavigating) {
       return;
     }
+
+    playPress();
 
     if (profile.prefersReducedMotion) {
       router.push(href);
@@ -346,16 +499,25 @@ export function TitleScreen() {
 
   return (
     <main
+      ref={shellRef}
       className="title-shell relative min-h-[100dvh] overflow-x-hidden px-5 py-5 sm:px-8 sm:py-7"
+      data-intro={introState}
       data-navigation-phase={navigationPhase}
       aria-busy={isNavigating}
     >
-      <div className="shell-grid pointer-events-none fixed inset-0 opacity-30" />
+      <div className="shell-grid title-parallax-deep pointer-events-none fixed inset-[-4%] opacity-30" />
       <SableCore
         anchorRef={coreAnchorRef}
+        intro={introState === "playing" ? "playing" : "done"}
         mode={coreMode}
+        onPulse={(pulse) => {
+          if (pulse.core) {
+            whisperRef.current?.surface(pulse.x, pulse.y);
+          }
+        }}
         reducedMotion={profile.prefersReducedMotion}
       />
+      <WhisperField ref={whisperRef} active={whispersActive} />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_40%,transparent_35%,rgba(2,3,6,0.72)_100%)]" />
 
       <div
@@ -363,7 +525,10 @@ export function TitleScreen() {
         inert={isSettingsOpen || undefined}
         aria-hidden={isSettingsOpen || undefined}
       >
-        <header className="title-shell-utilities flex items-center justify-between gap-4 pb-4 text-[0.62rem] uppercase tracking-[0.28em] sm:text-[0.68rem] sm:tracking-[0.38em]">
+        <header
+          className={`title-shell-utilities flex items-center justify-between gap-4 pb-4 text-[0.62rem] uppercase tracking-[0.28em] sm:text-[0.68rem] sm:tracking-[0.38em] ${revealClassName}`}
+          style={revealStyle("chrome")}
+        >
           <div className="flex min-w-0 items-center gap-3 text-[var(--host)]">
             <span
               className={`h-1.5 w-1.5 shrink-0 rounded-full bg-accent ${pulseClassName}`}
@@ -378,6 +543,7 @@ export function TitleScreen() {
                 void toggleMenuAudio();
               }}
               disabled={isNavigating}
+              data-core-attend
               className="cine-link inline-flex min-h-10 items-center justify-center px-3 text-[0.58rem] disabled:pointer-events-none disabled:opacity-40 sm:px-4"
               aria-label={audioState === "playing" ? "Mute menu audio" : "Enable menu audio"}
             >
@@ -389,8 +555,12 @@ export function TitleScreen() {
               aria-label="Open settings"
               aria-expanded={isSettingsOpen}
               aria-controls="title-screen-settings-panel"
-              onClick={openSettings}
+              onClick={() => {
+                playPress();
+                openSettings();
+              }}
               disabled={isNavigating}
+              data-core-attend
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-white/10 bg-black/20 text-white/54 transition duration-300 hover:border-accent/40 hover:text-accent-soft disabled:pointer-events-none disabled:opacity-40"
             >
               <SlidersIcon className="h-4 w-4" />
@@ -401,15 +571,16 @@ export function TitleScreen() {
         <section className="title-shell-hero flex flex-1 flex-col items-center justify-center py-6 text-center sm:py-8">
           <p
             className={`title-shell-carrier text-[0.6rem] uppercase tracking-[0.32em] text-[var(--host)] sm:text-[0.66rem] sm:tracking-[0.5em] ${revealClassName}`}
+            style={revealStyle("carrier")}
             aria-live="polite"
           >
             {carrierCopy}
           </p>
           <div ref={coreAnchorRef} className="title-core-anchor" aria-hidden="true" />
-          <h1 className="title-shell-wordmark title-wordmark text-[clamp(3rem,11vw,7.5rem)] font-medium leading-none tracking-[0.34em] [margin-right:-0.34em]">
+          <h1 className="title-shell-wordmark title-wordmark title-parallax-near text-[clamp(3rem,11vw,7.5rem)] font-medium leading-none tracking-[0.34em] [margin-right:-0.34em]">
             <GlitchText
               text="SABLE"
-              delay={350}
+              delay={reveal.wordmark}
               duration={1300}
               glitch={coreMode === "surge" ? "burst" : "live"}
               reducedMotion={profile.prefersReducedMotion}
@@ -417,7 +588,7 @@ export function TitleScreen() {
           </h1>
           <p
             className={`title-shell-narrative mt-6 max-w-xl text-[0.8rem] leading-7 text-muted/80 sm:text-[0.9rem] sm:leading-8 ${revealClassName}`}
-            style={{ animationDelay: "700ms" }}
+            style={revealStyle("narrative")}
           >
             A rogue intelligence stirs inside a silent host, tracing the fragments
             that taught her how to wake.
@@ -425,7 +596,7 @@ export function TitleScreen() {
 
           <div
             className={`mt-8 flex w-full max-w-xl flex-col items-center justify-center gap-4 sm:flex-row ${revealClassName}`}
-            style={{ animationDelay: "1100ms" }}
+            style={revealStyle("actions")}
           >
             <button
               type="button"
@@ -435,6 +606,7 @@ export function TitleScreen() {
                 }
               }}
               disabled={!presentation.primaryHref || isNavigating}
+              data-core-attend
               className="cine-btn cine-btn--primary w-full sm:w-auto sm:min-w-64"
             >
               <span className="cine-btn__glyph" aria-hidden="true" />
@@ -451,6 +623,7 @@ export function TitleScreen() {
                   )
                 }
                 disabled={isNavigating}
+                data-core-attend
                 className="cine-btn w-full sm:w-auto"
               >
                 {presentation.secondaryLabel}
@@ -460,7 +633,8 @@ export function TitleScreen() {
         </section>
 
         <section
-          className="title-shell-spine border-t border-white/[0.06] py-6 sm:py-7"
+          className={`title-shell-spine border-t border-white/[0.06] py-6 sm:py-7 ${revealClassName}`}
+          style={revealStyle("chrome")}
           aria-labelledby="signal-spine-title"
         >
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -490,7 +664,10 @@ export function TitleScreen() {
           </ol>
         </section>
 
-        <footer className="title-shell-utilities flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-[0.58rem] uppercase tracking-[0.28em] text-white/34">
+        <footer
+          style={revealStyle("chrome")}
+          className={`${revealClassName} title-shell-utilities flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-[0.58rem] uppercase tracking-[0.28em] text-white/34`}
+        >
           <span>
             Local trace{" "}
             <strong className="font-normal text-accent-soft">
@@ -501,6 +678,7 @@ export function TitleScreen() {
             type="button"
             onClick={() => navigateTo("/credits", "quick")}
             disabled={isNavigating}
+            data-core-attend
             className="cine-link text-[0.58rem] disabled:pointer-events-none"
           >
             Archive available
@@ -521,6 +699,7 @@ export function TitleScreen() {
           }
         }}
         aria-hidden={!isSettingsOpen}
+        data-core-ignore
       >
         <div
           id="title-screen-settings-panel"
@@ -547,7 +726,7 @@ export function TitleScreen() {
             <button
               type="button"
               onClick={closeSettings}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/44 transition duration-300 hover:border-white/20 hover:text-foreground"
+              className="inline-flex h-10 w-10 items-center justify-center border border-white/10 text-white/44 transition duration-300 hover:border-white/20 hover:text-foreground"
               aria-label="Close settings"
             >
               <CloseIcon className="h-4 w-4" />
@@ -561,7 +740,7 @@ export function TitleScreen() {
                 label="Menu audio"
               />
               <div className="flex items-center justify-between gap-4">
-                <span className="title-shell-system rounded-full border border-white/10 px-3 py-1 text-[0.58rem] uppercase tracking-[0.28em] text-foreground">
+                <span className="title-shell-system border border-white/10 px-3 py-1 text-[0.58rem] uppercase tracking-[0.28em] text-foreground">
                   {getAudioStatusLabel(audioState)}
                 </span>
                 <button
@@ -569,12 +748,33 @@ export function TitleScreen() {
                   onClick={() => {
                     void toggleMenuAudio();
                   }}
-                  className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 text-[0.6rem] uppercase tracking-[0.18em] text-muted transition duration-300 hover:border-white/20 hover:text-foreground"
+                  className="inline-flex min-h-10 items-center border border-white/10 bg-white/[0.02] px-4 py-2 text-[0.6rem] uppercase tracking-[0.18em] text-muted transition duration-300 hover:border-white/20 hover:text-foreground"
                 >
                   {audioState === "playing" ? "Mute" : "Enable"}
                 </button>
               </div>
               <VolumeControl value={menuVolume} onChange={handleVolumeChange} />
+            </section>
+
+            <section className="space-y-5 py-6">
+              <SettingHeading
+                description="Synthesized cues for hovering, confirming, and crossing between routes."
+                label="Interface sound"
+              />
+              <button
+                type="button"
+                role="switch"
+                aria-checked={interfaceSound}
+                onClick={toggleInterfaceSound}
+                className="settings-switch"
+              >
+                <span className="settings-switch__track" aria-hidden="true">
+                  <span className="settings-switch__thumb" />
+                </span>
+                <span className="title-shell-system text-[0.6rem] uppercase tracking-[0.24em]">
+                  {interfaceSound ? "Online" : "Muted"}
+                </span>
+              </button>
             </section>
 
             <details className="group py-6">
@@ -633,14 +833,14 @@ export function TitleScreen() {
                     <button
                       type="button"
                       onClick={() => setIsResetConfirming(false)}
-                      className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-muted transition hover:border-white/20 hover:text-foreground"
+                      className="inline-flex min-h-10 items-center border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-muted transition hover:border-white/20 hover:text-foreground"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={handleResetProgress}
-                      className="inline-flex min-h-10 items-center rounded-full border border-[#ffbe7b]/35 bg-[#ffbe7b]/[0.08] px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-[#ffd5a8] transition hover:border-[#ffbe7b]/55"
+                      className="inline-flex min-h-10 items-center border border-[#ffbe7b]/35 bg-[#ffbe7b]/[0.08] px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-[#ffd5a8] transition hover:border-[#ffbe7b]/55"
                     >
                       Confirm Reset
                     </button>
@@ -650,7 +850,7 @@ export function TitleScreen() {
                 <button
                   type="button"
                   onClick={() => setIsResetConfirming(true)}
-                  className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-white/48 transition hover:border-[#ffbe7b]/30 hover:text-[#ffd5a8]"
+                  className="inline-flex min-h-10 items-center border border-white/10 px-4 py-2 text-[0.58rem] uppercase tracking-[0.18em] text-white/48 transition hover:border-[#ffbe7b]/30 hover:text-[#ffd5a8]"
                 >
                   Reset Local Trace
                 </button>
@@ -790,11 +990,9 @@ function SignalSpineNode({
         <span className="title-shell-system mt-1 block truncate text-[0.68rem] uppercase tracking-[0.28em]">
           {chapter.token}
         </span>
-        {active ? (
-          <span className="mt-2 block text-xs leading-5 tracking-normal text-white/60">
-            {chapter.title}
-          </span>
-        ) : null}
+        <span className="signal-spine-node__title mt-2 block text-xs leading-5 tracking-normal text-white/60">
+          {chapter.title}
+        </span>
       </span>
     </>
   );
@@ -809,6 +1007,7 @@ function SignalSpineNode({
         <Link
           href={`/chapter/${chapter.id}`}
           className="signal-spine-node__content"
+          data-core-attend
           aria-current={active ? "step" : undefined}
           aria-label={`${chapter.token}: ${chapter.title}, ${statusCopyMap[status]}${
             active ? ", active route" : ""
@@ -862,10 +1061,10 @@ function VolumeControl({ onChange, value }: VolumeControlProps) {
         step="1"
         value={percentage}
         onChange={(event) => onChange(Number(event.target.value) / 100)}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[#84ffd2]"
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-[var(--sable)]"
         aria-label="Menu music volume"
       />
-      <span className="title-shell-system min-w-14 rounded-full border border-white/10 px-3 py-1 text-center text-[0.58rem] uppercase tracking-[0.24em] text-foreground">
+      <span className="title-shell-system min-w-14 border border-white/10 px-3 py-1 text-center text-[0.58rem] uppercase tracking-[0.24em] text-foreground">
         {percentage}%
       </span>
     </div>

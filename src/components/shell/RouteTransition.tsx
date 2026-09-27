@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { GlitchText } from "@/components/shell/GlitchText";
+import { playShutterClose, playShutterOpen, primeInterfaceSound } from "@/components/shell/interfaceSound";
 import { CHAPTERS, parseChapterId } from "@/data/chapters";
 
 type ShutterPhase = "idle" | "closing" | "closed" | "opening";
@@ -38,7 +40,12 @@ export function RouteTransition() {
   }, [pathname, phase]);
 
   useEffect(() => {
+    primeInterfaceSound();
+  }, []);
+
+  useEffect(() => {
     if (phase === "opening") {
+      playShutterOpen();
       const timer = window.setTimeout(() => setPhase("idle"), OPEN_DURATION);
       return () => window.clearTimeout(timer);
     }
@@ -94,6 +101,7 @@ export function RouteTransition() {
 
       setLabel(resolveRouteLabel(href));
       setPhase("closing");
+      playShutterClose();
       navigateTimer = window.setTimeout(() => {
         setPhase("closed");
         router.push(href);
@@ -112,8 +120,12 @@ export function RouteTransition() {
     <div className="route-shutter" data-phase={phase} aria-hidden="true">
       <div className="route-shutter__lid route-shutter__lid--top" />
       <div className="route-shutter__lid route-shutter__lid--bottom" />
+      <div className="route-shutter__seam route-shutter__seam--host" />
+      <div className="route-shutter__seam route-shutter__seam--sable" />
       <div className="route-shutter__seam" />
-      <p className="route-shutter__label">{label}</p>
+      <p className="route-shutter__label">
+        {phase === "idle" ? null : <GlitchText key={`${label}-${phase === "opening"}`} text={label} duration={520} glitch="burst" />}
+      </p>
     </div>
   );
 }

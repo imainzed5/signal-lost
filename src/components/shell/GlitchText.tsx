@@ -29,6 +29,7 @@ export function GlitchText({
   reducedMotion = false,
 }: GlitchTextProps) {
   const [display, setDisplay] = useState(text);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -43,6 +44,12 @@ export function GlitchText({
         start = now + delay;
       }
 
+      if (now < start) {
+        frame = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      setStarted(true);
       const progress = Math.max(0, Math.min(1, (now - start) / duration));
       const resolved = Math.floor(progress * text.length);
 
@@ -75,6 +82,7 @@ export function GlitchText({
         className={`glitch-text ${className}`}
         data-text={shown}
         data-glitch={reducedMotion ? "off" : glitch}
+        data-pending={!reducedMotion && !started ? "" : undefined}
         aria-hidden="true"
       >
         {shown}
