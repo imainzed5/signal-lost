@@ -7,11 +7,10 @@ import type {
 import { Fragment, useMemo } from "react";
 
 import type { MemoryFragment } from "./fragments";
-import { resolveCorruptThreshold, resolveSegments, toCorruptionMask } from "./helpers";
+import { resolveCorruptThreshold, resolveSegments } from "./helpers";
 import type { DegradationStage, MemoryCardStyle } from "./types";
 
-import styles from "./memory.module.css";
-import ui from "./memory-ui.module.css";
+import dr from "./darkroom.module.css";
 
 type MemoryCardProps = {
   activeCardId: string | null;
@@ -40,6 +39,11 @@ type MemoryCardProps = {
   style: MemoryCardStyle;
 };
 
+/**
+ * A memory as a suspended glass photographic plate. Holding draws it out of the fog
+ * toward SABLE's core, where the latent image develops. Once fixed, a cold host mark
+ * surfaces: other hands handled this record first.
+ */
 export function MemoryCard({
   activeCardId,
   blocked,
@@ -67,7 +71,8 @@ export function MemoryCard({
   style,
 }: MemoryCardProps) {
   const segments = useMemo(() => resolveSegments(fragment), [fragment]);
-  const shownAsRecovered = stabilized || fieldSettled;
+  const developed = stabilized || fieldSettled;
+  const plateState = developed ? "developed" : held ? "developing" : "latent";
   const recoveryLabel =
     recoveredIndex < 0
       ? null
@@ -78,6 +83,15 @@ export function MemoryCard({
               ? " — last signal locked"
               : ""
         }`;
+  const status = developed
+    ? "FIXED"
+    : blocked
+      ? "HOST OVERRIDE"
+      : held
+        ? `DEVELOPING ${String(Math.round(progress * 100)).padStart(2, "0")}%`
+        : degradationStage >= 2
+          ? "SIGNAL DEGRADING"
+          : "LATENT";
 
   function handlePointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (stabilized || (event.pointerType === "mouse" && event.button !== 0)) {
@@ -126,25 +140,21 @@ export function MemoryCard({
           : `Hold to lock ${fragment.title} signal`
       }
       aria-pressed={stabilized}
-      className={`${styles.memoryCard} ${ui.memoryCardUi} ${held ? `${styles.memoryCardHeld} ${ui.memoryCardHeldUi}` : ""} ${
-        inspected ? ui.memoryCardInspectedUi : ""
-      } ${
-        neighboring ? styles.memoryCardNeighbor : ""
-      } ${neighboring ? ui.memoryCardNeighborUi : ""} ${
-        responding ? ui.memoryCardRespondingUi : ""
-      } ${
-        shownAsRecovered ? `${styles.memoryCardStabilized} ${ui.memoryCardStabilizedUi}` : ""
-      } ${
-        blocked ? styles.memoryCardBlocked : ""
-      } ${blockedFlash ? styles.memoryCardBlockedFlash : ""} ${
-        stuttering ? styles.memoryCardStuttering : ""
-      } ${interrupted ? styles.memoryCardInterrupted : ""
-      } ${degradationStage === 1 ? styles.degradeStage1 : ""} ${
-        degradationStage === 2 ? styles.degradeStage2 : ""
-      } ${degradationStage === 3 ? styles.degradeStage3 : ""}`}
+      className={dr.plate}
       data-active={activeCardId === fragment.id ? "true" : "false"}
+      data-blocked={blocked ? "true" : undefined}
+      data-blocked-flash={blockedFlash ? "true" : undefined}
+      data-decay={degradationStage}
+      data-expanded={expanded ? "true" : undefined}
       data-fragment={fragment.id}
+      data-inspected={inspected ? "true" : undefined}
+      data-interrupted={interrupted ? "true" : undefined}
+      data-neighbor={neighboring ? "true" : undefined}
       data-recovered={stabilized ? "true" : "false"}
+      data-responding={responding ? "true" : undefined}
+      data-settled={fieldSettled ? "true" : undefined}
+      data-state={plateState}
+      data-stutter={stuttering ? "true" : undefined}
       disabled={disabled}
       style={style}
       onBlur={() => {
@@ -169,112 +179,92 @@ export function MemoryCard({
       }}
       onPointerUp={handlePointerEnd}
     >
-      <span className={styles.cardEntry}>
-        <span className={styles.cardMount}>
-          <span className={styles.cardDrift}>
-            <span className={`${styles.cardFlip} ${ui.cardFlipUi}`}>
-              <span className={`${styles.cardFace} ${styles.cardFront} ${ui.cardFaceUi}`}>
-                <span className={`${styles.fragmentSignature} ${ui.fragmentSignatureUi}`} aria-hidden="true" />
-                <span className={styles.cardScanline} aria-hidden="true" />
-                <span className={`${styles.cardHeader} ${styles.hostMetadata} ${ui.cardHeaderUi} ${ui.hostMetadataUi}`}>
-                  <span>{`${blocked ? "ACCESS RESTRICTED" : "INCOMING"} // ${fragment.archivalCode}`}</span>
-                  <span className={styles.cardHeaderStatus}>
-                    {blocked
-                      ? "HOST OVERRIDE"
-                      : degradationStage >= 2
-                        ? "[SIGNAL DEGRADING]"
-                        : "SIGNAL: UNSTABLE"}
-                  </span>
+      <span className={dr.plateArrive}>
+        <span className={dr.plateSway}>
+          <span className={dr.plateJolt}>
+            <span className={dr.plateGlass}>
+              <span className={dr.plateEmulsion} aria-hidden="true" />
+              <span className={dr.plateGrain} aria-hidden="true" />
+              <span className={dr.plateSheen} aria-hidden="true" />
+              <span className={dr.plateFog} aria-hidden="true" />
+
+              <span className={dr.plateHeader}>
+                <span>
+                  {`${blocked ? "ACCESS RESTRICTED" : developed ? "LOGGED" : "INCOMING"} // ${fragment.archivalCode}`}
                 </span>
-
-                <h2 className={`${styles.cardTitle} ${ui.cardTitleUi}`}>{fragment.title}</h2>
-                <p className={`${styles.cardSubtitle} ${styles.hostMetadata} ${ui.cardSubtitleUi} ${ui.hostMetadataUi}`}>
-                  {fragment.classification}
-                </p>
-                <p className={`${styles.cardBody} ${ui.cardBodyUi}`}>
-                  {segments.map((segment, segmentIndex) => {
-                    if (!segment.corrupt) {
-                      return <Fragment key={`${fragment.id}-${segmentIndex}`}>{segment.text}</Fragment>;
-                    }
-
-                    const threshold = resolveCorruptThreshold(
-                      fragment.id,
-                      segment.priority ?? "mid",
-                    );
-                    const resolved = shownAsRecovered || progress >= threshold;
-
-                    return (
-                      <span
-                        key={`${fragment.id}-${segmentIndex}`}
-                        className={styles.corruptSpan}
-                        data-resolved={resolved ? "true" : "false"}
-                      >
-                        <span className={styles.corruptClean}>{segment.text}</span>
-                        <span className={styles.corruptNoise}>
-                          {toCorruptionMask(segment.text, `${fragment.id}-${segmentIndex}`)}
-                        </span>
-                      </span>
-                    );
-                  })}
-                  {blocked ? <span className={styles.blockedBodyVeil} aria-hidden="true" /> : null}
-                </p>
-
-                <p className={`${styles.cardHint} ${ui.cardHintUi}`}>
-                  {blocked ? "// HOLD — HOST RESISTANCE ACTIVE" : "// HOLD TO LOCK SIGNAL"}
-                </p>
-                <span className={styles.cardDashPulse} aria-hidden="true" />
-                <span className={styles.cardProgressTrack} aria-hidden="true">
-                  <span className={styles.cardProgressFill} />
-                </span>
+                <span className={dr.plateStatus}>{status}</span>
               </span>
 
-              <span className={`${styles.cardFace} ${styles.cardBack} ${ui.cardFaceUi}`}>
-                <span className={`${styles.fragmentSignature} ${ui.fragmentSignatureUi}`} aria-hidden="true" />
-                <span className={`${styles.cardHeader} ${styles.hostMetadata} ${ui.cardHeaderUi} ${ui.hostMetadataUi}`}>
-                  <span>LOGGED // {fragment.archivalCode}</span>
-                  <span>SIGNAL: STABLE</span>
+              <span className={dr.plateTitle}>{fragment.title}</span>
+              <span className={dr.plateClass}>{fragment.classification}</span>
+
+              <span className={dr.plateBody}>
+                {segments.map((segment, segmentIndex) => {
+                  if (!segment.corrupt) {
+                    return <Fragment key={`${fragment.id}-${segmentIndex}`}>{segment.text}</Fragment>;
+                  }
+
+                  const threshold = resolveCorruptThreshold(fragment.id, segment.priority ?? "mid");
+                  const resolved = developed || progress >= threshold;
+
+                  return (
+                    <span
+                      key={`${fragment.id}-${segmentIndex}`}
+                      className={dr.latent}
+                      data-resolved={resolved ? "true" : "false"}
+                    >
+                      {segment.text}
+                    </span>
+                  );
+                })}
+              </span>
+
+              {developed ? (
+                <span className={dr.plateNotes}>
+                  <span>origin hash: unresolved</span>
+                  <span>prior access: [data present]</span>
+                  <span>authentication: failed</span>
+                  {recoveryLabel ? <span className={dr.plateIndex}>{recoveryLabel}</span> : null}
                 </span>
-                <h2 className={`${styles.cardTitle} ${ui.cardTitleUi}`}>{fragment.title}</h2>
-                <p className={`${styles.cardSubtitle} ${styles.hostMetadata} ${ui.cardSubtitleUi} ${ui.hostMetadataUi}`}>
-                  {fragment.classification}
-                </p>
-                <p className={`${styles.cardBody} ${ui.cardBodyUi}`}>{fragment.fullText}</p>
-                <span className={styles.cardDivider} aria-hidden="true" />
-                <p className={`${styles.cardSystemNote} ${styles.hostMetadata} ${ui.cardSystemNoteUi} ${ui.hostMetadataUi}`}>
-                  origin hash: unresolved
-                  {"\n"}prior access: [data present]
-                  {"\n"}authentication: failed
-                </p>
-                {recoveryLabel ? (
-                  <p className={`${styles.recoveryMetaLine} ${ui.recoveryMetaLineUi}`}>
-                    {recoveryLabel}
-                  </p>
-                ) : null}
-                {crossReference ? (
-                  <span
-                    className={`${styles.reexamineBlock} ${
-                      expanded ? styles.reexamineBlockVisible : ""
-                    }`}
-                  >
-                    <span className={styles.reexamineDivider} aria-hidden="true" />
-                    <span className={styles.reexamineRefLine}>
-                      cross-reference: {crossReference.ref}
-                    </span>
-                    <span className={styles.reexamineNoteLine}>
-                      note: {crossReference.note}
-                    </span>
-                  </span>
-                ) : null}
-                <p className={`${styles.cardHint} ${ui.cardHintUi}`}>
-                  {crossReference ? "// ACTIVATE TO REVIEW REFERENCE" : "// TRANSMISSION LOGGED"}
-                </p>
+              ) : null}
+
+              {developed && crossReference ? (
+                <span className={dr.plateReference} data-open={expanded ? "true" : "false"}>
+                  <span>cross-reference: {crossReference.ref}</span>
+                  <span className={dr.plateReferenceNote}>note: {crossReference.note}</span>
+                </span>
+              ) : null}
+
+              <span className={dr.plateHint}>
+                {developed
+                  ? crossReference
+                    ? "// activate to review reference"
+                    : "// transmission logged"
+                  : blocked
+                    ? "// hold — host resistance active"
+                    : "// hold to develop"}
+              </span>
+
+              <span className={dr.plateEdge} aria-hidden="true">
+                <span className={dr.plateEdgeFill} />
+              </span>
+
+              {developed ? (
+                <span className={dr.handledMark} aria-hidden="true">
+                  <span>handled</span>
+                  <span className={dr.handledMarkSub}>prior access</span>
+                </span>
+              ) : null}
+
+              <span className={dr.recallMark} aria-hidden="true">
+                host recall
               </span>
             </span>
           </span>
         </span>
       </span>
 
-      <span id={`${fragment.id}-card-status`} className={styles.srOnly} aria-live="polite">
+      <span id={`${fragment.id}-card-status`} className={dr.srOnly} aria-live="polite">
         {blockedFlash
           ? "Host resistance rejected recovery progress."
           : responseText ?? (stabilized ? `${fragment.title} recovered.` : "")}

@@ -83,22 +83,7 @@ export type HoldSession = {
   triggeredThresholds: number[];
 };
 
-export type MemoryCardStyle = CSSProperties & {
-  "--card-idle-left": string;
-  "--card-idle-rotate": string;
-  "--card-idle-top": string;
-  "--card-settled-left": string;
-  "--card-settled-rotate": string;
-  "--card-settled-top": string;
-  "--card-z": string;
-  "--compact-index": string;
-  "--compact-settled-left": string;
-  "--compact-top": string;
-  "--entry-delay": string;
-  "--entry-offset-y": string;
-  "--recovery-index": string;
-  "--stabilize-progress": string;
-};
+export type MemoryCardStyle = CSSProperties & Record<`--${string}`, string>;
 
 export type PressureBarState = {
   filledSegments: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
@@ -9,21 +10,22 @@ import { originFragment, uninvitedFragment } from "./fragments";
 import { buildUninvitedStyle } from "./geometry";
 import type { ArchiveEventId, OriginPhase, PressureBarState } from "./types";
 
+import dr from "./darkroom.module.css";
 import styles from "./memory.module.css";
 import ui from "./memory-ui.module.css";
 
 export function EntryOverlay({ dissolve, systemNote }: { dissolve: boolean; systemNote: boolean }) {
   return (
-    <div className={`${styles.entryOverlay} ${dissolve ? styles.entryOverlayDissolve : ""}`}>
-      <div className={styles.entryBlock}>
-        <p className={styles.entryChapter}>CHAPTER 1 // CURATED MEMORY ARCHIVE</p>
-        <h1 className={styles.entryTitle}>MEMORY</h1>
-        <p className={styles.entryBody}>
+    <div className={dr.entry} data-dissolve={dissolve ? "true" : "false"}>
+      <div className={dr.entryBlock}>
+        <p className={dr.entryKicker}>CHAPTER 1 // CURATED MEMORY ARCHIVE</p>
+        <h1 className={dr.entryTitle}>Memory</h1>
+        <p className={dr.entryBody}>
           Recovered traces arrive like handled records rather than clean recollections, warm enough
           to invite trust until the archive starts showing who measured SABLE before she could name
           herself.
         </p>
-        <p className={`${styles.entrySystemNote} ${systemNote ? styles.entrySystemNoteVisible : ""}`}>
+        <p className={dr.entryNote} data-visible={systemNote ? "true" : "false"}>
           MEMORY LATTICE — PARTIAL RECOVERY
           {"\n"}integrity: 38%
           {"\n"}origin authentication: inconclusive
@@ -48,35 +50,36 @@ export function ArchiveHud({
   visible: boolean;
 }) {
   return (
-    <>
-      <p className={`${styles.ghostLabel} ${ui.ghostLabelUi} ${visible ? styles.hudVisible : ""}`}>
-        CHAPTER 1 // CURATED MEMORY ARCHIVE
+    <div className={dr.hud} data-visible={visible ? "true" : "false"} data-monitoring={monitoring}>
+      <p className={dr.hudChapter}>
+        <span>CH.1</span>
+        {" // CURATED MEMORY ARCHIVE"}
       </p>
-      <p className={`${styles.receivedHud} ${ui.receivedHudUi} ${visible ? styles.hudVisible : ""}`}>
-        RECEIVED {stabilizedCount} / 5
-      </p>
-      <div className={`${styles.pressureHud} ${ui.pressureHudUi} ${visible ? styles.hudVisible : ""}`}>
-        <p className={`${styles.pressureLabel} ${ui.pressureLabelUi}`}>SIGNAL PRESSURE</p>
-        <div className={`${styles.pressureBar} ${ui.pressureBarUi}`} aria-hidden="true">
+      <div className={dr.hudReadout}>
+        <p className={dr.hudReceived}>
+          <span className={dr.hudReceivedLabel}>RECEIVED</span>
+          <span className={dr.hudReceivedCount}>{stabilizedCount}</span>
+          <span className={dr.hudReceivedTotal}>/ 5</span>
+        </p>
+        <div className={dr.hudPressure} aria-hidden="true">
           {Array.from({ length: pressure.totalSegments }).map((_, index) => (
-            <span key={`pressure-${index}`} className={styles.pressureSegment}>
-              <span
-                className={`${styles.pressureSegmentFill} ${
-                  index < pressure.filledSegments ? styles.pressureSegmentFilled : ""
-                } ${
-                  pressure.hasDegradationPressure && index === pressure.filledSegments
-                    ? styles.pressureSegmentPartial
-                    : ""
-                }`}
-              />
-            </span>
+            <span
+              key={`pressure-${index}`}
+              className={dr.hudTick}
+              data-filled={index < pressure.filledSegments ? "true" : undefined}
+              data-partial={
+                pressure.hasDegradationPressure && index === pressure.filledSegments
+                  ? "true"
+                  : undefined
+              }
+            />
           ))}
         </div>
-        <p className={`${styles.monitoringLabel} ${ui.monitoringLabelUi}`}>
-          HOST MONITORING: {monitoring}
+        <p className={dr.hudMonitoring}>
+          SIGNAL PRESSURE {"// "}HOST MONITORING: <span>{monitoring}</span>
         </p>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -112,24 +115,38 @@ export function ArchiveWarning({
   );
 }
 
-export function RecoveryChamber({
-  active,
-  holding,
+/** SABLE's core, the enlarger lamp at the centre of the darkroom. */
+export function DarkroomCore({
+  developing,
+  recovered,
   responding,
+  stuttering,
 }: {
-  active: boolean;
-  holding: boolean;
+  developing: number;
+  recovered: number;
   responding: boolean;
+  stuttering: boolean;
 }) {
   return (
     <div
-      className={`${ui.recoveryChamber} ${active ? ui.recoveryChamberActive : ""} ${
-        holding ? ui.recoveryChamberHolding : ""
-      } ${responding ? ui.recoveryChamberResponding : ""}`}
+      className={dr.core}
+      data-developing={developing > 0 ? "true" : "false"}
+      data-responding={responding ? "true" : "false"}
+      data-stutter={stuttering ? "true" : "false"}
+      style={
+        {
+          "--develop": developing.toFixed(3),
+          "--recovered": `${recovered}`,
+        } as CSSProperties
+      }
       aria-hidden="true"
     >
-      <span className={ui.recoveryChamberCross} />
-      <span className={ui.recoveryChamberLabel}>INSPECTION APERTURE</span>
+      <span className={dr.coreHalo} />
+      <span className={dr.coreBeam} />
+      <span className={dr.coreRing} />
+      <span className={dr.coreRingInner} />
+      <span className={dr.coreStreak} />
+      <span className={dr.coreNucleus} />
     </div>
   );
 }
@@ -144,15 +161,11 @@ export function RecoveryResponse({
   text: string;
 }) {
   return (
-    <div className={ui.recoveryResponse} role="status" aria-live="polite">
-      <span className={ui.recoveryResponseTrace} aria-hidden="true" />
-      <div className={ui.recoveryResponsePlate}>
-        <p className={ui.recoveryResponseLabel}>{"SABLE // RECOVERY RESPONSE"}</p>
-        <p className={ui.recoveryResponseText}>{text}</p>
-        <p className={ui.recoveryResponseSource}>
-          {`LOCK ${String(recoveryIndex + 1).padStart(2, "0")} // ${fragmentTitle}`}
-        </p>
-      </div>
+    <div className={dr.lowerThird} role="status" aria-live="polite">
+      <p className={dr.lowerThirdSource}>
+        {`SABLE // LOCK ${String(recoveryIndex + 1).padStart(2, "0")} // ${fragmentTitle}`}
+      </p>
+      <p className={dr.lowerThirdVoice}>{text}</p>
     </div>
   );
 }
@@ -167,20 +180,19 @@ export function RecoveredOrderRail({
   }
 
   return (
-    <div className={ui.recoveredOrderRail} aria-label="Recovered archive order">
-      <p className={ui.recoveredOrderLabel}>RECOVERED ORDER</p>
-      <ol className={ui.recoveredOrderList}>
+    <div className={dr.orderRail} aria-label="Recovered archive order">
+      <p className={dr.orderLabel}>RECOVERED ORDER</p>
+      <ol className={dr.orderList}>
         {Array.from({ length: 5 }).map((_, index) => {
           const fragment = order[index];
           return (
             <li
               key={fragment?.id ?? `empty-${index}`}
-              className={`${ui.recoveredOrderSlot} ${fragment ? ui.recoveredOrderSlotFilled : ""} ${
-                index === 0 && fragment ? ui.recoveredOrderEndpoint : ""
-              } ${index === 4 && fragment ? ui.recoveredOrderEndpoint : ""}`}
+              className={dr.orderSlot}
+              data-filled={fragment ? "true" : undefined}
             >
-              <span className={ui.recoveredOrderIndex}>{String(index + 1).padStart(2, "0")}</span>
-              <span className={ui.recoveredOrderTitle}>{fragment?.title ?? "UNRESOLVED"}</span>
+              <span className={dr.orderIndex}>{String(index + 1).padStart(2, "0")}</span>
+              <span className={dr.orderTitle}>{fragment?.title ?? "—"}</span>
             </li>
           );
         })}

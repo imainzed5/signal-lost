@@ -1,10 +1,13 @@
 "use client";
 
 import type {
+  CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
 } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useExperienceProfile } from "@/hooks/useExperienceProfile";
@@ -12,10 +15,10 @@ import { useExperienceProfile } from "@/hooks/useExperienceProfile";
 import {
   ArchiveHud,
   ArchiveWarning,
+  DarkroomCore,
   EntryOverlay,
   OriginCard,
   RecoveredOrderRail,
-  RecoveryChamber,
   RecoveryResponse,
   UninvitedCard,
 } from "./ArchivePanels";
@@ -36,7 +39,7 @@ import {
   responseLines,
   uninvitedFragment,
 } from "./fragments";
-import { buildMemoryCardStyle } from "./geometry";
+import { buildMemoryCardStyle, resolvePlatePull } from "./geometry";
 import {
   buildPressureBar,
   createBooleanMap,
@@ -63,6 +66,7 @@ import { useMemoryAudio } from "./useMemoryAudio";
 import { useMemoryHold } from "./useMemoryHold";
 import { useMemorySequence } from "./useMemorySequence";
 
+import dr from "./darkroom.module.css";
 import styles from "./memory.module.css";
 import ui from "./memory-ui.module.css";
 
@@ -124,6 +128,9 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
   const completionTriggeredRef = useRef(false);
   const degradationStartedAtRef = useRef<number | null>(null);
   const lastInteractionRef = useRef<Record<string, number>>({});
+  const cameraRef = useRef<HTMLDivElement | null>(null);
+  const driftFrameRef = useRef<number | null>(null);
+  const driftTargetRef = useRef({ x: 0, y: 0 });
 
   const updateOriginPhase = useCallback((phase: OriginPhase) => {
     originPhaseRef.current = phase;
@@ -485,6 +492,16 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
     cancelAll();
   }, [cancelAll, sequenceLocked]);
 
+  useEffect(
+    () => () => {
+      if (driftFrameRef.current !== null) {
+        window.cancelAnimationFrame(driftFrameRef.current);
+        driftFrameRef.current = null;
+      }
+    },
+    [],
+  );
+
   const continueDestination =
     sceneChoice?.continueHref ??
     (sceneChoice?.continueChapterId != null ? `/chapter/${sceneChoice.continueChapterId}` : null);
@@ -596,6 +613,35 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
     continueToNextChapter();
   }
 
+  // The darkroom camera drifts gently with the pointer; CSS eases the motion.
+  function handleRootPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    if (prefersReducedMotion || event.pointerType !== "mouse") {
+      return;
+    }
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    driftTargetRef.current = {
+      x: ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 2 - 1,
+      y: ((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 2 - 1,
+    };
+
+    if (driftFrameRef.current !== null) {
+      return;
+    }
+
+    driftFrameRef.current = window.requestAnimationFrame(() => {
+      driftFrameRef.current = null;
+      const camera = cameraRef.current;
+
+      if (!camera) {
+        return;
+      }
+
+      camera.style.setProperty("--cam-x", driftTargetRef.current.x.toFixed(3));
+      camera.style.setProperty("--cam-y", driftTargetRef.current.y.toFixed(3));
+    });
+  }
+
   function handleRootKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
     startAmbient();
 
@@ -631,21 +677,27 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
     const fragment = memoryFragments.find((candidate) => candidate.id === fragmentId);
     return fragment ? [{ id: fragment.id, title: fragment.title }] : [];
   });
-  const rootClassName = `${styles.memoryRoot} ${ui.memoryRootUi} ${styles[`pressure${stabilizedCount}`] ?? ""} ${
-    ui[`pressure${stabilizedCount}`] ?? ""
-  } ${
-    fieldSettled ? `${styles.fieldComplete} ${ui.fieldCompleteUi}` : ""
-  } ${aftermath === "keep" ? styles.aftermathKeep : ""} ${
-    aftermath === "decay" ? styles.aftermathDecay : ""
-  }`;
+  const developingProgress = activeCardId ? (progressById[activeCardId] ?? 0) : 0;
+  const coreStuttering = Boolean(activeCardId && stutteringById[activeCardId]);
+  const rootStyle = {
+    "--develop": developingProgress.toFixed(3),
+    "--recovered": `${stabilizedCount}`,
+  } as CSSProperties;
 
   return (
     <section
-      className={rootClassName}
+      className={dr.room}
       aria-label="Chapter 1: Memory"
+      data-aftermath={aftermath ?? undefined}
+      data-intro={introPhase}
+      data-phase={completionPhase}
+      data-pressure={stabilizedCount}
+      data-settled={fieldSettled ? "true" : "false"}
+      style={rootStyle}
       onClick={handleSceneClick}
       onKeyDownCapture={handleRootKeyDown}
       onPointerDownCapture={startAmbient}
+      onPointerMove={handleRootPointerMove}
     >
       {showIntro ? (
         <EntryOverlay
@@ -654,6 +706,10 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
         />
       ) : null}
 
+      <Link href="/" className={dr.returnLink} data-prevent-continue="true">
+        <span aria-hidden="true">&larr;</span> Return to Shell
+      </Link>
+
       <ArchiveHud
         monitoring={monitoring}
         pressure={pressure}
@@ -661,25 +717,27 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
         visible={showHud && completionPhase !== "choice"}
       />
 
-      <RecoveryChamber
-        active={Boolean(focusCardId || activeResponseId)}
-        holding={Boolean(activeCardId)}
-        responding={Boolean(activeResponseId && archiveEventId === null)}
-      />
-
       <div
-        className={`${styles.cardField} ${cardsVisible ? styles.cardFieldVisible : ""} ${
-          introPhase === "active" ? styles.cardFieldActive : ""
-        } ${fieldSettled ? styles.cardFieldSettled : ""} ${
-          fieldSettled ? ui.cardFieldSettledUi : ""
-        } ${ui.cardFieldUi} ${
-          archiveEventId !== null ? styles.cardFieldFrozen : ""
-        } ${archiveEventId !== null ? ui[`cardFieldEvent${archiveEventId}`] : ""} ${
-          activeResponse && archiveEventId === null ? ui.cardFieldResponding : ""
-        } ${
-          focusCardId ? styles.cardFieldHasActive : ""
-        }`}
+        className={dr.volume}
+        data-active={introPhase === "active" ? "true" : "false"}
+        data-event={archiveEventId ?? undefined}
+        data-focus={focusCardId ? "true" : "false"}
+        data-frozen={archiveEventId !== null ? "true" : "false"}
+        data-settled={fieldSettled ? "true" : "false"}
+        data-visible={cardsVisible ? "true" : "false"}
       >
+        <div ref={cameraRef} className={dr.camera}>
+          <span className={`${dr.fogPlane} ${dr.fogFar}`} aria-hidden="true" />
+          <span className={`${dr.fogPlane} ${dr.fogMid}`} aria-hidden="true" />
+          <span className={`${dr.dust} ${dr.dustFar}`} aria-hidden="true" />
+
+          <DarkroomCore
+            developing={developingProgress}
+            recovered={stabilizedCount}
+            responding={Boolean(activeResponseId && archiveEventId === null)}
+            stuttering={coreStuttering}
+          />
+
         {memoryFragments.map((fragment, fragmentIndex) => {
           const recoveredIndex = stabilizationOrder.indexOf(fragment.id);
           const stabilized = recoveredIndex >= 0;
@@ -687,9 +745,15 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
             blockedStateActive && blockedFragmentId === fragment.id && !stabilized;
           const held = activeCardId === fragment.id;
           const style = buildMemoryCardStyle({
+            decay: stabilized ? 0 : (degradationById[fragment.id] ?? 0),
             fragment,
             fragmentIndex,
             progress: progressById[fragment.id] ?? 0,
+            pull: resolvePlatePull({
+              held,
+              progress: progressById[fragment.id] ?? 0,
+              responding: activeResponse?.fragmentId === fragment.id,
+            }),
             recoveryIndex: recoveredIndex,
           });
 
@@ -730,7 +794,13 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
             />
           );
         })}
+
+          <span className={`${dr.dust} ${dr.dustNear}`} aria-hidden="true" />
+        </div>
       </div>
+
+      <span className={dr.grain} aria-hidden="true" />
+      <span className={dr.vignette} aria-hidden="true" />
 
       {activeResponse && activeResponseFragment && archiveEventId === null ? (
         <RecoveryResponse
@@ -798,7 +868,7 @@ export function Chapter1Memory({ onComplete, sceneChoice }: Chapter1MemoryProps)
         />
       ) : null}
 
-      <p className={styles.srOnly} aria-live="polite">
+      <p className={dr.srOnly} aria-live="polite">
         {activeCardId ? `Recovering ${activeCardId}.` : ""}
       </p>
     </section>
